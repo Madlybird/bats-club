@@ -158,10 +158,13 @@ export default function ArchiveClient({
           </div>
         )}
 
-        {/* Manufacturer chips */}
+        {/* Manufacturer chips — horizontal scroll on mobile, wrap on md+ */}
         <div>
           <p className="text-xs text-slate-500 mb-2 font-medium uppercase tracking-wider">{labels.mfgLabel}</p>
-          <div className="flex flex-wrap gap-2">
+          <div
+            className="flex md:flex-wrap gap-2 overflow-x-auto md:overflow-visible scrollbar-none pb-1 -mx-4 px-4 md:mx-0 md:px-0"
+            style={{ scrollbarWidth: "none" }}
+          >
             {manufacturers.map((m) => (
               <button
                 key={m}
@@ -190,7 +193,7 @@ export default function ArchiveClient({
 
       {/* Grid */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filtered.map((figure) => (
             <FigureCard
               key={figure.id}

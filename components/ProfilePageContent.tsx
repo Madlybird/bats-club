@@ -68,7 +68,7 @@ export default function ProfilePageContent({
         <ScrollReveal>
           <div className="border-b border-white/[0.05]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                 {/* Avatar */}
                 <div className="flex-shrink-0 flex flex-col items-center gap-2">
                   <div className="relative">
@@ -130,7 +130,7 @@ export default function ProfilePageContent({
                 </div>
 
                 {/* Stats */}
-                <div className="flex gap-6">
+                <div className="flex gap-6 flex-wrap w-full md:w-auto">
                   <div className="text-center">
                     <p className="text-2xl font-black" style={{ color: "#ff2d78" }}>{have.length}</p>
                     <p className="text-xs text-white/30">{dict.profile_collection}</p>
@@ -209,7 +209,7 @@ function FigureSection({
             {subtitle} · {items.length} figure{items.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
           {items.map((item) => (
             <Link
               key={item.id}

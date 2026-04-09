@@ -39,16 +39,19 @@ export default function ShopFilters({ currentCondition, currentSort, currentSeri
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 md:gap-4">
       {/* Condition */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">{dict.shop_condition_label}:</span>
-        <div className="flex gap-1.5 flex-wrap">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="flex-shrink-0 text-xs text-slate-500 font-medium uppercase tracking-wider">{dict.shop_condition_label}:</span>
+        <div
+          className="flex gap-1.5 md:flex-wrap overflow-x-auto md:overflow-visible scrollbar-none pb-1 md:pb-0"
+          style={{ scrollbarWidth: "none" }}
+        >
           {CONDITIONS.map((c) => (
             <button
               key={c.value}
               onClick={() => updateFilter("condition", currentCondition === c.value ? null : c.value)}
-              className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all font-medium ${
+              className={`flex-shrink-0 text-xs px-2.5 py-1.5 rounded-lg border transition-all font-medium ${
                 currentCondition === c.value
                   ? "bg-violet-700 border-violet-600 text-white"
                   : "bg-[#0a0a12] border-[#1a1a3a] text-slate-400 hover:border-violet-700/50 hover:text-slate-200"
@@ -65,7 +68,7 @@ export default function ShopFilters({ currentCondition, currentSort, currentSeri
         <select
           value={currentSort || "newest"}
           onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
-          className="input text-xs py-1.5 w-auto"
+          className="input text-xs py-1.5 w-full md:w-auto"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>

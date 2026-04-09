@@ -65,6 +65,7 @@ export default function HomePageContent({
             alt=""
             width={56}
             height={56}
+            className={i >= 5 ? "hidden md:block" : undefined}
             style={{
               position: "absolute",
               left: `${b.x}%`,
@@ -111,7 +112,7 @@ export default function HomePageContent({
               <h1 className="font-black leading-[0.88] tracking-tighter lowercase">
                 <span
                   className="block text-white"
-                  style={{ fontSize: "clamp(3.5rem, 8.5vw, 7rem)" }}
+                  style={{ fontSize: "clamp(2.5rem, 8.5vw, 7rem)" }}
                 >
                   {dict.hero_title}
                 </span>
@@ -120,7 +121,7 @@ export default function HomePageContent({
                     key={line}
                     className="block mt-2"
                     style={{
-                      fontSize: "clamp(2.75rem, 6.5vw, 5.25rem)",
+                      fontSize: "clamp(2rem, 6.5vw, 5.25rem)",
                       color: "#ff2d78",
                       textShadow: "0 0 40px rgba(255,45,120,0.35)",
                     }}
@@ -161,9 +162,9 @@ export default function HomePageContent({
             <span className="hidden lg:inline float-tag animate-float-slow"   style={{ position:"absolute", top:"76%", left:"52%", animationDelay:"0.8s" }}>Original figures</span>
             <span className="hidden lg:inline float-tag animate-float-slow-2" style={{ position:"absolute", top:"91%", left:"50%", animationDelay:"1.3s" }}>Wonder Festival</span>
 
-            {/* Right: figure grid only */}
-            <div className="hidden lg:block">
-              <div className="grid grid-cols-2 gap-3 max-w-[360px] ml-auto">
+            {/* Right: figure grid — single-column stack on mobile, 2-col staggered on desktop */}
+            <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[280px] sm:max-w-[360px] mx-auto lg:ml-auto lg:mr-0">
                 {[0, 1, 2, 3].map((i) => (
                   <div
                     key={i}
@@ -176,7 +177,7 @@ export default function HomePageContent({
                       fill
                       unoptimized
                       className="object-cover object-top"
-                      sizes="180px"
+                      sizes="(max-width: 640px) 80vw, 180px"
                     />
                   </div>
                 ))}

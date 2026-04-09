@@ -22,6 +22,7 @@ export default function BatsOverlay() {
           alt=""
           width={56}
           height={56}
+          className={i >= 5 ? "hidden md:block" : undefined}
           style={{
             position: "absolute",
             left: `${b.x}%`,

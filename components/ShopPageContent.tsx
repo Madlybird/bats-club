@@ -135,7 +135,7 @@ export default function ShopPageContent({ listings, condition, sort, series, top
 
           {listings.length > 0 ? (
             <ScrollReveal>
-              <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 items-stretch">
+              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-stretch">
                 {listings.map((listing) => (
                   <ListingCard key={listing.id} listing={listing} labels={listingLabels} basePath={shopBasePath} />
                 ))}
