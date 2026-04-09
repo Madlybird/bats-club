@@ -196,13 +196,13 @@ export default function ArchiveClient({
               key={figure.id}
               figure={figure}
               labels={{
-                figurePath: labels.figurePath,
-                forSale: labels.forSale,
-                wishlisting: labels.wishlisting,
-                noImage: labels.noImage,
-                statusHave: labels.statusHave,
-                statusWishlist: labels.statusWishlist,
-                statusBuy: labels.statusBuy,
+                figurePath: labels.figurePath ?? '',
+forSale: labels.forSale ?? '',
+wishlisting: labels.wishlisting ?? '',
+noImage: labels.noImage ?? '',
+statusHave: labels.statusHave ?? '',
+statusWishlist: labels.statusWishlist ?? '',
+statusBuy: labels.statusBuy ?? '',
               }}
             />
           ))}
