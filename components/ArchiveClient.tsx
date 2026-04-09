@@ -27,13 +27,13 @@ interface Labels {
   emptyTitle: string
   emptySub: string
   clearAllBtn: string
-  figurePath: string
-  forSale: string
-  wishlisting: string
-  noImage: string
-  statusHave: string
-  statusWishlist: string
-  statusBuy: string
+  figurePath?: string
+  forSale?: string
+  wishlisting?: string
+  noImage?: string
+  statusHave?: string
+  statusWishlist?: string
+  statusBuy?: string
 }
 
 interface ArchiveClientProps {
