@@ -320,7 +320,7 @@ export default function HomePageContent({
               labels={{
                 collectionsHeading: dict.archive_collections,
                 searchPh: dict.archive_search_ph,
-                seriesLabel: dict.archive_series_label,
+                characterLabel: dict.archive_series_label,
                 mfgLabel: dict.archive_mfg_label,
                 resultsWord: dict.archive_results,
                 clearFilters: dict.archive_clear,
