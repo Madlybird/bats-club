@@ -39,7 +39,6 @@ interface FigureData {
 interface Props {
   dict: Dict
   figures: FigureData[]
-  allSeries: string[]
   allManufacturers: string[]
   hasSession: boolean
   yearsCollecting: number
@@ -48,7 +47,6 @@ interface Props {
 export default function HomePageContent({
   dict,
   figures,
-  allSeries,
   allManufacturers,
   hasSession,
   yearsCollecting,
@@ -314,9 +312,7 @@ export default function HomePageContent({
 
             <ArchiveClient
               figures={figures}
-              series={allSeries}
               manufacturers={allManufacturers}
-              seriesCounts={[]}
               labels={{
                 collectionsHeading: dict.archive_collections,
                 searchPh: dict.archive_search_ph,

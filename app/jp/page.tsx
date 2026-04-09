@@ -30,7 +30,6 @@ export default async function HomePageJp() {
     _count: { listings: (f.listings || []).filter((l: any) => l.active).length },
   }))
 
-  const allSeries = Array.from(new Set((figures || []).map((f) => f.series))).sort()
   const allManufacturers = Array.from(new Set((figures || []).map((f) => f.manufacturer))).sort()
   const minYear = figures && figures.length > 0 ? Math.min(...figures.map((f) => f.year)) : new Date().getFullYear()
 
@@ -39,7 +38,6 @@ export default async function HomePageJp() {
       <HomePageContent
         dict={jp}
         figures={figuresWithData}
-        allSeries={allSeries}
         allManufacturers={allManufacturers}
         hasSession={!!session}
         yearsCollecting={new Date().getFullYear() - minYear}
