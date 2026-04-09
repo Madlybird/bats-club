@@ -1,0 +1,40 @@
+{
+  "name": "bats-club",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0",
+    "@stripe/stripe-js": "^3.4.0",
+    "@supabase/supabase-js": "^2.102.1",
+    "@types/nodemailer": "^8.0.0",
+    "bcryptjs": "^2.4.3",
+    "csv-parse": "^5.5.6",
+    "next": "14.2.5",
+    "next-auth": "^4.24.7",
+    "nodemailer": "^7.0.13",
+    "react": "^18",
+    "react-dom": "^18",
+    "sharp": "^0.33.4",
+    "stripe": "^15.7.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "prisma": "^5.14.0",
+    "tailwindcss": "^3.4.4",
+    "tsx": "^4.15.0",
+    "typescript": "^5"
+  }
+}

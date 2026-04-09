@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  username  String   @unique
+  password  String
+  avatar    String?
+  bio       String?
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userFigures UserFigure[]
+  listings    Listing[]
+  orders      Order[]
+  articles    Article[]
+}
+
+model Figure {
+  id           String   @id @default(cuid())
+  name         String
+  series       String
+  character    String
+  manufacturer String
+  scale        String
+  year         Int
+  sculptor     String?
+  material     String?
+  imageUrl     String?
+  description  String?
+  createdAt    DateTime @default(now())
+
+  userFigures    UserFigure[]
+  listings       Listing[]
+  articleFigures ArticleFigure[]
+}
+
+model UserFigure {
+  id       String @id @default(cuid())
+  userId   String
+  figureId String
+  status   String // HAVE | WISHLIST | BUY
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  figure Figure @relation(fields: [figureId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, figureId])
+}
+
+model Listing {
+  id          String   @id @default(cuid())
+  figureId    String
+  sellerId    String
+  price       Int
+  condition   String
+  stock       Int      @default(1)
+  photos      String   @default("[]")
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  figure Figure  @relation(fields: [figureId], references: [id])
+  seller User    @relation(fields: [sellerId], references: [id])
+  orders Order[]
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  buyerId         String
+  listingId       String
+  status          String   @default("PENDING")
+  trackingNumber  String?
+  shippingAddress String
+  stripeSessionId String?  @unique
+  quantity        Int      @default(1)
+  unitPrice       Int
+  shippingPrice   Int      @default(1500)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buyer   User    @relation(fields: [buyerId], references: [id])
+  listing Listing @relation(fields: [listingId], references: [id])
+}
+
+model Article {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  body       String
+  excerpt    String?
+  coverImage String?
+  authorId   String
+  published  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  author         User            @relation(fields: [authorId], references: [id])
+  articleFigures ArticleFigure[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ArticleFigure {
+  articleId String
+  figureId  String
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  figure  Figure  @relation(fields: [figureId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, figureId])
+}

@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# env files — keep .env.example, never commit real secrets
+.env
+.env.local
+.env*.local
+
+# typescript
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# misc
+.DS_Store
+*.pem
