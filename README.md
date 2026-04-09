@@ -64,10 +64,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Seed Accounts
 
-| Role      | Email                   | Password  | Username      |
-|-----------|-------------------------|-----------|---------------|
-| Admin     | admin@bats.club         | admin123  | batslord      |
-| Collector | collector@bats.club     | pass123   | figurefiend   |
+Seed credentials are defined in `prisma/seed.ts` — do not commit real passwords here.
 
 ---
 
