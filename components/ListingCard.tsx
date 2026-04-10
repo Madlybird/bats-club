@@ -4,7 +4,6 @@ import AddToCartButton from "@/components/AddToCartButton"
 
 interface ListingCardLabels {
   addToCart?: string
-  conditions?: Record<string, string>
 }
 
 interface ListingCardProps {
@@ -30,17 +29,8 @@ interface ListingCardProps {
   priority?: boolean
 }
 
-const conditionColors: Record<string, string> = {
-  Mint: "badge-green",
-  "Near Mint": "badge-blue",
-  Good: "badge-violet",
-  Fair: "badge-yellow",
-  Poor: "badge-red",
-}
-
 export default function ListingCard({ listing, labels, basePath = "/shop", priority = false }: ListingCardProps) {
   const addToCartLabel = labels?.addToCart ?? "Add to Cart"
-  const conditionDisplay = labels?.conditions?.[listing.condition] ?? listing.condition
   const listingHref = `${basePath}/${listing.id}`
 
   const photos = (() => {
@@ -68,12 +58,6 @@ export default function ListingCard({ listing, labels, basePath = "/shop", prior
             <span className="text-3xl opacity-20">🦇</span>
           </div>
         )}
-        {/* Condition badge */}
-        <div className="absolute top-2 left-2">
-          <span className={`badge ${conditionColors[listing.condition] || "badge-violet"} text-[10px] backdrop-blur-sm`}>
-            {conditionDisplay}
-          </span>
-        </div>
         {/* Price badge */}
         <div className="absolute bottom-2 right-2">
           <span className="badge bg-[#080810]/80 text-violet-300 border border-violet-700/40 backdrop-blur-sm text-[11px] font-bold">

@@ -81,8 +81,7 @@ export default function FigureCard({ figure, labels, priority = false }: FigureC
           <p className="text-xs text-slate-500 mt-0.5">{figure.series}</p>
         </Link>
 
-        <div className="flex items-center justify-between text-xs text-slate-500">
-          <span>{figure.manufacturer}</span>
+        <div className="flex items-center justify-end text-xs text-slate-500">
           <span>{figure.year}</span>
         </div>
 

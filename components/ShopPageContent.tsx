@@ -83,13 +83,6 @@ function SeriesBar({ topSeries, currentSeries, dict }: { topSeries: TopSeries[];
 export default function ShopPageContent({ listings, condition, sort, series, topSeries, dict, shopBasePath = "/shop" }: Props) {
   const listingLabels = {
     addToCart: dict.shop_add_to_cart,
-    conditions: {
-      Mint: dict.shop_condition_mint,
-      "Near Mint": dict.shop_condition_near_mint,
-      Good: dict.shop_condition_good,
-      Fair: dict.shop_condition_fair,
-      Poor: dict.shop_condition_poor,
-    },
   }
 
   return (
