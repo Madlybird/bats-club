@@ -11,7 +11,6 @@ interface Listing {
   id: string
   price: number
   condition: string
-  stock: number
   description?: string | null
   photos: string
   figure: {
@@ -22,7 +21,6 @@ interface Listing {
     imageUrl?: string | null
     scale: string
   }
-  seller: { username: string; name: string }
 }
 
 interface TopSeries {
@@ -84,7 +82,6 @@ function SeriesBar({ topSeries, currentSeries, dict }: { topSeries: TopSeries[];
 
 export default function ShopPageContent({ listings, condition, sort, series, topSeries, dict, shopBasePath = "/shop" }: Props) {
   const listingLabels = {
-    stock: dict.shop_stock,
     addToCart: dict.shop_add_to_cart,
     conditions: {
       Mint: dict.shop_condition_mint,

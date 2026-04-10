@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -63,7 +64,8 @@ export async function POST(req: Request) {
       .insert({
         figure_id: figureId,
         seller_id: session.user.id,
-        price: Math.round(parseFloat(price) * 100),
+        // Client sends price already in cents (integer). Don't multiply again.
+        price: Math.round(Number(price)),
         condition,
         stock: parseInt(stock) || 1,
         description: description || null,
@@ -78,6 +80,19 @@ export async function POST(req: Request) {
       .single()
 
     if (error) throw error
+
+    try {
+      revalidatePath("/shop")
+      revalidatePath("/ru/shop")
+      revalidatePath("/jp/shop")
+      if (figureId) {
+        revalidatePath(`/figures/${figureId}`)
+        revalidatePath(`/ru/figures/${figureId}`)
+        revalidatePath(`/jp/figures/${figureId}`)
+      }
+    } catch (e) {
+      console.error("revalidatePath error:", e)
+    }
 
     return NextResponse.json(listing, { status: 201 })
   } catch (error) {

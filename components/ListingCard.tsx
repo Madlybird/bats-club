@@ -3,7 +3,6 @@ import Image from "next/image"
 import AddToCartButton from "@/components/AddToCartButton"
 
 interface ListingCardLabels {
-  stock?: string
   addToCart?: string
   conditions?: Record<string, string>
 }
@@ -13,7 +12,6 @@ interface ListingCardProps {
     id: string
     price: number
     condition: string
-    stock: number
     description?: string | null
     photos: string
     figure: {
@@ -23,10 +21,6 @@ interface ListingCardProps {
       character: string
       imageUrl?: string | null
       scale: string
-    }
-    seller: {
-      username: string
-      name: string
     }
   }
   labels?: ListingCardLabels
@@ -42,7 +36,6 @@ const conditionColors: Record<string, string> = {
 }
 
 export default function ListingCard({ listing, labels, basePath = "/shop" }: ListingCardProps) {
-  const stockLabel = labels?.stock ?? "Stock"
   const addToCartLabel = labels?.addToCart ?? "Add to Cart"
   const conditionDisplay = labels?.conditions?.[listing.condition] ?? listing.condition
   const listingHref = `${basePath}/${listing.id}`
@@ -94,10 +87,6 @@ export default function ListingCard({ listing, labels, basePath = "/shop" }: Lis
             </h3>
             <p className="text-xs text-white/30 mt-0.5 truncate">{listing.figure.series}</p>
           </Link>
-        </div>
-
-        <div className="h-6 flex items-center mt-2">
-          <span className="text-xs text-white/25">{stockLabel}: {listing.stock}</span>
         </div>
 
         <div className="mt-2">

@@ -7,6 +7,9 @@ import { ru } from "@/lib/dict"
 import { getRates, convertPrice } from "@/lib/currency"
 import { Metadata } from "next"
 
+export const dynamicParams = true
+export const dynamic = "force-dynamic"
+
 interface Props { params: { id: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -43,7 +44,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   const { price, condition, stock, description, photos, active } = body
 
   const updateData: Record<string, any> = {}
-  if (price !== undefined) updateData.price = Math.round(parseFloat(price) * 100)
+  // Client sends price already in cents (integer). Don't multiply again.
+  if (price !== undefined) updateData.price = Math.round(Number(price))
   if (condition !== undefined) updateData.condition = condition
   if (stock !== undefined) updateData.stock = parseInt(stock)
   if (description !== undefined) updateData.description = description
@@ -64,6 +66,24 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   if (error) {
     console.error("Update listing error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+
+  // Invalidate caches so the change is visible immediately on the site.
+  const figureId = (listing as any)?.figureId
+  try {
+    revalidatePath("/shop")
+    revalidatePath("/ru/shop")
+    revalidatePath("/jp/shop")
+    revalidatePath(`/shop/${params.id}`)
+    revalidatePath(`/ru/shop/${params.id}`)
+    revalidatePath(`/jp/shop/${params.id}`)
+    if (figureId) {
+      revalidatePath(`/figures/${figureId}`)
+      revalidatePath(`/ru/figures/${figureId}`)
+      revalidatePath(`/jp/figures/${figureId}`)
+    }
+  } catch (e) {
+    console.error("revalidatePath error:", e)
   }
 
   return NextResponse.json(listing)

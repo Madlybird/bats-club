@@ -6,6 +6,9 @@ import FigureDetailContent from "@/components/FigureDetailContent"
 import { en } from "@/lib/dict"
 import { Metadata } from "next"
 
+export const dynamicParams = true
+export const dynamic = "force-dynamic"
+
 interface Props { params: { id: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

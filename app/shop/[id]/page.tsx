@@ -45,9 +45,8 @@ export default async function ListingDetailPage({ params }: Props) {
   const { data: listing } = await supabaseAdmin
     .from("listings")
     .select(`
-      id, price, condition, stock, photos, description, active,
-      figure:figures(id, name, series, character, scale, imageUrl:image_url, images),
-      seller:users(id, name, username)
+      id, price, condition, photos, description, active,
+      figure:figures(id, name, series, character, scale, imageUrl:image_url, images)
     `)
     .eq("id", params.id)
     .single()
@@ -55,7 +54,6 @@ export default async function ListingDetailPage({ params }: Props) {
   if (!listing || !listing.active) notFound()
 
   const figure = listing.figure as any
-  const seller = listing.seller as any
   const photos = parseImages(listing.photos)
   const figureImages = parseImages(figure?.images)
   const displayImages: string[] = photos.length > 0
@@ -108,12 +106,6 @@ export default async function ListingDetailPage({ params }: Props) {
                   <span className="text-4xl font-black" style={{ color: "#ff2d78" }}>${(listing.price / 100).toFixed(2)}</span>
                   <p className="text-xs text-white/25 mt-1">{dict.shop_shipping_note}</p>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className={`w-2 h-2 rounded-full ${listing.stock > 0 ? "bg-emerald-400" : "bg-red-500"}`} />
-                  <span className={listing.stock > 0 ? "text-emerald-400" : "text-red-400"}>
-                    {listing.stock > 0 ? `${listing.stock} ${dict.shop_in_stock}` : dict.shop_out_of_stock}
-                  </span>
-                </div>
                 {listing.description && (
                   <div>
                     <h3 className="text-sm font-medium text-white/40 uppercase tracking-wider mb-2">{dict.shop_description}</h3>
@@ -121,45 +113,27 @@ export default async function ListingDetailPage({ params }: Props) {
                   </div>
                 )}
                 <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <p className="text-xs text-white/25 uppercase tracking-wider mb-3">{dict.shop_sold_by}</p>
-                  <Link href={`/profile/${seller?.username}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: "linear-gradient(135deg,#7c3aed,#ff2d78)" }}>
-                      {seller?.name?.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-medium text-white/80">{seller?.name}</p>
-                      <p className="text-xs text-white/30">@{seller?.username}</p>
-                    </div>
-                  </Link>
-                </div>
-                <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
                   <p className="text-xs text-white/25 uppercase tracking-wider mb-2">{dict.shop_figure_info}</p>
                   <Link href={`/figures/${figure?.id}`} className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: "#ff2d78" }}>
                     {dict.shop_view_figure}
                   </Link>
                 </div>
-                {listing.stock > 0 ? (
-                  <div className="space-y-2">
-                    <AddToCartButton
-                      item={{
-                        listingId: listing.id,
-                        figureName: figure?.name,
-                        figureImageUrl: figure?.imageUrl ?? null,
-                        figureSeries: figure?.series,
-                        price: listing.price,
-                        condition: listing.condition,
-                      }}
-                      label={dict.shop_add_to_cart}
-                      className="w-full py-3 text-base font-bold rounded-lg text-white transition-opacity"
-                      style={{ backgroundColor: "#ff2d78" }}
-                    />
-                    <Link href="/cart" className="block text-center text-sm text-white/40 hover:text-white transition-colors">{dict.shop_view_cart}</Link>
-                  </div>
-                ) : (
-                  <button disabled className="w-full py-3 font-bold rounded-lg text-white opacity-40 cursor-not-allowed" style={{ backgroundColor: "#ff2d78" }}>
-                    {dict.shop_out_of_stock_btn}
-                  </button>
-                )}
+                <div className="space-y-2">
+                  <AddToCartButton
+                    item={{
+                      listingId: listing.id,
+                      figureName: figure?.name,
+                      figureImageUrl: figure?.imageUrl ?? null,
+                      figureSeries: figure?.series,
+                      price: listing.price,
+                      condition: listing.condition,
+                    }}
+                    label={dict.shop_add_to_cart}
+                    className="w-full py-3 text-base font-bold rounded-lg text-white transition-opacity"
+                    style={{ backgroundColor: "#ff2d78" }}
+                  />
+                  <Link href="/cart" className="block text-center text-sm text-white/40 hover:text-white transition-colors">{dict.shop_view_cart}</Link>
+                </div>
               </div>
             </div>
           </ScrollReveal>
