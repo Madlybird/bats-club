@@ -46,7 +46,7 @@ interface Props {
 }
 
 export default function CartPageContent({ dict, shopHref }: Props) {
-  const { items, removeItem, setQuantity, clearCart } = useCart()
+  const { items, removeItem, setQuantity } = useCart()
 
   const [countryCode, setCountryCode] = useState("")
   const [countrySearch, setCountrySearch] = useState("")
@@ -60,6 +60,12 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const [showAddress, setShowAddress] = useState(false)
   const [address, setAddress] = useState<AddressForm>(emptyAddress)
   const [loading, setLoading] = useState(false)
+  // Once Stripe gives us a redirect URL we set this to keep the
+  // loading UI mounted until the browser actually navigates away.
+  // Without it the empty-cart guard would briefly render between
+  // clearCart() and the actual navigation. We also stopped clearing
+  // the cart here entirely — the /order/success page does it.
+  const [redirecting, setRedirecting] = useState(false)
   const [error, setError] = useState("")
 
   const filteredCountries = COUNTRIES.filter((c) =>
@@ -132,17 +138,24 @@ export default function CartPageContent({ dict, shopHref }: Props) {
         return
       }
       if (data.url) {
-        clearCart()
+        // Don't clear the cart here — clearCart() flips items.length
+        // to 0 and re-renders the empty-cart screen before the
+        // browser navigates, causing a 1-2s "cart is empty" flash.
+        // The /order/success page clears the cart on mount instead.
+        setRedirecting(true)
         window.location.href = data.url
+        return
       }
     } catch {
       setError("Something went wrong. Please try again.")
     } finally {
-      setLoading(false)
+      // Don't drop the loading state if we're already redirecting —
+      // the spinner needs to stay until the browser leaves the page.
+      if (!redirecting) setLoading(false)
     }
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !redirecting) {
     return (
       <div className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
         <BatsOverlay />
@@ -451,11 +464,11 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   <div className="flex gap-2">
                     <button
                       onClick={handlePay}
-                      disabled={loading}
+                      disabled={loading || redirecting}
                       className="flex-1 py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ backgroundColor: "#ff2d78" }}
                     >
-                      {loading ? (
+                      {loading || redirecting ? (
                         <span className="flex items-center justify-center gap-2">
                           <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
