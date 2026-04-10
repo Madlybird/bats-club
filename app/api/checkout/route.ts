@@ -31,6 +31,11 @@ interface CartItem {
  * (Stripe rejects both options at once.)
  */
 export async function POST(req: Request) {
+  console.log("ENV CHECK:", {
+    hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
+    keyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10),
+  })
+
   // ── Diagnostics ────────────────────────────────────────────────
   // Log a sanitized fingerprint of the secret key on every request
   // so Vercel logs make it obvious whether we're hitting Stripe in
