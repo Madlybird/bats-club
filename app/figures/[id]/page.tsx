@@ -88,6 +88,12 @@ export default async function FigureDetailPage({ params }: Props) {
   const wishlistCount = userFigures.filter((uf: any) => uf.status === "WISHLIST").length
   const haveCount = userFigures.filter((uf: any) => uf.status === "HAVE").length
   const lowestPrice = listings.length > 0 ? Math.min(...listings.map((l: any) => l.price)) : null
+  const cheapestListing = listings.length > 0
+    ? (() => {
+        const c = listings.reduce((a: any, b: any) => (a.price <= b.price ? a : b))
+        return { id: c.id, price: c.price, condition: c.condition }
+      })()
+    : null
 
   const publishedArticles = articleFigures
     .map((af: any) => af.article)
@@ -154,6 +160,7 @@ export default async function FigureDetailPage({ params }: Props) {
       haveCount={haveCount}
       lowestPrice={lowestPrice}
       convertedLowestPrice={null}
+      cheapestListing={cheapestListing}
       jsonLd={jsonLd}
       dict={en}
       archiveHref="/archive"

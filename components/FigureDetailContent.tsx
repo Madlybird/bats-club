@@ -52,6 +52,9 @@ interface Props {
   haveCount: number
   lowestPrice: number | null
   convertedLowestPrice?: string | null
+  /** Cheapest active listing for this figure, if any. Powers the
+   *  "Want to Buy" → cart side effect on StatusButton. */
+  cheapestListing?: { id: string; price: number; condition: string } | null
   jsonLd: object
   dict: Dict
   archiveHref: string
@@ -66,6 +69,7 @@ export default function FigureDetailContent({
   haveCount,
   lowestPrice,
   convertedLowestPrice,
+  cheapestListing = null,
   jsonLd,
   dict,
   archiveHref,
@@ -190,6 +194,14 @@ export default function FigureDetailContent({
                       figureId={figure.id}
                       initialStatus={userStatus}
                       labels={{ have: dict.fig_status_have, wishlist: dict.fig_status_wishlist, buy: dict.fig_status_buy }}
+                      buyAddsToCart={{
+                        listing: cheapestListing,
+                        figureName: figure.name,
+                        figureSeries: figure.series,
+                        figureImageUrl: figure.imageUrl ?? null,
+                        toastAdded: dict.fig_added_wishlist,
+                        toastAddedWithCart: dict.fig_added_wishlist_cart,
+                      }}
                     />
                   </div>
 

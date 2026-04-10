@@ -1,5 +1,6 @@
 import ScrollReveal from "@/components/ScrollReveal"
 import ArchiveClient from "@/components/ArchiveClient"
+import BuyToCartButton from "@/components/BuyToCartButton"
 import Link from "next/link"
 import Image from "next/image"
 import type { Dict } from "@/lib/dict"
@@ -34,6 +35,7 @@ interface FigureData {
   wishlistCount: number
   userStatus?: string | null
   _count: { listings: number }
+  cheapestListing?: { id: string; price: number; condition: string } | null
 }
 
 interface Props {
@@ -216,18 +218,27 @@ export default function HomePageContent({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                 {recentFigures.map((fig, i) => (
                   <ScrollReveal key={fig.id} delay={i * 70}>
-                    <Link href={`/figures/${fig.id}`} className="group block">
+                    <div className="group block">
+                      {/* Image area: a fully-clickable Link sits behind the
+                          BuyToCartButton, which is a sibling (NOT a child)
+                          so we don't nest <button> inside <a>. */}
                       <div className="figure-grid-item aspect-square mb-4">
-                        <Image
-                          src={fig.imageUrl || LOCAL_FIGURES[i % LOCAL_FIGURES.length]}
-                          alt={fig.name}
-                          fill
-                          unoptimized={!fig.imageUrl}
-                          className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                        />
+                        <Link
+                          href={`/figures/${fig.id}`}
+                          className="absolute inset-0 z-0"
+                          aria-label={fig.name}
+                        >
+                          <Image
+                            src={fig.imageUrl || LOCAL_FIGURES[i % LOCAL_FIGURES.length]}
+                            alt={fig.name}
+                            fill
+                            unoptimized={!fig.imageUrl}
+                            className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                          />
+                        </Link>
                         {fig._count.listings > 0 && (
-                          <div className="absolute top-2.5 left-2.5 z-10">
+                          <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
                             <span
                               className="text-[10px] px-2.5 py-1 rounded-full font-bold text-white"
                               style={{ background: "#ff2d78" }}
@@ -236,14 +247,28 @@ export default function HomePageContent({
                             </span>
                           </div>
                         )}
+                        <div className="absolute bottom-2.5 right-2.5 z-20">
+                          <BuyToCartButton
+                            figureId={fig.id}
+                            figureName={fig.name}
+                            figureSeries={fig.series}
+                            figureImageUrl={fig.imageUrl ?? null}
+                            cheapestListing={fig.cheapestListing ?? null}
+                            label={dict.fig_status_buy}
+                            toastAdded={dict.fig_added_wishlist}
+                            toastAddedWithCart={dict.fig_added_wishlist_cart}
+                          />
+                        </div>
                       </div>
-                      <p className="text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">
-                        {fig.name}
-                      </p>
-                      <p className="text-xs text-white/25 mt-1">
-                        {fig.series} · {fig.year}
-                      </p>
-                    </Link>
+                      <Link href={`/figures/${fig.id}`} className="block">
+                        <p className="text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">
+                          {fig.name}
+                        </p>
+                        <p className="text-xs text-white/25 mt-1">
+                          {fig.series} · {fig.year}
+                        </p>
+                      </Link>
+                    </div>
                   </ScrollReveal>
                 ))}
               </div>
