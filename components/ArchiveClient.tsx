@@ -3,6 +3,12 @@
 import { useState, useMemo, useRef } from "react"
 import FigureCard from "./FigureCard"
 
+interface CheapestListing {
+  id: string
+  price: number
+  condition: string
+}
+
 interface FigureData {
   id: string
   name: string
@@ -15,6 +21,7 @@ interface FigureData {
   wishlistCount: number
   userStatus?: string | null
   _count: { listings: number }
+  cheapestListing?: CheapestListing | null
 }
 
 interface Labels {
@@ -34,6 +41,8 @@ interface Labels {
   statusHave?: string
   statusWishlist?: string
   statusBuy?: string
+  toastAddedWishlist?: string
+  toastAddedWishlistCart?: string
 }
 
 interface ArchiveClientProps {
@@ -201,12 +210,14 @@ export default function ArchiveClient({
               priority={index < 4}
               labels={{
                 figurePath: labels.figurePath ?? '',
-forSale: labels.forSale ?? '',
-wishlisting: labels.wishlisting ?? '',
-noImage: labels.noImage ?? '',
-statusHave: labels.statusHave ?? '',
-statusWishlist: labels.statusWishlist ?? '',
-statusBuy: labels.statusBuy ?? '',
+                forSale: labels.forSale ?? '',
+                wishlisting: labels.wishlisting ?? '',
+                noImage: labels.noImage ?? '',
+                statusHave: labels.statusHave ?? '',
+                statusWishlist: labels.statusWishlist ?? '',
+                statusBuy: labels.statusBuy ?? '',
+                toastAddedWishlist: labels.toastAddedWishlist ?? '',
+                toastAddedWishlistCart: labels.toastAddedWishlistCart ?? '',
               }}
             />
           ))}

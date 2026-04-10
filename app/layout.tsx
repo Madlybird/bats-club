@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import Navbar from "@/components/Navbar"
 import Providers from "@/components/Providers"
+import Toaster from "@/components/Toaster"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -24,6 +25,7 @@ export default function RootLayout({
       >
         <Providers>
           <Navbar />
+          <Toaster />
           <main>{children}</main>
           <footer className="border-t border-black/10 py-14">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useCart } from "@/lib/cart-context"
 
 interface StatusLabels {
   have: string
@@ -10,10 +11,25 @@ interface StatusLabels {
   buy: string
 }
 
+interface BuyAddsToCart {
+  /** Cheapest active listing for this figure, or null if none. */
+  listing: { id: string; price: number; condition: string } | null
+  figureName: string
+  figureSeries: string
+  figureImageUrl: string | null
+  /** Toast shown when no listing exists (BUY only marks wishlist). */
+  toastAdded: string
+  /** Toast shown when a listing exists and was added to the cart too. */
+  toastAddedWithCart: string
+}
+
 interface StatusButtonProps {
   figureId: string
   initialStatus?: string | null
   labels?: StatusLabels
+  /** When provided, clicking BUY also adds the cheapest listing (if any)
+   *  to the cart and shows a localized toast. Used by archive cards. */
+  buyAddsToCart?: BuyAddsToCart
 }
 
 const DEFAULT_LABELS: StatusLabels = {
@@ -22,9 +38,15 @@ const DEFAULT_LABELS: StatusLabels = {
   buy: "Want to Buy",
 }
 
-export default function StatusButton({ figureId, initialStatus, labels = DEFAULT_LABELS }: StatusButtonProps) {
+function showToast(message: string) {
+  if (typeof window === "undefined" || !message) return
+  window.dispatchEvent(new CustomEvent("bats:toast", { detail: message }))
+}
+
+export default function StatusButton({ figureId, initialStatus, labels = DEFAULT_LABELS, buyAddsToCart }: StatusButtonProps) {
   const { data: session, status: sessionStatus } = useSession()
   const router = useRouter()
+  const { addItem, items: cartItems } = useCart()
   const [currentStatus, setCurrentStatus] = useState<string | null>(initialStatus || null)
   const [loading, setLoading] = useState(false)
 
@@ -76,7 +98,32 @@ export default function StatusButton({ figureId, initialStatus, labels = DEFAULT
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ figureId, status }),
         })
-        if (res.ok) setCurrentStatus(status)
+        if (res.ok) {
+          setCurrentStatus(status)
+
+          // BUY-click side effect: if the figure has an active listing,
+          // also drop it in the cart so the user can check out in one
+          // step. Falls back to a plain wishlist toast otherwise.
+          if (status === "BUY" && buyAddsToCart) {
+            const listing = buyAddsToCart.listing
+            if (listing) {
+              const alreadyInCart = cartItems.some((i) => i.listingId === listing.id)
+              if (!alreadyInCart) {
+                addItem({
+                  listingId: listing.id,
+                  figureName: buyAddsToCart.figureName,
+                  figureImageUrl: buyAddsToCart.figureImageUrl,
+                  figureSeries: buyAddsToCart.figureSeries,
+                  price: listing.price,
+                  condition: listing.condition,
+                })
+              }
+              showToast(buyAddsToCart.toastAddedWithCart)
+            } else {
+              showToast(buyAddsToCart.toastAdded)
+            }
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to update status:", error)

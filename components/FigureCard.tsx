@@ -12,6 +12,8 @@ interface FigureCardLabels {
   statusHave: string
   statusWishlist: string
   statusBuy: string
+  toastAddedWishlist?: string
+  toastAddedWishlistCart?: string
 }
 
 interface FigureCardProps {
@@ -29,6 +31,7 @@ interface FigureCardProps {
     _count?: {
       listings: number
     }
+    cheapestListing?: { id: string; price: number; condition: string } | null
   }
   labels: FigureCardLabels
   /** Pass true for above-the-fold cards (e.g. first 4) so the browser
@@ -95,6 +98,25 @@ export default function FigureCard({ figure, labels, priority = false }: FigureC
             figureId={figure.id}
             initialStatus={figure.userStatus}
             labels={{ have: labels.statusHave, wishlist: labels.statusWishlist, buy: labels.statusBuy }}
+            buyAddsToCart={
+              figure.cheapestListing
+                ? {
+                    listing: figure.cheapestListing,
+                    figureName: figure.name,
+                    figureSeries: figure.series,
+                    figureImageUrl: figure.imageUrl ?? null,
+                    toastAdded: labels.toastAddedWishlist ?? "Added to wishlist",
+                    toastAddedWithCart: labels.toastAddedWishlistCart ?? "Added to wishlist and cart!",
+                  }
+                : {
+                    listing: null,
+                    figureName: figure.name,
+                    figureSeries: figure.series,
+                    figureImageUrl: figure.imageUrl ?? null,
+                    toastAdded: labels.toastAddedWishlist ?? "Added to wishlist",
+                    toastAddedWithCart: labels.toastAddedWishlistCart ?? "Added to wishlist and cart!",
+                  }
+            }
           />
         </div>
       </div>

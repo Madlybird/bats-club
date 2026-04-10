@@ -105,6 +105,8 @@ export interface Dict {
   fig_status_have: string
   fig_status_wishlist: string
   fig_status_buy: string
+  fig_added_wishlist: string
+  fig_added_wishlist_cart: string
   fig_prize: string
   fig_unknown: string
   currency_approx: string
@@ -331,6 +333,8 @@ export const en: Dict = {
   fig_status_have: "Have It",
   fig_status_wishlist: "Wishlist",
   fig_status_buy: "Want to Buy",
+  fig_added_wishlist: "Added to wishlist",
+  fig_added_wishlist_cart: "Added to wishlist and cart!",
   fig_prize: "Prize figure",
   fig_unknown: "Unknown",
   currency_approx: "approx.",
@@ -550,6 +554,8 @@ export const ru: Dict = {
   fig_status_have: "Есть у меня",
   fig_status_wishlist: "Вишлист",
   fig_status_buy: "Хочу купить",
+  fig_added_wishlist: "Добавлено в вишлист",
+  fig_added_wishlist_cart: "Добавлено в вишлист и корзину!",
   fig_prize: "Призовая фигурка",
   fig_unknown: "Неизвестно",
   currency_approx: "прибл.",
@@ -769,6 +775,8 @@ export const jp: Dict = {
   fig_status_have: "持っている",
   fig_status_wishlist: "ほしい",
   fig_status_buy: "買いたい",
+  fig_added_wishlist: "ウィッシュリストに追加しました",
+  fig_added_wishlist_cart: "ウィッシュリストとカートに追加しました！",
   fig_prize: "プライズフィギュア",
   fig_unknown: "不明",
   currency_approx: "約",
