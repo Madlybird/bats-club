@@ -123,7 +123,12 @@ export default function CartPageContent({ dict, shopHref }: Props) {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "Checkout failed")
+        // Surface the verbose diagnostic the API returns so we can
+        // see the real Stripe error in the cart UI + browser console.
+        console.error("[checkout] api error:", data)
+        const detail = data.message || data.error || "Checkout failed"
+        const stripeBit = data.stripe?.code ? ` (stripe: ${data.stripe.code})` : ""
+        setError(`${detail}${stripeBit}`)
         return
       }
       if (data.url) {

@@ -31,10 +31,38 @@ interface CartItem {
  * (Stripe rejects both options at once.)
  */
 export async function POST(req: Request) {
+  // ── Diagnostics ────────────────────────────────────────────────
+  // Log a sanitized fingerprint of the secret key on every request
+  // so Vercel logs make it obvious whether we're hitting Stripe in
+  // live mode, test mode, or with a missing/empty key. We never log
+  // the full key.
+  const secret = process.env.STRIPE_SECRET_KEY
+  const keyMode = !secret
+    ? "MISSING"
+    : secret.startsWith("sk_live_")
+      ? "live"
+      : secret.startsWith("sk_test_")
+        ? "test"
+        : "unknown"
+  const keyFingerprint = secret ? `${secret.slice(0, 8)}…${secret.slice(-4)}` : "(none)"
+  console.log(`[checkout] STRIPE_SECRET_KEY mode=${keyMode} fingerprint=${keyFingerprint}`)
+
+  if (!secret) {
+    return NextResponse.json(
+      { error: "STRIPE_SECRET_KEY is not configured on the server" },
+      { status: 500 }
+    )
+  }
+
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  // `stage` tracks how far we got, so the catch block can report
+  // exactly which step failed instead of swallowing it as a generic
+  // 500. Update it as we cross each milestone.
+  let stage: string = "parse-body"
 
   try {
     const { items, country, promoCode, shippingAddress } = (await req.json()) as {
@@ -43,6 +71,13 @@ export async function POST(req: Request) {
       promoCode?: string
       shippingAddress?: Record<string, string>
     }
+    console.log("[checkout] payload", {
+      items: items?.length ?? 0,
+      country,
+      hasPromo: !!promoCode,
+      hasAddress: !!shippingAddress,
+      buyer: session.user.id,
+    })
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 })
@@ -56,6 +91,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: shippingInfo.blockedMessage }, { status: 400 })
     }
 
+    stage = "fetch-listings"
     const listingIds = items.map((i) => i.listingId)
     const { data: listings, error: listingsError } = await supabaseAdmin
       .from("listings")
@@ -63,7 +99,11 @@ export async function POST(req: Request) {
       .in("id", listingIds)
       .eq("active", true)
 
-    if (listingsError) throw listingsError
+    if (listingsError) {
+      console.error("[checkout] supabase listings error:", listingsError)
+      throw listingsError
+    }
+    console.log(`[checkout] fetched ${listings?.length ?? 0}/${listingIds.length} listings`)
     if (!listings || listings.length !== listingIds.length) {
       return NextResponse.json({ error: "One or more items are no longer available" }, { status: 400 })
     }
@@ -140,6 +180,7 @@ export async function POST(req: Request) {
     }
 
     if (promoDiscountCents > 0) {
+      stage = "create-coupon"
       // In-app coupon path (mutually exclusive with allow_promotion_codes)
       const coupon = await stripe.coupons.create({
         amount_off: promoDiscountCents,
@@ -152,13 +193,22 @@ export async function POST(req: Request) {
       params.allow_promotion_codes = true
     }
 
+    stage = "create-session"
+    console.log("[checkout] creating Stripe session", {
+      lineItems: params.line_items?.length,
+      hasDiscount: !!params.discounts,
+      allowPromo: !!params.allow_promotion_codes,
+      successUrl: params.success_url,
+    })
     const checkoutSession = await stripe.checkout.sessions.create(params)
+    console.log(`[checkout] created session id=${checkoutSession.id}`)
 
+    stage = "insert-orders"
     // Create one Order row per listing, all sharing the same
     // stripe_session_id so the webhook can fan out and mark them PAID.
     for (let i = 0; i < listings.length; i++) {
       const listing = listings[i]
-      await supabaseAdmin.from("orders").insert({
+      const { error: insertError } = await supabaseAdmin.from("orders").insert({
         buyer_id: session.user.id,
         listing_id: listing.id,
         status: "PENDING",
@@ -170,11 +220,52 @@ export async function POST(req: Request) {
         quantity: 1,
         stripe_session_id: checkoutSession.id,
       })
+      if (insertError) {
+        console.error(`[checkout] order insert ${i} failed:`, insertError)
+        throw insertError
+      }
     }
 
     return NextResponse.json({ url: checkoutSession.url })
-  } catch (error) {
-    console.error("Checkout error:", error)
-    return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 })
+  } catch (error: any) {
+    // ── Verbose error reporting ─────────────────────────────────
+    // Surface as much as we know about the failure: which stage we
+    // were in, the Stripe-specific error fields if any, and the raw
+    // shape of unknown errors. We send a sanitized subset back to
+    // the client so the cart UI can show something more useful than
+    // "Failed to create checkout session".
+    const isStripeError = error instanceof Stripe.errors.StripeError
+    const payload: Record<string, any> = {
+      stage,
+      message: error?.message ?? String(error),
+      name: error?.name,
+    }
+    if (isStripeError) {
+      payload.stripe = {
+        type: error.type,
+        code: (error as any).code,
+        decline_code: (error as any).decline_code,
+        param: (error as any).param,
+        statusCode: error.statusCode,
+        requestId: (error as any).requestId,
+        doc_url: (error as any).doc_url,
+      }
+    }
+
+    console.error("[checkout] FAILED", JSON.stringify(payload, null, 2))
+    if (error?.stack) console.error(error.stack)
+
+    return NextResponse.json(
+      {
+        error: "Failed to create checkout session",
+        stage,
+        // Forwarded to the cart UI so the user/devtools see what
+        // Stripe actually said. Safe to expose: this is the same
+        // user-facing message Stripe returns from its dashboard.
+        message: payload.message,
+        ...(isStripeError && { stripe: payload.stripe }),
+      },
+      { status: 500 }
+    )
   }
 }
