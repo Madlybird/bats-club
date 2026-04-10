@@ -25,6 +25,9 @@ interface ListingCardProps {
   }
   labels?: ListingCardLabels
   basePath?: string
+  /** Pass true for above-the-fold cards (e.g. first 4) so the browser
+   *  preloads them; everything else lazy-loads. */
+  priority?: boolean
 }
 
 const conditionColors: Record<string, string> = {
@@ -35,7 +38,7 @@ const conditionColors: Record<string, string> = {
   Poor: "badge-red",
 }
 
-export default function ListingCard({ listing, labels, basePath = "/shop" }: ListingCardProps) {
+export default function ListingCard({ listing, labels, basePath = "/shop", priority = false }: ListingCardProps) {
   const addToCartLabel = labels?.addToCart ?? "Add to Cart"
   const conditionDisplay = labels?.conditions?.[listing.condition] ?? listing.condition
   const listingHref = `${basePath}/${listing.id}`
@@ -58,6 +61,7 @@ export default function ListingCard({ listing, labels, basePath = "/shop" }: Lis
             fill
             className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 50vw, 25vw"
+            {...(priority ? { priority: true } : { loading: "lazy" })}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">

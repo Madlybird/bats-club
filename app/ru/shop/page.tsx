@@ -1,8 +1,25 @@
+import { Suspense } from "react"
 import { supabaseAdmin } from "@/lib/supabase"
 import ShopPageContent from "@/components/ShopPageContent"
 import { ru } from "@/lib/dict"
 
-export const revalidate = 30
+export const revalidate = 60
+
+function ShopSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div
+            key={i}
+            className="aspect-square rounded-2xl border border-white/[0.06] animate-pulse"
+            style={{ background: "rgba(255,255,255,0.02)" }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 interface Props { searchParams: { condition?: string; sort?: string; series?: string } }
 
@@ -58,14 +75,16 @@ export default async function ShopPageRu({ searchParams }: Props) {
     : (listings || [])
 
   return (
-    <ShopPageContent
-      listings={filtered as any}
-      condition={condition}
-      sort={sort}
-      series={series}
-      topSeries={topSeries}
-      dict={ru}
-      shopBasePath="/ru/shop"
-    />
+    <Suspense fallback={<ShopSkeleton />}>
+      <ShopPageContent
+        listings={filtered as any}
+        condition={condition}
+        sort={sort}
+        series={series}
+        topSeries={topSeries}
+        dict={ru}
+        shopBasePath="/ru/shop"
+      />
+    </Suspense>
   )
 }

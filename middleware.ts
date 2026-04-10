@@ -27,6 +27,8 @@ export default withAuth(
   }
 )
 
+// Profile view pages are public; the edit pages do their own server-side
+// auth check via getServerSession, so we only gate /admin here.
 export const config = {
-  matcher: ["/admin/:path*", "/profile/:path*"],
+  matcher: ["/admin/:path*"],
 }

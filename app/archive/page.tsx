@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -6,6 +7,20 @@ import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import { en } from "@/lib/dict"
 import { Metadata } from "next"
+
+function ArchiveSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div
+          key={i}
+          className="aspect-square rounded-2xl border border-white/[0.06] animate-pulse"
+          style={{ background: "rgba(255,255,255,0.02)" }}
+        />
+      ))}
+    </div>
+  )
+}
 
 export const metadata: Metadata = {
   title: "Archive | Bats Club",
@@ -84,31 +99,33 @@ export default async function ArchivePage({ searchParams }: Props) {
         </ScrollReveal>
         <ScrollReveal>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <ArchiveClient
-              figures={figuresWithData}
-              characters={allCharacters}
-              manufacturers={allManufacturers}
-              seriesCounts={seriesCounts}
-              defaultSeries={defaultSeries}
-              labels={{
-                collectionsHeading: dict.archive_collections,
-                searchPh: dict.archive_search_ph,
-                characterLabel: dict.archive_character_label,
-                mfgLabel: dict.archive_mfg_label,
-                resultsWord: dict.archive_results,
-                clearFilters: dict.archive_clear,
-                emptyTitle: dict.archive_empty_title,
-                emptySub: dict.archive_empty_sub,
-                clearAllBtn: dict.archive_clear_all_btn,
-                figurePath: "/figures",
-                forSale: dict.fig_for_sale,
-                wishlisting: dict.fig_wishlisting,
-                noImage: dict.fig_no_image,
-                statusHave: dict.fig_status_have,
-                statusWishlist: dict.fig_status_wishlist,
-                statusBuy: dict.fig_status_buy,
-              }}
-            />
+            <Suspense fallback={<ArchiveSkeleton />}>
+              <ArchiveClient
+                figures={figuresWithData}
+                characters={allCharacters}
+                manufacturers={allManufacturers}
+                seriesCounts={seriesCounts}
+                defaultSeries={defaultSeries}
+                labels={{
+                  collectionsHeading: dict.archive_collections,
+                  searchPh: dict.archive_search_ph,
+                  characterLabel: dict.archive_character_label,
+                  mfgLabel: dict.archive_mfg_label,
+                  resultsWord: dict.archive_results,
+                  clearFilters: dict.archive_clear,
+                  emptyTitle: dict.archive_empty_title,
+                  emptySub: dict.archive_empty_sub,
+                  clearAllBtn: dict.archive_clear_all_btn,
+                  figurePath: "/figures",
+                  forSale: dict.fig_for_sale,
+                  wishlisting: dict.fig_wishlisting,
+                  noImage: dict.fig_no_image,
+                  statusHave: dict.fig_status_have,
+                  statusWishlist: dict.fig_status_wishlist,
+                  statusBuy: dict.fig_status_buy,
+                }}
+              />
+            </Suspense>
           </div>
         </ScrollReveal>
       </div>

@@ -31,9 +31,12 @@ interface FigureCardProps {
     }
   }
   labels: FigureCardLabels
+  /** Pass true for above-the-fold cards (e.g. first 4) so the browser
+   *  preloads them; everything else lazy-loads. */
+  priority?: boolean
 }
 
-export default function FigureCard({ figure, labels }: FigureCardProps) {
+export default function FigureCard({ figure, labels, priority = false }: FigureCardProps) {
   const figureHref = `${labels.figurePath}/${figure.id}`
   return (
     <div className="card-hover group flex flex-col overflow-hidden">
@@ -46,6 +49,7 @@ export default function FigureCard({ figure, labels }: FigureCardProps) {
             fill
             className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 50vw, 25vw"
+            {...(priority ? { priority: true } : { loading: "lazy" })}
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center">

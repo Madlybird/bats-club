@@ -7,7 +7,13 @@ import { en } from "@/lib/dict"
 import { Metadata } from "next"
 
 export const dynamicParams = true
-export const dynamic = "force-dynamic"
+export const revalidate = 60
+
+// Don't pre-render any figure pages at build time — generate on-demand
+// and cache via ISR so any new figure ID Just Works without a rebuild.
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  return []
+}
 
 interface Props { params: { id: string } }
 

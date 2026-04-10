@@ -194,10 +194,11 @@ export default function ArchiveClient({
       {/* Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {filtered.map((figure) => (
+          {filtered.map((figure, index) => (
             <FigureCard
               key={figure.id}
               figure={figure}
+              priority={index < 4}
               labels={{
                 figurePath: labels.figurePath ?? '',
 forSale: labels.forSale ?? '',

@@ -8,7 +8,11 @@ import { getRates, convertPrice } from "@/lib/currency"
 import { Metadata } from "next"
 
 export const dynamicParams = true
-export const dynamic = "force-dynamic"
+export const revalidate = 60
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  return []
+}
 
 interface Props { params: { id: string } }
 
