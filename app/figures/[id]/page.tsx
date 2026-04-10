@@ -18,40 +18,61 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
 interface Props { params: { id: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { data: figure } = await supabaseAdmin
-    .from("figures")
-    .select("name, character, series, manufacturer, scale")
-    .eq("id", params.id)
-    .single()
-  if (!figure) return { title: "Figure Not Found" }
-  return {
-    title: `${figure.name} | Bats Club`,
-    description: `${figure.character} from ${figure.series} — ${figure.manufacturer} ${figure.scale}`,
+  try {
+    const { data: figure, error } = await supabaseAdmin
+      .from("figures")
+      .select("name, character, series, manufacturer, scale")
+      .eq("id", params.id)
+      .maybeSingle()
+    if (error || !figure) return { title: "Figure Not Found" }
+    return {
+      title: `${figure.name} | Bats Club`,
+      description: `${figure.character} from ${figure.series} — ${figure.manufacturer} ${figure.scale}`,
+    }
+  } catch (e) {
+    console.error("[figures/[id]] generateMetadata error:", e)
+    return { title: "Figure Not Found" }
   }
 }
 
 export default async function FigureDetailPage({ params }: Props) {
   const session = await getServerSession(authOptions)
 
-  const { data: figure } = await supabaseAdmin
-    .from("figures")
-    .select(`
-      id, name, series, character, manufacturer, scale, year, sculptor, material,
-      imageUrl:image_url, images, description, createdAt:created_at,
-      user_figures(userId:user_id, status),
-      listings(
-        id, price, condition, stock, photos, description, active, createdAt:created_at,
-        seller:users(id, name, username, avatar),
-        figure:figures(id, name, series, scale, imageUrl:image_url)
-      ),
-      article_figures(
-        article:articles(id, title, slug, excerpt, published, author:users(id, name, username, avatar))
-      )
-    `)
-    .eq("id", params.id)
-    .eq("listings.active", true)
-    .order("price", { ascending: true, referencedTable: "listings" })
-    .single()
+  // Main figure fetch — use maybeSingle so a missing row returns
+  // { data: null } instead of an error, and wrap in try/catch so any
+  // unexpected Supabase failure surfaces as a 404 rather than a 500.
+  let figure: any = null
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("figures")
+      .select(`
+        id, name, series, character, manufacturer, scale, year, sculptor, material,
+        imageUrl:image_url, images, description, createdAt:created_at,
+        user_figures(userId:user_id, status),
+        listings(
+          id, price, condition, stock, photos, description, active, createdAt:created_at,
+          seller:users(id, name, username, avatar),
+          figure:figures(id, name, series, scale, imageUrl:image_url)
+        ),
+        article_figures(
+          article:articles(id, title, slug, excerpt, published, author:users(id, name, username, avatar))
+        )
+      `)
+      .eq("id", params.id)
+      .eq("listings.active", true)
+      .order("price", { ascending: true, referencedTable: "listings" })
+      .maybeSingle()
+    if (error) {
+      console.error("[figures/[id]] main query error:", error)
+      notFound()
+    }
+    figure = data
+  } catch (e: any) {
+    // Re-throw Next.js navigation signals (notFound/redirect) untouched.
+    if (e?.digest?.startsWith?.("NEXT_")) throw e
+    console.error("[figures/[id]] main query threw:", e)
+    notFound()
+  }
 
   if (!figure) notFound()
 
@@ -71,26 +92,33 @@ export default async function FigureDetailPage({ params }: Props) {
     .map((af: any) => af.article)
     .filter((a: any) => a && a.published)
 
-  // Related figures: same series first, fill with same manufacturer
-  const { data: seriesFigures } = await supabaseAdmin
-    .from("figures")
-    .select("id, name, series, imageUrl:image_url, images")
-    .eq("series", figure.series)
-    .neq("id", params.id)
-    .limit(4)
-
-  let relatedFigures = (seriesFigures || []) as any[]
-  if (relatedFigures.length < 4) {
-    const needed = 4 - relatedFigures.length
-    const existingIds = [params.id, ...relatedFigures.map((f: any) => f.id)]
-    const { data: mfgFigures } = await supabaseAdmin
+  // Related figures are best-effort — if either query fails we just
+  // render an empty related-section instead of crashing the whole page.
+  let relatedFigures: any[] = []
+  try {
+    const { data: seriesFigures } = await supabaseAdmin
       .from("figures")
       .select("id, name, series, imageUrl:image_url, images")
-      .eq("manufacturer", figure.manufacturer)
-      .neq("series", figure.series)
-      .not("id", "in", `(${existingIds.join(",")})`)
-      .limit(needed)
-    relatedFigures = [...relatedFigures, ...(mfgFigures || [])]
+      .eq("series", figure.series)
+      .neq("id", params.id)
+      .limit(4)
+
+    relatedFigures = (seriesFigures || []) as any[]
+    if (relatedFigures.length < 4) {
+      const needed = 4 - relatedFigures.length
+      const existingIds = [params.id, ...relatedFigures.map((f: any) => f.id)]
+      const { data: mfgFigures } = await supabaseAdmin
+        .from("figures")
+        .select("id, name, series, imageUrl:image_url, images")
+        .eq("manufacturer", figure.manufacturer)
+        .neq("series", figure.series)
+        .not("id", "in", `(${existingIds.join(",")})`)
+        .limit(needed)
+      relatedFigures = [...relatedFigures, ...(mfgFigures || [])]
+    }
+  } catch (e) {
+    console.error("[figures/[id]] related figures query failed:", e)
+    relatedFigures = []
   }
 
   const jsonLd = {
