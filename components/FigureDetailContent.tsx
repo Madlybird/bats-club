@@ -239,7 +239,7 @@ export default function FigureDetailContent({
                         <Link key={rel.id} href={`${archiveHref.replace("/archive", "/figures")}/${rel.id}`} className="group block">
                           <div className="relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] mb-2" style={{ background: "rgba(15,15,26,0.8)" }}>
                             {thumb ? (
-                              <Image src={thumb} alt={rel.name} fill className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
+                              <Image src={thumb} alt={rel.name} fill unoptimized className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center text-4xl">🦇</div>
                             )}

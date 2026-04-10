@@ -223,6 +223,10 @@ function FigureSection({
                     src={item.figure.imageUrl}
                     alt={item.figure.name}
                     fill
+                    // Bypass Vercel image optimizer; load JPG
+                    // straight from Supabase. Same fix as
+                    // FigureCard / ListingCard.
+                    unoptimized
                     className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
                     sizes="120px"
                   />

@@ -232,7 +232,12 @@ export default function HomePageContent({
                             src={fig.imageUrl || LOCAL_FIGURES[i % LOCAL_FIGURES.length]}
                             alt={fig.name}
                             fill
-                            unoptimized={!fig.imageUrl}
+                            // Bypass Vercel's image optimizer for
+                            // the figure photos pulled from
+                            // Supabase. Local fallbacks (the
+                            // /figures/*.png pngs) are tiny so
+                            // skipping optimization is a wash.
+                            unoptimized
                             className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
                             sizes="(max-width: 768px) 50vw, 25vw"
                           />

@@ -50,6 +50,11 @@ export default function FigureCard({ figure, labels, priority = false }: FigureC
             src={figure.imageUrl}
             alt={figure.name}
             fill
+            // Bypass Vercel's image optimizer and fetch the JPG
+            // straight from Supabase Storage. The optimizer was
+            // intermittently returning blank/broken images on some
+            // mobile clients (Option A from the debug session).
+            unoptimized
             className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 50vw, 25vw"
             {...(priority ? { priority: true } : { loading: "lazy" })}
