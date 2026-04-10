@@ -1,6 +1,4 @@
 import { supabaseAdmin } from "@/lib/supabase"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import FigureDetailContent from "@/components/FigureDetailContent"
 import { en } from "@/lib/dict"
@@ -36,7 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function FigureDetailPage({ params }: Props) {
-  const session = await getServerSession(authOptions)
+  // No getServerSession here on purpose: this page is ISR-cached
+  // (revalidate=60), so it must not depend on per-user request state.
+  // The current user's HAVE/WISHLIST/BUY status is fetched client-side
+  // by <StatusButton/> via /api/user-figures.
 
   // Main figure fetch — use maybeSingle so a missing row returns
   // { data: null } instead of an error, and wrap in try/catch so any
@@ -80,9 +81,9 @@ export default async function FigureDetailPage({ params }: Props) {
   const listings = (figure.listings || []) as any[]
   const articleFigures = figure.article_figures || []
 
-  const userStatus = session
-    ? (userFigures.find((uf: any) => uf.userId === session.user.id)?.status ?? null)
-    : null
+  // userStatus is hydrated client-side by StatusButton; the static page
+  // ships with null so the same HTML can be cached for every visitor.
+  const userStatus: string | null = null
 
   const wishlistCount = userFigures.filter((uf: any) => uf.status === "WISHLIST").length
   const haveCount = userFigures.filter((uf: any) => uf.status === "HAVE").length

@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface StatusLabels {
   have: string
@@ -23,10 +23,31 @@ const DEFAULT_LABELS: StatusLabels = {
 }
 
 export default function StatusButton({ figureId, initialStatus, labels = DEFAULT_LABELS }: StatusButtonProps) {
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const router = useRouter()
   const [currentStatus, setCurrentStatus] = useState<string | null>(initialStatus || null)
   const [loading, setLoading] = useState(false)
+
+  // The figure detail page is ISR-cached, so it can't read the session
+  // server-side and ships with initialStatus=null. Once the user's
+  // session is known on the client we hydrate the real status here.
+  useEffect(() => {
+    if (sessionStatus !== "authenticated") return
+    let cancelled = false
+    fetch("/api/user-figures", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: any[]) => {
+        if (cancelled) return
+        const mine = Array.isArray(rows)
+          ? rows.find((r) => r?.figureId === figureId || r?.figure?.id === figureId)
+          : null
+        if (mine?.status) setCurrentStatus(mine.status)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [sessionStatus, figureId])
 
   const statuses = [
     { value: "HAVE",     label: labels.have,     icon: "✓",  activeClass: "bg-emerald-700 border-emerald-600 text-white" },
