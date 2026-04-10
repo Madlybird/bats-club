@@ -219,13 +219,17 @@ export default function HomePageContent({
                 {recentFigures.map((fig, i) => (
                   <ScrollReveal key={fig.id} delay={i * 70}>
                     <div className="group block">
-                      {/* Image area: a fully-clickable Link sits behind the
-                          BuyToCartButton, which is a sibling (NOT a child)
-                          so we don't nest <button> inside <a>. */}
+                      {/* Image area uses the same pattern as FigureCard /
+                          ListingCard: the Link is a normal-flow block that
+                          fills the tile and itself wraps <Image fill>. The
+                          BuyToCartButton sits as an absolutely-positioned
+                          sibling at a higher z-index so clicks land on the
+                          button instead of the Link, and we never nest a
+                          <button> inside an <a>. */}
                       <div className="figure-grid-item aspect-square mb-4">
                         <Link
                           href={`/figures/${fig.id}`}
-                          className="absolute inset-0 z-0"
+                          className="block w-full h-full relative"
                           aria-label={fig.name}
                         >
                           <Image
@@ -233,10 +237,10 @@ export default function HomePageContent({
                             alt={fig.name}
                             fill
                             // Bypass Vercel's image optimizer for
-                            // the figure photos pulled from
-                            // Supabase. Local fallbacks (the
-                            // /figures/*.png pngs) are tiny so
-                            // skipping optimization is a wash.
+                            // the figure photos pulled from Supabase.
+                            // Local fallbacks (the /figures/*.png
+                            // assets) are tiny so skipping
+                            // optimization is a wash.
                             unoptimized
                             className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
                             sizes="(max-width: 768px) 50vw, 25vw"
