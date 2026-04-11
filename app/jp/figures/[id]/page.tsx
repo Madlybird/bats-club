@@ -18,13 +18,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { data: figure, error } = await supabaseAdmin
       .from("figures")
-      .select("name, character, series, manufacturer, scale")
+      .select("name, character, series, manufacturer, scale, description")
       .eq("id", params.id)
       .maybeSingle()
     if (error || !figure) return { title: "Figure Not Found" }
+    const fallback = `${figure.character} · ${figure.series} · ${figure.manufacturer} ${figure.scale}`
     return {
-      title: `${figure.name} | Bats Club`,
-      description: `${figure.character} from ${figure.series} — ${figure.manufacturer} ${figure.scale}`,
+      title: `${figure.name} — ${figure.series} | Bats Club`,
+      description: (figure.description as string | null)?.trim() || fallback,
     }
   } catch (e) {
     console.error("[jp/figures/[id]] generateMetadata error:", e)

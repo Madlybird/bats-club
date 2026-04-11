@@ -4,8 +4,9 @@ import { jp } from "@/lib/dict"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Articles | Bats Club",
-  description: "Collector spotlights, reviews, and news from the Bats Club community.",
+  title: "コレクター記事・スポットライト | Bats Club",
+  description:
+    "Bats Clubによるアニメフィギュア収集ガイド、レビュー、コレクター紹介。",
 }
 
 export const revalidate = 60

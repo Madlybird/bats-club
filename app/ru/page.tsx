@@ -1,8 +1,15 @@
+import type { Metadata } from "next"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import HomePageContent from "@/components/HomePageContent"
 import { ru } from "@/lib/dict"
+
+export const metadata: Metadata = {
+  title: "Bats Club — Архив и маркетплейс редких аниме-фигурок",
+  description:
+    "Подлинные редкие аниме-фигурки из частной коллекции. Японские оригиналы 1990-х — 2000-х: Di Gi Charat, Evangelion и другие. Доставка по миру.",
+}
 
 export const revalidate = 60
 

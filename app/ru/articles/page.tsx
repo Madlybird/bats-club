@@ -4,8 +4,9 @@ import { ru } from "@/lib/dict"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Articles | Bats Club",
-  description: "Collector spotlights, reviews, and news from the Bats Club community.",
+  title: "Статьи и обзоры коллекционеров | Bats Club",
+  description:
+    "Гайды по коллекционированию аниме-фигурок, обзоры и интервью с коллекционерами от Bats Club.",
 }
 
 export const revalidate = 60

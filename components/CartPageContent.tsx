@@ -56,6 +56,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const [promoInput, setPromoInput] = useState("")
   const [appliedPromo, setAppliedPromo] = useState("")
   const [promoError, setPromoError] = useState("")
+  const [upsellDismissed, setUpsellDismissed] = useState(false)
 
   const [showAddress, setShowAddress] = useState(false)
   const [address, setAddress] = useState<AddressForm>(emptyAddress)
@@ -85,11 +86,14 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   }, [])
 
   const itemsSubtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  // Multi-item shipping discount: 40% off shipping when the cart has
+  // 2+ distinct figures. Kept in sync with app/api/checkout/route.ts.
   const multiDiscount = items.length >= 2
   const shippingCents = countryCode && !shipping.blocked
-    ? multiDiscount ? Math.round(shipping.priceCents * 0.85) : shipping.priceCents
+    ? multiDiscount ? Math.round(shipping.priceCents * 0.60) : shipping.priceCents
     : 0
   const shippingOriginal = countryCode && !shipping.blocked ? shipping.priceCents : 0
+  const shippingDisplay = `$${(shippingCents / 100).toFixed(2)}`
 
   const PROMO_RATES: Record<string, number> = { BATSCLUB10: 10 }
   const promoRate = appliedPromo ? (PROMO_RATES[appliedPromo] ?? 0) : 0
@@ -331,6 +335,30 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                 )}
               </div>
 
+              {/* Upsell banner — shown only when cart has exactly 1 item */}
+              {items.length === 1 && !upsellDismissed && (
+                <div
+                  className="relative rounded-2xl border border-[#ff2d78]/40 p-4 pr-10"
+                  style={{ background: "rgba(255,45,120,0.06)" }}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl leading-none mt-0.5">🦇</span>
+                    <p className="text-sm text-white/85 font-medium leading-snug">
+                      {dict.cart_upsell_banner}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setUpsellDismissed(true)}
+                    aria-label="Dismiss"
+                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+
               {/* Promo code */}
               <div className="rounded-2xl border border-white/[0.06] p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
                 <h3 className="font-bold text-white text-sm mb-3">{dict.cart_promo_heading}</h3>
@@ -386,7 +414,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                       <div className="flex justify-between text-white/50">
                         <span>
                           {dict.cart_shipping} ({selectedCountry?.name})
-                          {multiDiscount && <span className="text-emerald-400 ml-1 text-xs">−15%</span>}
+                          {multiDiscount && <span className="text-emerald-400 ml-1 text-xs">{dict.cart_multi_discount_percent}</span>}
                         </span>
                         <span>
                           {multiDiscount && (
@@ -394,12 +422,12 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                               ${(shippingOriginal / 100).toFixed(2)}
                             </span>
                           )}
-                          {shipping.priceDisplay}
+                          {shippingDisplay}
                         </span>
                       </div>
                       {multiDiscount && (
                         <div className="flex justify-between text-emerald-400 text-xs">
-                          <span>Multi-item discount</span>
+                          <span>{dict.cart_multi_discount_line}</span>
                           <span>−${((shippingOriginal - shippingCents) / 100).toFixed(2)}</span>
                         </div>
                       )}

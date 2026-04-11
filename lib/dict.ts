@@ -115,6 +115,7 @@ export interface Dict {
   nav_archive: string
   nav_shop: string
   nav_articles: string
+  nav_faq: string
   nav_signin: string
   nav_join: string
 
@@ -157,6 +158,9 @@ export interface Dict {
   cart_shipping_dest: string
   cart_country_ph: string
   cart_multi_discount: string
+  cart_multi_discount_line: string
+  cart_multi_discount_percent: string
+  cart_upsell_banner: string
   cart_promo_heading: string
   cart_promo_ph: string
   cart_promo_apply: string
@@ -342,6 +346,7 @@ export const en: Dict = {
   nav_archive: "Archive",
   nav_shop: "Shop",
   nav_articles: "Articles",
+  nav_faq: "FAQ",
   nav_signin: "Sign In",
   nav_join: "Join Club",
 
@@ -378,7 +383,10 @@ export const en: Dict = {
   cart_item_suffix: "item",
   cart_shipping_dest: "Shipping Destination",
   cart_country_ph: "Search country…",
-  cart_multi_discount: "Multi-item shipping discount applied (−15%)",
+  cart_multi_discount: "Multi-item shipping discount: 40% off",
+  cart_multi_discount_line: "Multi-item discount",
+  cart_multi_discount_percent: "−40%",
+  cart_upsell_banner: "Add one more figure and get 40% off shipping!",
   cart_promo_heading: "Promo Code",
   cart_promo_ph: "BATSCLUB10",
   cart_promo_apply: "Apply",
@@ -563,6 +571,7 @@ export const ru: Dict = {
   nav_archive: "Архив",
   nav_shop: "Магазин",
   nav_articles: "Статьи",
+  nav_faq: "FAQ",
   nav_signin: "Войти",
   nav_join: "Вступить",
 
@@ -599,7 +608,10 @@ export const ru: Dict = {
   cart_item_suffix: "товар",
   cart_shipping_dest: "Страна доставки",
   cart_country_ph: "Поиск страны…",
-  cart_multi_discount: "Скидка на доставку за несколько товаров (−15%)",
+  cart_multi_discount: "Скидка на доставку: 40%",
+  cart_multi_discount_line: "Скидка за несколько товаров",
+  cart_multi_discount_percent: "−40%",
+  cart_upsell_banner: "Добавь ещё одну фигурку и получи скидку 40% на доставку!",
   cart_promo_heading: "Промокод",
   cart_promo_ph: "BATSCLUB10",
   cart_promo_apply: "Применить",
@@ -784,6 +796,7 @@ export const jp: Dict = {
   nav_archive: "アーカイブ",
   nav_shop: "ショップ",
   nav_articles: "記事",
+  nav_faq: "FAQ",
   nav_signin: "ログイン",
   nav_join: "参加する",
 
@@ -820,7 +833,10 @@ export const jp: Dict = {
   cart_item_suffix: "点",
   cart_shipping_dest: "配送先",
   cart_country_ph: "国を検索…",
-  cart_multi_discount: "複数点購入による送料割引が適用されました（−15%）",
+  cart_multi_discount: "複数商品送料40%割引",
+  cart_multi_discount_line: "複数商品割引",
+  cart_multi_discount_percent: "−40%",
+  cart_upsell_banner: "もう1つフィギュアを追加して送料40%オフ！",
   cart_promo_heading: "プロモコード",
   cart_promo_ph: "BATSCLUB10",
   cart_promo_apply: "適用",

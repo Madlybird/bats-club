@@ -23,7 +23,7 @@ export interface ShippingInfo {
 
 export function getShippingInfo(countryCode: string): ShippingInfo {
   const BLOCKED_MSG =
-    "Unfortunately, we don't ship to this region at this time. Please contact us at t.me/batscare_bot for alternative options."
+    "Unfortunately, we don't ship to this region at this time. Please contact us at support@batsclub.com for alternative options."
 
   if (!countryCode) {
     return { blocked: false, priceCents: 0, priceDisplay: "", blockedMessage: "" }
@@ -32,17 +32,17 @@ export function getShippingInfo(countryCode: string): ShippingInfo {
     return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: BLOCKED_MSG }
   }
   if (countryCode === "RU") {
-    return { blocked: false, priceCents: 700, priceDisplay: "$7.00", blockedMessage: "" }
+    return { blocked: false, priceCents: 900, priceDisplay: "$9.00", blockedMessage: "" }
   }
   if (EUROPE.has(countryCode)) {
-    return { blocked: false, priceCents: 1500, priceDisplay: "$15.00", blockedMessage: "" }
+    return { blocked: false, priceCents: 1700, priceDisplay: "$17.00", blockedMessage: "" }
   }
   if (countryCode === "US" || countryCode === "CA") {
-    return { blocked: false, priceCents: 1800, priceDisplay: "$18.00", blockedMessage: "" }
+    return { blocked: false, priceCents: 2000, priceDisplay: "$20.00", blockedMessage: "" }
   }
   if (countryCode === "IL" || countryCode === "AE" || countryCode === "SA" || countryCode === "TR" || countryCode === "JP") {
-    return { blocked: false, priceCents: 1500, priceDisplay: "$15.00", blockedMessage: "" }
+    return { blocked: false, priceCents: 1700, priceDisplay: "$17.00", blockedMessage: "" }
   }
   // Americas (MX, BR, AR, CL, CO, PE) + AU + NZ
-  return { blocked: false, priceCents: 2000, priceDisplay: "$20.00", blockedMessage: "" }
+  return { blocked: false, priceCents: 2200, priceDisplay: "$22.00", blockedMessage: "" }
 }

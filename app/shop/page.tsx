@@ -1,7 +1,14 @@
 import { Suspense } from "react"
+import type { Metadata } from "next"
 import { supabaseAdmin } from "@/lib/supabase"
 import ShopPageContent from "@/components/ShopPageContent"
 import { en } from "@/lib/dict"
+
+export const metadata: Metadata = {
+  title: "Buy Rare Anime Figures | Bats Club",
+  description:
+    "Shop authentic vintage anime figures from a private Japanese collection. Worldwide shipping. All figures verified and described.",
+}
 
 export const revalidate = 60
 

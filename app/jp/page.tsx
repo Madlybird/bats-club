@@ -1,8 +1,15 @@
+import type { Metadata } from "next"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import HomePageContent from "@/components/HomePageContent"
 import { jp } from "@/lib/dict"
+
+export const metadata: Metadata = {
+  title: "Bats Club — レアアニメフィギュアのアーカイブ＆マーケットプレイス",
+  description:
+    "プライベートコレクターによる本物のレアアニメフィギュア。1990〜2000年代の日本オリジナル品。デジ・キャラット、エヴァンゲリオンなど。世界中に発送。",
+}
 
 export const revalidate = 60
 

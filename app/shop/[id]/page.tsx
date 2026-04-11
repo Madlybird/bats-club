@@ -16,11 +16,15 @@ interface Props { params: { id: string } }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: listing } = await supabaseAdmin
     .from("listings")
-    .select("price, figure:figures(name)")
+    .select("condition, figure:figures(name, series)")
     .eq("id", params.id)
     .single()
   if (!listing) return { title: "Listing Not Found" }
-  return { title: `${(listing.figure as any)?.name} — $${(listing.price / 100).toFixed(2)} | Bats Club Shop` }
+  const figure = listing.figure as any
+  return {
+    title: `Buy ${figure?.name} | Bats Club`,
+    description: `${figure?.name} from ${figure?.series}. ${listing.condition}. Ships worldwide from Bats Club.`,
+  }
 }
 
 const conditionColors: Record<string, string> = {

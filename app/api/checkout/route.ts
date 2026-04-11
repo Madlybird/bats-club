@@ -119,10 +119,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // 15% shipping discount when buying 2+ items in one order
+    // 40% shipping discount when buying 2+ items in one order.
+    // Kept in sync with components/CartPageContent.tsx.
     const multiItemDiscount = listings.length >= 2
     let shippingCents = shippingInfo.priceCents
-    if (multiItemDiscount) shippingCents = Math.round(shippingCents * 0.85)
+    if (multiItemDiscount) shippingCents = Math.round(shippingCents * 0.60)
 
     const itemsSubtotal = listings.reduce((sum, l) => sum + l.price, 0)
 

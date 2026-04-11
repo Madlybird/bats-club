@@ -1,7 +1,14 @@
 import { Suspense } from "react"
+import type { Metadata } from "next"
 import { supabaseAdmin } from "@/lib/supabase"
 import ShopPageContent from "@/components/ShopPageContent"
 import { jp } from "@/lib/dict"
+
+export const metadata: Metadata = {
+  title: "レアアニメフィギュア購入 | Bats Club",
+  description:
+    "日本人コレクターのプライベートコレクションから本物のヴィンテージアニメフィギュアを販売。世界中に発送。全商品を検品・説明付きで出品。",
+}
 
 export const revalidate = 60
 
