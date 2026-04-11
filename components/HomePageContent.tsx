@@ -226,10 +226,16 @@ export default function HomePageContent({
                           sibling at a higher z-index so clicks land on the
                           button instead of the Link, and we never nest a
                           <button> inside an <a>. */}
-                      <div className="figure-grid-item aspect-square mb-4">
+                      <div className="relative mb-4">
+                        {/* Match ListingCard exactly: the Link is the
+                            direct `relative aspect-square` parent of
+                            <Image fill>. Wrapping Link inside another
+                            aspect-square div with h-full was fragile on
+                            mobile Safari/Chrome and caused the image
+                            box to collapse so nothing loaded. */}
                         <Link
                           href={`/figures/${fig.id}`}
-                          className="block w-full h-full relative"
+                          className="figure-grid-item block relative aspect-square overflow-hidden flex-shrink-0"
                           aria-label={fig.name}
                         >
                           <Image

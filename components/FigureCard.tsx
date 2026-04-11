@@ -42,9 +42,9 @@ interface FigureCardProps {
 export default function FigureCard({ figure, labels, priority = false }: FigureCardProps) {
   const figureHref = `${labels.figurePath}/${figure.id}`
   return (
-    <div className="card-hover group flex flex-col overflow-hidden">
+    <div className="card-hover group flex flex-col overflow-hidden h-full">
       {/* Image */}
-      <Link href={figureHref} className="block relative aspect-square overflow-hidden" style={{ background: "#0a0a0a" }}>
+      <Link href={figureHref} className="block relative aspect-square overflow-hidden flex-shrink-0" style={{ background: "#0a0a0a" }}>
         {figure.imageUrl ? (
           <Image
             src={figure.imageUrl}
