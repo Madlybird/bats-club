@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import ProfilePageContent from "@/components/ProfilePageContent"
 import { en } from "@/lib/dict"
+import { getFollowData } from "@/lib/follows"
 import { Metadata } from "next"
 
 interface Props { params: { username: string } }
@@ -41,6 +42,8 @@ export default async function ProfilePage({ params }: Props) {
   const wishlist = userFigures.filter((uf) => uf.status === "WISHLIST")
   const buying = userFigures.filter((uf) => uf.status === "BUY")
 
+  const follow = await getFollowData((user as any).id, session?.user?.id ?? null)
+
   return (
     <ProfilePageContent
       user={{ ...(user as any), userFigures } as any}
@@ -49,7 +52,15 @@ export default async function ProfilePage({ params }: Props) {
       buying={buying}
       dict={en}
       archiveHref="/archive"
-      isOwner={session?.user?.id === user.id}
+      profileBasePath="/profile"
+      loginHref="/login"
+      isOwner={session?.user?.id === (user as any).id}
+      isAuthenticated={!!session?.user?.id}
+      followers={follow.followers}
+      following={follow.following}
+      followersCount={follow.followersCount}
+      followingCount={follow.followingCount}
+      viewerIsFollowing={follow.viewerIsFollowing}
     />
   )
 }

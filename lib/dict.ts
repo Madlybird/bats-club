@@ -141,6 +141,12 @@ export interface Dict {
   profile_browse_archive: string
   profile_section_empty: string
   profile_explore_archive: string
+  profile_follow: string
+  profile_unfollow: string
+  profile_followers: string
+  profile_following: string
+  profile_no_followers: string
+  profile_not_following: string
 
   // ── Share ──
   share_label: string
@@ -370,6 +376,12 @@ export const en: Dict = {
   profile_browse_archive: "Browse Archive",
   profile_section_empty: "Your collection is empty",
   profile_explore_archive: "Explore Archive",
+  profile_follow: "Follow",
+  profile_unfollow: "Unfollow",
+  profile_followers: "Followers",
+  profile_following: "Following",
+  profile_no_followers: "No followers yet",
+  profile_not_following: "Not following anyone yet",
 
   share_label: "Share",
 
@@ -595,6 +607,12 @@ export const ru: Dict = {
   profile_browse_archive: "Открыть архив",
   profile_section_empty: "Коллекция пуста",
   profile_explore_archive: "Открыть архив",
+  profile_follow: "Подписаться",
+  profile_unfollow: "Отписаться",
+  profile_followers: "Подписчики",
+  profile_following: "Подписки",
+  profile_no_followers: "Пока нет подписчиков",
+  profile_not_following: "Пока нет подписок",
 
   share_label: "Поделиться",
 
@@ -820,6 +838,12 @@ export const jp: Dict = {
   profile_browse_archive: "アーカイブを見る",
   profile_section_empty: "コレクションは空です",
   profile_explore_archive: "アーカイブを見る",
+  profile_follow: "フォロー",
+  profile_unfollow: "フォロー解除",
+  profile_followers: "フォロワー",
+  profile_following: "フォロー中",
+  profile_no_followers: "フォロワーはまだいません",
+  profile_not_following: "フォロー中のユーザーはいません",
 
   share_label: "シェア",
 

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import ProfilePageContent from "@/components/ProfilePageContent"
 import { jp } from "@/lib/dict"
+import { getFollowData } from "@/lib/follows"
 import { Metadata } from "next"
 
 interface Props { params: { username: string } }
@@ -41,6 +42,8 @@ export default async function ProfilePageJp({ params }: Props) {
   const wishlist = userFigures.filter((uf) => uf.status === "WISHLIST")
   const buying = userFigures.filter((uf) => uf.status === "BUY")
 
+  const follow = await getFollowData((user as any).id, session?.user?.id ?? null)
+
   return (
     <ProfilePageContent
       user={{ ...(user as any), userFigures } as any}
@@ -48,8 +51,16 @@ export default async function ProfilePageJp({ params }: Props) {
       wishlist={wishlist}
       buying={buying}
       dict={jp}
-      archiveHref="/archive"
-      isOwner={session?.user?.id === user.id}
+      archiveHref="/jp/archive"
+      profileBasePath="/jp/profile"
+      loginHref="/jp/login"
+      isOwner={session?.user?.id === (user as any).id}
+      isAuthenticated={!!session?.user?.id}
+      followers={follow.followers}
+      following={follow.following}
+      followersCount={follow.followersCount}
+      followingCount={follow.followingCount}
+      viewerIsFollowing={follow.viewerIsFollowing}
     />
   )
 }

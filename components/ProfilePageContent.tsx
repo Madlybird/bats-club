@@ -3,7 +3,10 @@ import Link from "next/link"
 import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import ShareButtons from "@/components/ShareButtons"
+import FollowButton from "@/components/FollowButton"
+import UnfollowInline from "@/components/UnfollowInline"
 import type { Dict } from "@/lib/dict"
+import type { PublicUser } from "@/lib/follows"
 
 interface UserFigure {
   id: string
@@ -20,6 +23,7 @@ interface UserFigure {
 
 interface Props {
   user: {
+    id: string
     name: string
     username: string
     avatar?: string | null
@@ -32,7 +36,15 @@ interface Props {
   buying: UserFigure[]
   dict: Dict
   archiveHref: string
+  profileBasePath: string
+  loginHref: string
   isOwner?: boolean
+  isAuthenticated: boolean
+  followers: PublicUser[]
+  following: PublicUser[]
+  followersCount: number
+  followingCount: number
+  viewerIsFollowing: boolean
 }
 
 export default function ProfilePageContent({
@@ -42,7 +54,15 @@ export default function ProfilePageContent({
   buying,
   dict,
   archiveHref,
+  profileBasePath,
+  loginHref,
   isOwner = false,
+  isAuthenticated,
+  followers,
+  following,
+  followersCount,
+  followingCount,
+  viewerIsFollowing,
 }: Props) {
   const memberSince = new Date(user.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
@@ -118,13 +138,21 @@ export default function ProfilePageContent({
                       name={`${user.username}'s anime figure collection`}
                       label={dict.share_label}
                     />
-                    {isOwner && (
+                    {isOwner ? (
                       <Link
                         href={`/profile/${user.username}/edit`}
                         className="text-xs font-medium px-3 py-1.5 rounded-lg border border-white/[0.08] text-white/40 hover:text-white hover:border-white/20 transition-all"
                       >
                         Edit profile
                       </Link>
+                    ) : (
+                      <FollowButton
+                        targetUserId={user.id}
+                        initiallyFollowing={viewerIsFollowing}
+                        isAuthenticated={isAuthenticated}
+                        labels={{ follow: dict.profile_follow, unfollow: dict.profile_unfollow }}
+                        loginHref={loginHref}
+                      />
                     )}
                   </div>
                 </div>
@@ -143,6 +171,14 @@ export default function ProfilePageContent({
                     <p className="text-2xl font-black" style={{ color: "#ff2d78" }}>{buying.length}</p>
                     <p className="text-xs text-white/30">{dict.profile_buying}</p>
                   </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-black" style={{ color: "#ff2d78" }}>{followersCount}</p>
+                    <p className="text-xs text-white/30">{dict.profile_followers}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-black" style={{ color: "#ff2d78" }}>{followingCount}</p>
+                    <p className="text-xs text-white/30">{dict.profile_following}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -150,6 +186,22 @@ export default function ProfilePageContent({
         </ScrollReveal>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+          <UserListSection
+            title={dict.profile_followers}
+            count={followersCount}
+            users={followers}
+            emptyLabel={dict.profile_no_followers}
+            profileBasePath={profileBasePath}
+          />
+          <UserListSection
+            title={dict.profile_following}
+            count={followingCount}
+            users={following}
+            emptyLabel={dict.profile_not_following}
+            profileBasePath={profileBasePath}
+            unfollowLabel={isOwner ? dict.profile_unfollow : undefined}
+          />
+
           <FigureSection title={dict.profile_collection} subtitle={dict.profile_figures_owned} items={have} emptyLabel={dict.profile_section_empty} />
           <FigureSection title={`${dict.profile_wishlist} ❤️`} subtitle={dict.profile_figures_want} items={wishlist} emptyLabel={dict.profile_section_empty} />
           <FigureSection title={dict.profile_buying} subtitle={dict.profile_figures_buy} items={buying} emptyLabel={dict.profile_section_empty} />
@@ -170,6 +222,81 @@ export default function ProfilePageContent({
         </div>
       </div>
     </div>
+  )
+}
+
+function UserListSection({
+  title,
+  count,
+  users,
+  emptyLabel,
+  profileBasePath,
+  /** When set, renders an inline unfollow button next to each user —
+   *  used on the viewer's own profile under the Following tab. */
+  unfollowLabel,
+}: {
+  title: string
+  count: number
+  users: PublicUser[]
+  emptyLabel: string
+  profileBasePath: string
+  unfollowLabel?: string
+}) {
+  return (
+    <ScrollReveal>
+      <section>
+        <div className="mb-5">
+          <span className="inline-block w-8 h-px bg-[#ff2d78] mb-3" />
+          <h2 className="text-xl font-black text-white lowercase tracking-tight">
+            {title}{" "}
+            <span className="text-white/25 text-sm font-medium">({count})</span>
+          </h2>
+        </div>
+        {users.length === 0 ? (
+          <p className="text-sm text-white/20 italic">{emptyLabel}</p>
+        ) : (
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {users.map((u) => (
+              <li
+                key={u.id}
+                className="flex items-center gap-3 rounded-xl border border-white/[0.06] p-3 hover:border-[#ff2d78]/30 transition-colors"
+                style={{ background: "rgba(255,255,255,0.02)" }}
+              >
+                <Link
+                  href={`${profileBasePath}/${u.username}`}
+                  className="flex items-center gap-3 flex-1 min-w-0"
+                >
+                  {u.avatar ? (
+                    <Image
+                      src={u.avatar}
+                      alt={u.name}
+                      width={40}
+                      height={40}
+                      className="rounded-full border border-white/10 flex-shrink-0"
+                      unoptimized
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white border border-white/10 flex-shrink-0"
+                      style={{ background: "#000000" }}
+                    >
+                      {u.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-white truncate">{u.name}</p>
+                    <p className="text-xs text-white/30 truncate">@{u.username}</p>
+                  </div>
+                </Link>
+                {unfollowLabel && (
+                  <UnfollowInline targetUserId={u.id} label={unfollowLabel} />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </ScrollReveal>
   )
 }
 
