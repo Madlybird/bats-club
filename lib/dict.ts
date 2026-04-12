@@ -131,22 +131,26 @@ export interface Dict {
 
   // ── Profile page ──
   profile_collection: string
-  profile_wishlist: string
-  profile_buying: string
+  profile_hunting: string
+  profile_purchases: string
   profile_member_since: string
-  profile_figures_owned: string
-  profile_figures_want: string
-  profile_figures_buy: string
   profile_no_figures: string
   profile_browse_archive: string
-  profile_section_empty: string
-  profile_explore_archive: string
-  profile_follow: string
-  profile_unfollow: string
-  profile_followers: string
-  profile_following: string
-  profile_no_followers: string
-  profile_not_following: string
+  profile_edit: string
+  profile_share: string
+  profile_rarity_score: string
+  profile_rarity_tooltip: string
+  profile_rarity_percentile: string
+  profile_stamp_card: string
+  profile_stamp_tooltip: string
+  profile_stamp_reward: string
+  profile_stamps_left: string
+  profile_public_wishlist: string
+  profile_hunt_tooltip: string
+  profile_hunt_empty: string
+  profile_also_hunting: string
+  profile_view_all: string
+  profile_for_sale: string
 
   // ── Share ──
   share_label: string
@@ -366,22 +370,26 @@ export const en: Dict = {
   login_join_link: "Join the Club",
 
   profile_collection: "Collection",
-  profile_wishlist: "Wishlist",
-  profile_buying: "Purchase History",
-  profile_member_since: "Member since",
-  profile_figures_owned: "Figures they own",
-  profile_figures_want: "Figures they want",
-  profile_figures_buy: "Past purchases",
+  profile_hunting: "Hunting",
+  profile_purchases: "Purchases",
+  profile_member_since: "Collector since",
   profile_no_figures: "No figures tracked yet",
   profile_browse_archive: "Browse Archive",
-  profile_section_empty: "Your collection is empty",
-  profile_explore_archive: "Explore Archive",
-  profile_follow: "Follow",
-  profile_unfollow: "Unfollow",
-  profile_followers: "Followers",
-  profile_following: "Following",
-  profile_no_followers: "No followers yet",
-  profile_not_following: "Not following anyone yet",
+  profile_edit: "Edit profile",
+  profile_share: "Copy link",
+  profile_rarity_score: "Rarity Score",
+  profile_rarity_tooltip: "Your rarity score is calculated based on how rare each figure in your collection is. The fewer collectors own a figure, the higher its rarity weight.",
+  profile_rarity_percentile: "top {X}% of collectors",
+  profile_stamp_card: "Stamp Card",
+  profile_stamp_tooltip: "Every purchase earns 1 stamp. Collect 10 to unlock free worldwide shipping on your next order.",
+  profile_stamp_reward: "Free worldwide shipping — applied automatically on order 10",
+  profile_stamps_left: "{X} stamps left",
+  profile_public_wishlist: "public wishlist",
+  profile_hunt_tooltip: "Your wishlist is public so other collectors can see what you're looking for.",
+  profile_hunt_empty: "Nothing on the hunt board yet",
+  profile_also_hunting: "also hunting",
+  profile_view_all: "View all",
+  profile_for_sale: "for sale",
 
   share_label: "Share",
 
@@ -597,22 +605,26 @@ export const ru: Dict = {
   login_join_link: "Вступить в клуб",
 
   profile_collection: "Коллекция",
-  profile_wishlist: "Вишлист",
-  profile_buying: "История покупок",
-  profile_member_since: "Участник с",
-  profile_figures_owned: "Фигурки в коллекции",
-  profile_figures_want: "Желаемые фигурки",
-  profile_figures_buy: "Прошлые покупки",
+  profile_hunting: "Охота",
+  profile_purchases: "Покупки",
+  profile_member_since: "Коллекционер с",
   profile_no_figures: "Фигурки ещё не отслеживаются",
   profile_browse_archive: "Открыть архив",
-  profile_section_empty: "Коллекция пуста",
-  profile_explore_archive: "Открыть архив",
-  profile_follow: "Подписаться",
-  profile_unfollow: "Отписаться",
-  profile_followers: "Подписчики",
-  profile_following: "Подписки",
-  profile_no_followers: "Пока нет подписчиков",
-  profile_not_following: "Пока нет подписок",
+  profile_edit: "Редактировать",
+  profile_share: "Копировать ссылку",
+  profile_rarity_score: "Редкость",
+  profile_rarity_tooltip: "Ваш показатель редкости рассчитывается на основе того, насколько редка каждая фигурка в вашей коллекции. Чем меньше коллекционеров владеют фигуркой, тем выше её вес редкости.",
+  profile_rarity_percentile: "топ {X}% коллекционеров",
+  profile_stamp_card: "Карта штампов",
+  profile_stamp_tooltip: "Каждая покупка даёт 1 штамп. Соберите 10 и получите бесплатную доставку по миру на следующий заказ.",
+  profile_stamp_reward: "Бесплатная доставка по миру — применяется автоматически на 10-м заказе",
+  profile_stamps_left: "осталось {X} штампов",
+  profile_public_wishlist: "публичный вишлист",
+  profile_hunt_tooltip: "Ваш вишлист публичный, чтобы другие коллекционеры могли видеть, что вы ищете.",
+  profile_hunt_empty: "Вишлист пуст",
+  profile_also_hunting: "тоже ищут",
+  profile_view_all: "Смотреть все",
+  profile_for_sale: "в продаже",
 
   share_label: "Поделиться",
 
@@ -828,22 +840,26 @@ export const jp: Dict = {
   login_join_link: "クラブに参加",
 
   profile_collection: "コレクション",
-  profile_wishlist: "ウィッシュリスト",
-  profile_buying: "購入履歴",
-  profile_member_since: "参加日",
-  profile_figures_owned: "所有フィギュア",
-  profile_figures_want: "欲しいフィギュア",
-  profile_figures_buy: "過去の購入",
+  profile_hunting: "ハンティング",
+  profile_purchases: "購入",
+  profile_member_since: "コレクター歴",
   profile_no_figures: "フィギュアはまだ登録されていません",
   profile_browse_archive: "アーカイブを見る",
-  profile_section_empty: "コレクションは空です",
-  profile_explore_archive: "アーカイブを見る",
-  profile_follow: "フォロー",
-  profile_unfollow: "フォロー解除",
-  profile_followers: "フォロワー",
-  profile_following: "フォロー中",
-  profile_no_followers: "フォロワーはまだいません",
-  profile_not_following: "フォロー中のユーザーはいません",
+  profile_edit: "プロフィール編集",
+  profile_share: "リンクをコピー",
+  profile_rarity_score: "レアリティスコア",
+  profile_rarity_tooltip: "レアリティスコアは、コレクション内の各フィギュアの希少性に基づいて計算されます。所有するコレクターが少ないほど、レアリティウェイトが高くなります。",
+  profile_rarity_percentile: "コレクターのトップ{X}%",
+  profile_stamp_card: "スタンプカード",
+  profile_stamp_tooltip: "購入ごとに1スタンプ。10個集めると次の注文で世界無料配送が解放されます。",
+  profile_stamp_reward: "世界無料配送 — 10回目の注文で自動適用",
+  profile_stamps_left: "あと{X}スタンプ",
+  profile_public_wishlist: "パブリックウィッシュリスト",
+  profile_hunt_tooltip: "ウィッシュリストは公開されており、他のコレクターがあなたの探しているものを見ることができます。",
+  profile_hunt_empty: "ハントボードは空です",
+  profile_also_hunting: "人も探しています",
+  profile_view_all: "すべて見る",
+  profile_for_sale: "販売中",
 
   share_label: "シェア",
 
