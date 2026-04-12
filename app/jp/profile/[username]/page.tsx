@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .from("users")
     .select("name, username")
     .eq("username", params.username)
-    .single()
+    .maybeSingle()
   if (!user) return { title: "User Not Found" }
   return { title: `${user.name} (@${user.username}) | Bats Club` }
 }
@@ -25,7 +25,7 @@ export default async function ProfilePageJp({ params }: Props) {
       .from("users")
       .select("id, name, username, avatar, bio, isAdmin:is_admin, createdAt:created_at")
       .eq("username", params.username)
-      .single(),
+      .maybeSingle(),
   ])
 
   if (!user || userError) { console.error("[profile] user query failed:", userError); notFound() }

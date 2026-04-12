@@ -20,7 +20,7 @@ export default async function ProfileEditPage({ params }: Props) {
       )
     `)
     .eq("username", params.username)
-    .single()
+    .maybeSingle()
 
   if (!user) notFound()
   if (user.id !== session.user.id) redirect(`/profile/${user.username}`)
