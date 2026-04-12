@@ -138,10 +138,12 @@ export async function POST(req: Request) {
       }
     }
 
+    // Always use the canonical production domain for Stripe redirect
+    // URLs. Preview deployment URLs (e.g. bats-club-xxx.vercel.app)
+    // aren't stable and cause errors when Stripe redirects back.
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.NEXTAUTH_URL ||
-      "http://localhost:3000"
+      "https://batsclub.com"
 
     const stripeLineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = listings.map((listing) => {
       const figure = listing.figure as any
