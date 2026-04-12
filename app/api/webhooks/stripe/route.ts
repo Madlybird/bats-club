@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
 import { supabaseAdmin } from "@/lib/supabase"
+import { sendOrderConfirmationEmail } from "@/lib/email"
 import Stripe from "stripe"
 
 export async function POST(req: Request) {
@@ -100,6 +101,22 @@ export async function POST(req: Request) {
         console.log(
           `[stripe webhook] session ${session.id} → created ${listingIds.length} order(s) as PAID`
         )
+
+        // Send order confirmation email
+        const buyerEmail = session.customer_email || session.customer_details?.email
+        if (buyerEmail) {
+          // Fetch figure names for the email
+          const { data: figureData } = await supabaseAdmin
+            .from("listings")
+            .select("figure:figures(name)")
+            .in("id", listingIds)
+          const figureNames = (figureData || []).map((l: any) => l.figure?.name).filter(Boolean).join(", ")
+          const totalPrice = listingPrices.reduce((a: number, b: number) => a + b, 0)
+          const country = (shippingFromStripe as any)?.country || (shippingAddress as any)?.country || "—"
+          await sendOrderConfirmationEmail(buyerEmail, figureNames, totalPrice, country).catch((err: any) =>
+            console.error("[stripe webhook] order email failed:", err)
+          )
+        }
       }
     } catch (error) {
       console.error("Error processing payment webhook:", error)

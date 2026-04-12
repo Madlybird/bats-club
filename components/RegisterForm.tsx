@@ -48,6 +48,12 @@ export default function RegisterForm({ labels }: { labels: RegisterFormLabels })
         setError(data.error || "Registration failed")
         return
       }
+      if (data.needsVerification) {
+        // Stash password for auto-login after verification
+        sessionStorage.setItem("_bats_pw", formData.password)
+        router.push(`/verify?email=${encodeURIComponent(formData.email)}`)
+        return
+      }
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,

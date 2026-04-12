@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     if (error) throw error
 
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3002"
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://batsclub.com"
     const resetUrl = `${baseUrl}/reset-password?token=${token}`
 
     await sendPasswordResetEmail(email, resetUrl)
