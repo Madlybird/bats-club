@@ -348,7 +348,7 @@ export default function ProfilePageContent({
           </section>
         )}
 
-        {/* ── 6. Hunt Board ── */}
+        {/* ���─ 6. Hunt Board (LARGE — full grid) ── */}
         <section className="space-y-3" id="hunt-board">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>Hunt Board</h2>
@@ -359,128 +359,136 @@ export default function ProfilePageContent({
               {dict.profile_public_wishlist}
             </span>
             <InfoTooltip text={dict.profile_hunt_tooltip} />
-            {/* 7. Hunt Board share button */}
             <HuntShareButton label={dict.profile_hunt_share} />
           </div>
           {wishlist.length === 0 ? (
-            <p className="text-sm italic" style={{ color: "rgba(240,224,224,0.25)" }}>
-              {dict.profile_hunt_empty}
-            </p>
+            <div className="text-center py-10">
+              <p className="text-sm" style={{ color: "rgba(240,224,224,0.3)" }}>{dict.profile_hunt_empty}</p>
+              <Link
+                href={archiveHref}
+                className="inline-block mt-3 px-5 py-2 text-xs font-bold rounded-full transition-opacity hover:opacity-80"
+                style={{ background: "#ff2d78", color: "#fff" }}
+              >
+                {dict.profile_hunt_cta}
+              </Link>
+            </div>
           ) : (
-            <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-2">
               {wishlist.map((item) => (
-                <div
+                <Link
                   key={item.id}
-                  className="flex items-center gap-3 rounded-md px-3 py-2"
-                  style={{ background: "rgba(255,45,120,0.04)", border: "1px solid rgba(255,45,120,0.13)" }}
+                  href={`/figures/${item.figure.id}`}
+                  className="group rounded-lg overflow-hidden"
+                  style={{ background: "#0a0408", border: "1px solid rgba(255,45,120,0.13)" }}
                 >
-                  <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0" style={{ background: "#000" }}>
+                  <div className="relative aspect-square">
                     {item.figure.imageUrl ? (
                       <Image
                         src={item.figure.imageUrl}
                         alt={item.figure.name}
-                        width={40}
-                        height={40}
+                        fill
                         unoptimized
-                        className="w-full h-full object-cover object-top"
+                        className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        sizes="200px"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs opacity-30">🦇</div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl opacity-20">🦇</span>
+                      </div>
+                    )}
+                    {(huntingCounts[item.figure.id] ?? 0) > 0 && (
+                      <span
+                        className="absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-sm"
+                        style={{ background: "rgba(0,0,0,0.7)", color: "rgba(240,224,224,0.6)" }}
+                      >
+                        {huntingCounts[item.figure.id]} {dict.profile_also_hunting}
+                      </span>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: "#f0e0e0" }}>{item.figure.name}</p>
-                    <p className="text-[11px]" style={{ color: "rgba(240,224,224,0.35)" }}>
+                  <div className="p-2">
+                    <p className="text-xs font-medium line-clamp-2 leading-tight group-hover:text-[#ff2d78] transition-colors" style={{ color: "rgba(240,224,224,0.7)" }}>
+                      {item.figure.name}
+                    </p>
+                    <p className="text-[10px] mt-0.5" style={{ color: "rgba(240,224,224,0.3)" }}>
                       {item.figure.manufacturer}{item.figure.year ? ` · ${item.figure.year}` : ""}
                     </p>
                   </div>
-                  {(huntingCounts[item.figure.id] ?? 0) > 0 && (
-                    <span className="text-[10px] flex-shrink-0" style={{ color: "rgba(240,224,224,0.35)" }}>
-                      {huntingCounts[item.figure.id]} {dict.profile_also_hunting}
-                    </span>
-                  )}
-                </div>
+                </Link>
               ))}
             </div>
           )}
         </section>
 
-        {/* ── 7. Collection Grid ── */}
-        {have.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>{dict.profile_collection}</h2>
-            <div className="grid grid-cols-3 gap-2">
-              {displayCollection.map((item) => {
-                const forSale = activeListingFigureIds.has(item.figure.id)
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/figures/${item.figure.id}`}
-                    className="group rounded-lg overflow-hidden"
-                    style={{ background: "#0a0408", border: "1px solid rgba(255,45,120,0.13)" }}
-                  >
-                    <div className="relative aspect-square">
-                      {item.figure.imageUrl ? (
-                        <Image
-                          src={item.figure.imageUrl}
-                          alt={item.figure.name}
-                          fill
-                          unoptimized
-                          className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                          sizes="200px"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-2xl opacity-20">🦇</span>
-                        </div>
-                      )}
+        {/* ── 7. Collection (COMPACT — list rows) ── */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>{dict.profile_collection}</h2>
+          {have.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-sm" style={{ color: "rgba(240,224,224,0.3)" }}>{dict.profile_collection_empty}</p>
+              <Link
+                href={archiveHref}
+                className="inline-block mt-3 px-5 py-2 text-xs font-bold rounded-full transition-opacity hover:opacity-80"
+                style={{ background: "#ff2d78", color: "#fff" }}
+              >
+                {dict.profile_collection_cta}
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                {displayCollection.map((item) => {
+                  const forSale = activeListingFigureIds.has(item.figure.id)
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/figures/${item.figure.id}`}
+                      className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:border-[#ff2d78]/30"
+                      style={{ background: "rgba(255,45,120,0.04)", border: "1px solid rgba(255,45,120,0.13)" }}
+                    >
+                      <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0" style={{ background: "#000" }}>
+                        {item.figure.imageUrl ? (
+                          <Image
+                            src={item.figure.imageUrl}
+                            alt={item.figure.name}
+                            width={40}
+                            height={40}
+                            unoptimized
+                            className="w-full h-full object-cover object-top"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs opacity-30">🦇</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: "#f0e0e0" }}>{item.figure.name}</p>
+                        <p className="text-[11px]" style={{ color: "rgba(240,224,224,0.35)" }}>
+                          {item.figure.manufacturer}{item.figure.year ? ` · ${item.figure.year}` : ""}
+                        </p>
+                      </div>
                       {forSale && (
                         <span
-                          className="absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-sm"
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm flex-shrink-0"
                           style={{ background: "#ff2d78", color: "#fff" }}
                         >
                           {dict.profile_for_sale}
                         </span>
                       )}
-                    </div>
-                    <div className="p-2">
-                      <p className="text-xs font-medium line-clamp-2 leading-tight group-hover:text-[#ff2d78] transition-colors" style={{ color: "rgba(240,224,224,0.7)" }}>
-                        {item.figure.name}
-                      </p>
-                      <p className="text-[10px] mt-0.5" style={{ color: "rgba(240,224,224,0.3)" }}>
-                        {item.figure.manufacturer}{item.figure.year ? ` · ${item.figure.year}` : ""}
-                      </p>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-            {have.length > 6 && !collectionExpanded && (
-              <button
-                onClick={() => setCollectionExpanded(true)}
-                className="text-xs font-medium transition-colors"
-                style={{ color: "#ff2d78" }}
-              >
-                {dict.profile_view_all} ({have.length})
-              </button>
-            )}
-          </section>
-        )}
-
-        {/* Empty state */}
-        {have.length === 0 && wishlist.length === 0 && (
-          <div className="text-center py-16">
-            <span className="text-5xl block mb-4 opacity-20">🦇</span>
-            <p className="text-lg" style={{ color: "rgba(240,224,224,0.3)" }}>{dict.profile_no_figures}</p>
-            <Link
-              href={archiveHref}
-              className="inline-block mt-4 px-6 py-2.5 text-sm font-bold rounded-full transition-opacity hover:opacity-80"
-              style={{ background: "#ff2d78", color: "#fff" }}
-            >
-              {dict.profile_browse_archive}
-            </Link>
-          </div>
-        )}
+                    </Link>
+                  )
+                })}
+              </div>
+              {have.length > 6 && !collectionExpanded && (
+                <button
+                  onClick={() => setCollectionExpanded(true)}
+                  className="text-xs font-medium transition-colors"
+                  style={{ color: "#ff2d78" }}
+                >
+                  {dict.profile_view_all} ({have.length})
+                </button>
+              )}
+            </>
+          )}
+        </section>
       </div>
     </div>
   )

@@ -148,6 +148,9 @@ export interface Dict {
   profile_public_wishlist: string
   profile_hunt_tooltip: string
   profile_hunt_empty: string
+  profile_hunt_cta: string
+  profile_collection_empty: string
+  profile_collection_cta: string
   profile_also_hunting: string
   profile_view_all: string
   profile_for_sale: string
@@ -390,7 +393,10 @@ export const en: Dict = {
   profile_stamps_left: "{X} stamps left",
   profile_public_wishlist: "public wishlist",
   profile_hunt_tooltip: "Your wishlist is public so other collectors can see what you're looking for.",
-  profile_hunt_empty: "Nothing on the hunt board yet",
+  profile_hunt_empty: "Nothing on your hunt board yet. Add figures you're looking for!",
+  profile_hunt_cta: "Explore Archive",
+  profile_collection_empty: "Your collection is empty. Start exploring the archive!",
+  profile_collection_cta: "Browse Archive",
   profile_also_hunting: "also hunting",
   profile_view_all: "View all",
   profile_for_sale: "for sale",
@@ -629,7 +635,10 @@ export const ru: Dict = {
   profile_stamps_left: "осталось {X} штампов",
   profile_public_wishlist: "публичный вишлист",
   profile_hunt_tooltip: "Ваш вишлист публичный, чтобы другие коллекционеры могли видеть, что вы ищете.",
-  profile_hunt_empty: "Вишлист пуст",
+  profile_hunt_empty: "Вишлист пуст. Добавь фигурки которые ищешь!",
+  profile_hunt_cta: "Исследовать архив",
+  profile_collection_empty: "Коллекция пуста. Начни исследовать архив!",
+  profile_collection_cta: "Открыть архив",
   profile_also_hunting: "тоже ищут",
   profile_view_all: "Смотреть все",
   profile_for_sale: "в продаже",
@@ -868,7 +877,10 @@ export const jp: Dict = {
   profile_stamps_left: "あと{X}スタンプ",
   profile_public_wishlist: "パブリックウィッシュリスト",
   profile_hunt_tooltip: "ウィッシュリストは公開されており、他のコレクターがあなたの探しているものを見ることができます。",
-  profile_hunt_empty: "ハントボードは空です",
+  profile_hunt_empty: "ハントボードは空です。探しているフィギュアを追加しよう！",
+  profile_hunt_cta: "アーカイブを探索する",
+  profile_collection_empty: "コレクションは空です。アーカイブを探索しよう！",
+  profile_collection_cta: "アーカイブを見る",
   profile_also_hunting: "人も探しています",
   profile_view_all: "すべて見る",
   profile_for_sale: "販売中",
