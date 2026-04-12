@@ -56,7 +56,7 @@ export default function RegisterForm({ labels }: { labels: RegisterFormLabels })
       if (result?.error) {
         router.push(labels.loginHref)
       } else {
-        router.push("/")
+        router.push(`/profile/${formData.username}`)
         router.refresh()
       }
     } catch {

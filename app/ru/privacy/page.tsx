@@ -31,13 +31,6 @@ export default function PrivacyRuPage() {
       </section>
 
       <section>
-        <h2 className="text-white font-bold text-base mb-2">Третьи стороны</h2>
-        <p className="text-white/60 text-sm leading-relaxed">
-          Для работы сайта мы используем следующие сторонние сервисы: <span className="text-white">Stripe</span> (платежи), <span className="text-white">Supabase</span> (база данных и хранилище) и <span className="text-white">Vercel</span> (хостинг). Мы никому не продаём ваши данные.
-        </p>
-      </section>
-
-      <section>
         <h2 className="text-white font-bold text-base mb-2">Удаление аккаунта</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           Для удаления аккаунта напишите на{" "}

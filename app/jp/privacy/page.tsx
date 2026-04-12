@@ -31,13 +31,6 @@ export default function PrivacyJpPage() {
       </section>
 
       <section>
-        <h2 className="text-white font-bold text-base mb-2">第三者サービス</h2>
-        <p className="text-white/60 text-sm leading-relaxed">
-          当サイトの運営には以下の第三者サービスを利用しています：<span className="text-white">Stripe</span>（決済）、<span className="text-white">Supabase</span>（データベースとストレージ）、<span className="text-white">Vercel</span>（ホスティング）。当社はお客様のデータを第三者に販売しません。
-        </p>
-      </section>
-
-      <section>
         <h2 className="text-white font-bold text-base mb-2">アカウントの削除</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           アカウントの削除をご希望の場合は{" "}

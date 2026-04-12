@@ -1,6 +1,6 @@
 "use client"
 
-import { signIn } from "next-auth/react"
+import { signIn, getSession } from "next-auth/react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -35,7 +35,9 @@ export default function LoginForm({ labels }: { labels: LoginFormLabels }) {
       if (result?.error) {
         setError(result.error)
       } else {
-        router.push("/")
+        const session = await getSession()
+        const username = (session?.user as any)?.username
+        router.push(username ? `/profile/${username}` : "/")
         router.refresh()
       }
     } catch {

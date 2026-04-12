@@ -31,13 +31,6 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2 className="text-white font-bold text-base mb-2">Third parties</h2>
-        <p className="text-white/60 text-sm leading-relaxed">
-          We use the following third-party services to operate the site: <span className="text-white">Stripe</span> (payments), <span className="text-white">Supabase</span> (database &amp; storage) and <span className="text-white">Vercel</span> (hosting). We do not sell your data to anyone.
-        </p>
-      </section>
-
-      <section>
         <h2 className="text-white font-bold text-base mb-2">Account deletion</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           To request account deletion, contact{" "}

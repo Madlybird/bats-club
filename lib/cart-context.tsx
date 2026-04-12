@@ -68,7 +68,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const setQuantity = useCallback((listingId: string, quantity: number) => {
-    if (quantity < 1) return
+    if (quantity < 1) {
+      setItems((prev) => prev.filter((i) => i.listingId !== listingId))
+      return
+    }
     setItems((prev) =>
       prev.map((i) => (i.listingId === listingId ? { ...i, quantity } : i))
     )
