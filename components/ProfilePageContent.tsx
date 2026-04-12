@@ -180,25 +180,7 @@ export default function ProfilePageContent({
           </p>
 
           {/* 3. Share row + Share Profile button */}
-          <div className="flex items-center gap-3">
-            <ShareIcon
-              label="Telegram"
-              href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(`${user.username}'s collection`)}`}
-              svg={<path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12.056 0h-.112zM8.016 8.2a.14.14 0 0 1 .072.02l1.072.68 4.624 2.928c.04.024.04.064 0 .088L9.16 14.84l-1.072.68a.14.14 0 0 1-.072.02c-.056 0-.096-.04-.096-.096V8.296c0-.056.04-.096.096-.096z" fill="currentColor"/>}
-            />
-            <ShareIcon
-              label="WhatsApp"
-              href={`https://wa.me/?text=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
-              svg={<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.05 21.785a9.84 9.84 0 0 1-5.012-1.373l-.36-.214-3.732.979.996-3.641-.235-.374A9.864 9.864 0 0 1 2.193 12.1c0-5.458 4.44-9.897 9.9-9.897 2.646 0 5.13 1.03 6.998 2.9a9.825 9.825 0 0 1 2.898 6.994c-.003 5.458-4.443 9.898-9.9 9.898l-.04-.01zm8.413-18.27A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892a11.864 11.864 0 0 0 1.588 5.945L0 24l6.335-1.662a11.866 11.866 0 0 0 5.71 1.453h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" fill="currentColor"/>}
-            />
-            <ShareIcon
-              label="Line"
-              href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
-              svg={<path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 .63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016a.63.63 0 0 1-.63.629.626.626 0 0 1-.51-.262l-2.445-3.339v2.972a.63.63 0 0 1-1.26 0V8.108a.629.629 0 0 1 .63-.63c.2 0 .385.096.51.262l2.445 3.333V8.108a.63.63 0 0 1 1.26 0v4.771zm-6.078.629a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 1.26 0v4.771a.63.63 0 0 1-.63.629zm-2.908 0H4.138a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 1.26 0v4.141h1.755c.349 0 .63.283.63.63a.627.627 0 0 1-.63.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="currentColor"/>}
-            />
-            <CopyLinkButton label={dict.profile_share} />
-            <ShareProfileButton label={dict.profile_share_profile} />
-          </div>
+          <ShareRow username={user.username} name={user.name} dict={dict} />
         </section>
 
         {/* ── 2. Stats Bar ── */}
@@ -359,18 +341,22 @@ export default function ProfilePageContent({
               {dict.profile_public_wishlist}
             </span>
             <InfoTooltip text={dict.profile_hunt_tooltip} />
-            <HuntShareButton label={dict.profile_hunt_share} />
+            <HuntShareButton label={dict.profile_hunt_share} username={user.username} />
           </div>
           {wishlist.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-sm" style={{ color: "rgba(240,224,224,0.3)" }}>{dict.profile_hunt_empty}</p>
-              <Link
-                href={archiveHref}
-                className="inline-block mt-3 px-5 py-2 text-xs font-bold rounded-full transition-opacity hover:opacity-80"
-                style={{ background: "#ff2d78", color: "#fff" }}
-              >
-                {dict.profile_hunt_cta}
-              </Link>
+              <p className="text-sm" style={{ color: "rgba(240,224,224,0.3)" }}>
+                {isOwner ? dict.profile_hunt_empty : dict.profile_hunt_empty_visitor}
+              </p>
+              {isOwner && (
+                <Link
+                  href={archiveHref}
+                  className="inline-block mt-3 px-5 py-2 text-xs font-bold rounded-full transition-opacity hover:opacity-80"
+                  style={{ background: "#ff2d78", color: "#fff" }}
+                >
+                  {dict.profile_hunt_cta}
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2">
@@ -424,14 +410,18 @@ export default function ProfilePageContent({
           <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>{dict.profile_collection}</h2>
           {have.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-sm" style={{ color: "rgba(240,224,224,0.3)" }}>{dict.profile_collection_empty}</p>
-              <Link
-                href={archiveHref}
-                className="inline-block mt-3 px-5 py-2 text-xs font-bold rounded-full transition-opacity hover:opacity-80"
-                style={{ background: "#ff2d78", color: "#fff" }}
-              >
-                {dict.profile_collection_cta}
-              </Link>
+              <p className="text-sm" style={{ color: "rgba(240,224,224,0.3)" }}>
+                {isOwner ? dict.profile_collection_empty : dict.profile_collection_empty_visitor}
+              </p>
+              {isOwner && (
+                <Link
+                  href={archiveHref}
+                  className="inline-block mt-3 px-5 py-2 text-xs font-bold rounded-full transition-opacity hover:opacity-80"
+                  style={{ background: "#ff2d78", color: "#fff" }}
+                >
+                  {dict.profile_collection_cta}
+                </Link>
+              )}
             </div>
           ) : (
             <>
@@ -503,83 +493,77 @@ function StatCell({ value, label }: { value: number; label: string }) {
   )
 }
 
-function ShareIcon({ label, href, svg }: { label: string; href: string; svg: React.ReactNode }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={label}
-      className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-      style={{ background: "rgba(255,45,120,0.08)", color: "rgba(240,224,224,0.4)", border: "1px solid rgba(255,45,120,0.13)" }}
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24">{svg}</svg>
-    </a>
-  )
-}
-
-function CopyLinkButton({ label }: { label: string }) {
+function ShareRow({ username, name, dict }: { username: string; name: string; dict: Dict }) {
   const [copied, setCopied] = useState(false)
+  const profileUrl = `https://batsclub.com/profile/${username}`
+  const shareText = dict.profile_share_text.replace("{name}", name)
+
   const handleCopy = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    }
+    navigator.clipboard.writeText(profileUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
-  return (
-    <button
-      onClick={handleCopy}
-      className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-      style={{ background: copied ? "rgba(255,45,120,0.2)" : "rgba(255,45,120,0.08)", color: "rgba(240,224,224,0.4)", border: "1px solid rgba(255,45,120,0.13)" }}
-      title={label}
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        {copied ? (
-          <path d="M5 13l4 4L19 7" />
-        ) : (
-          <>
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-          </>
-        )}
-      </svg>
-    </button>
-  )
-}
 
-function ShareProfileButton({ label }: { label: string }) {
-  const handleShare = () => {
+  const handleNativeShare = () => {
     if (typeof window !== "undefined" && navigator.share) {
-      navigator.share({ url: window.location.href, title: document.title })
-    } else if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href)
+      navigator.share({ url: profileUrl, title: shareText })
+    } else {
+      handleCopy()
     }
   }
+
+  const iconStyle = { background: "rgba(255,45,120,0.08)", color: "rgba(240,224,224,0.4)", border: "1px solid rgba(255,45,120,0.13)" }
+
   return (
-    <button
-      onClick={handleShare}
-      className="text-[11px] font-medium px-3 py-1 rounded-full transition-colors"
-      style={{
-        background: "rgba(255,45,120,0.08)",
-        color: "rgba(240,224,224,0.5)",
-        border: "1px solid rgba(255,45,120,0.2)",
-      }}
-    >
-      {label}
-    </button>
+    <div className="flex items-center gap-3">
+      <a
+        href={`https://t.me/share/url?url=${encodeURIComponent(profileUrl)}&text=${encodeURIComponent(shareText)}`}
+        target="_blank" rel="noopener noreferrer" aria-label="Telegram"
+        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={iconStyle}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12.056 0h-.112zM8.016 8.2a.14.14 0 0 1 .072.02l1.072.68 4.624 2.928c.04.024.04.064 0 .088L9.16 14.84l-1.072.68a.14.14 0 0 1-.072.02c-.056 0-.096-.04-.096-.096V8.296c0-.056.04-.096.096-.096z" fill="currentColor"/></svg>
+      </a>
+      <a
+        href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${profileUrl}`)}`}
+        target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={iconStyle}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.05 21.785a9.84 9.84 0 0 1-5.012-1.373l-.36-.214-3.732.979.996-3.641-.235-.374A9.864 9.864 0 0 1 2.193 12.1c0-5.458 4.44-9.897 9.9-9.897 2.646 0 5.13 1.03 6.998 2.9a9.825 9.825 0 0 1 2.898 6.994c-.003 5.458-4.443 9.898-9.9 9.898l-.04-.01zm8.413-18.27A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892a11.864 11.864 0 0 0 1.588 5.945L0 24l6.335-1.662a11.866 11.866 0 0 0 5.71 1.453h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" fill="currentColor"/></svg>
+      </a>
+      <a
+        href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(profileUrl)}`}
+        target="_blank" rel="noopener noreferrer" aria-label="Line"
+        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={iconStyle}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 .63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016a.63.63 0 0 1-.63.629.626.626 0 0 1-.51-.262l-2.445-3.339v2.972a.63.63 0 0 1-1.26 0V8.108a.629.629 0 0 1 .63-.63c.2 0 .385.096.51.262l2.445 3.333V8.108a.63.63 0 0 1 1.26 0v4.771zm-6.078.629a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 1.26 0v4.771a.63.63 0 0 1-.63.629zm-2.908 0H4.138a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 1.26 0v4.141h1.755c.349 0 .63.283.63.63a.627.627 0 0 1-.63.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="currentColor"/></svg>
+      </a>
+      <button
+        onClick={handleCopy}
+        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+        style={{ ...iconStyle, background: copied ? "rgba(255,45,120,0.2)" : iconStyle.background }}
+        title={dict.profile_share}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {copied ? <path d="M5 13l4 4L19 7" /> : <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></>}
+        </svg>
+      </button>
+      <button
+        onClick={handleNativeShare}
+        className="text-[11px] font-medium px-3 py-1 rounded-full transition-colors"
+        style={{ background: "rgba(255,45,120,0.08)", color: "rgba(240,224,224,0.5)", border: "1px solid rgba(255,45,120,0.2)" }}
+      >
+        {dict.profile_share_profile}
+      </button>
+    </div>
   )
 }
 
-function HuntShareButton({ label }: { label: string }) {
+function HuntShareButton({ label, username }: { label: string; username: string }) {
   const [copied, setCopied] = useState(false)
   const handleShare = () => {
-    if (typeof window !== "undefined") {
-      const url = window.location.href.split("#")[0] + "#hunt-board"
-      navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    }
+    navigator.clipboard.writeText(`https://batsclub.com/profile/${username}#hunt-board`)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
   return (
     <button

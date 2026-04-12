@@ -148,9 +148,12 @@ export interface Dict {
   profile_public_wishlist: string
   profile_hunt_tooltip: string
   profile_hunt_empty: string
+  profile_hunt_empty_visitor: string
   profile_hunt_cta: string
   profile_collection_empty: string
+  profile_collection_empty_visitor: string
   profile_collection_cta: string
+  profile_share_text: string
   profile_also_hunting: string
   profile_view_all: string
   profile_for_sale: string
@@ -394,9 +397,12 @@ export const en: Dict = {
   profile_public_wishlist: "public wishlist",
   profile_hunt_tooltip: "Your wishlist is public so other collectors can see what you're looking for.",
   profile_hunt_empty: "Nothing on your hunt board yet. Add figures you're looking for!",
+  profile_hunt_empty_visitor: "This collector's hunt board is empty",
   profile_hunt_cta: "Explore Archive",
   profile_collection_empty: "Your collection is empty. Start exploring the archive!",
+  profile_collection_empty_visitor: "This collector's collection is empty",
   profile_collection_cta: "Browse Archive",
+  profile_share_text: "Check out {name}'s anime figure collection on Bats Club 🦇",
   profile_also_hunting: "also hunting",
   profile_view_all: "View all",
   profile_for_sale: "for sale",
@@ -636,9 +642,12 @@ export const ru: Dict = {
   profile_public_wishlist: "публичный вишлист",
   profile_hunt_tooltip: "Ваш вишлист публичный, чтобы другие коллекционеры могли видеть, что вы ищете.",
   profile_hunt_empty: "Вишлист пуст. Добавь фигурки которые ищешь!",
+  profile_hunt_empty_visitor: "У этого коллекционера пустой вишлист",
   profile_hunt_cta: "Исследовать архив",
   profile_collection_empty: "Коллекция пуста. Начни исследовать архив!",
+  profile_collection_empty_visitor: "У этого коллекционера пустая коллекция",
   profile_collection_cta: "Открыть архив",
+  profile_share_text: "Смотри коллекцию {name} на Bats Club 🦇",
   profile_also_hunting: "тоже ищут",
   profile_view_all: "Смотреть все",
   profile_for_sale: "в продаже",
@@ -878,9 +887,12 @@ export const jp: Dict = {
   profile_public_wishlist: "パブリックウィッシュリスト",
   profile_hunt_tooltip: "ウィッシュリストは公開されており、他のコレクターがあなたの探しているものを見ることができます。",
   profile_hunt_empty: "ハントボードは空です。探しているフィギュアを追加しよう！",
+  profile_hunt_empty_visitor: "このコレクターのハントボードは空です",
   profile_hunt_cta: "アーカイブを探索する",
   profile_collection_empty: "コレクションは空です。アーカイブを探索しよう！",
+  profile_collection_empty_visitor: "このコレクターのコレクションは空です",
   profile_collection_cta: "アーカイブを見る",
+  profile_share_text: "Bats Clubで{name}のアニメフィギュアコレクションをチェック 🦇",
   profile_also_hunting: "人も探しています",
   profile_view_all: "すべて見る",
   profile_for_sale: "販売中",
