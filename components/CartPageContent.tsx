@@ -95,7 +95,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const shippingOriginal = countryCode && !shipping.blocked ? shipping.priceCents : 0
   const shippingDisplay = `$${(shippingCents / 100).toFixed(2)}`
 
-  const PROMO_RATES: Record<string, number> = { BATSCLUB10: 10 }
+  const PROMO_RATES: Record<string, number> = {}
   const promoRate = appliedPromo ? (PROMO_RATES[appliedPromo] ?? 0) : 0
   const promoDiscountCents = promoRate > 0
     ? Math.round((itemsSubtotal + shippingCents) * (promoRate / 100))

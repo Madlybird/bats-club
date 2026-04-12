@@ -11,7 +11,7 @@ const wrap = (content: string) => `
 <html>
 <body style="margin:0;padding:0;background:#0e0408">
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:480px;margin:0 auto;background:#0e0408;color:#f0e0e0;padding:40px 32px">
-  <img src="https://batsclub.com/logo.png" alt="Bats Club" width="120" height="36" style="margin-bottom:24px" />
+  <img src="https://batsclub.com/logo.png" alt="Bats Club" width="120" height="auto" style="display:block;max-width:120px;height:auto;margin-bottom:24px" />
   ${content}
   <p style="color:rgba(240,224,224,0.2);font-size:11px;margin:32px 0 0;border-top:1px solid rgba(255,45,120,0.13);padding-top:16px">
     &copy; 2026 Bats Club by Sinbiox Limited. All rights reserved.

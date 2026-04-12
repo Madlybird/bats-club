@@ -10,7 +10,7 @@ import { getShippingInfo, ALLOWED_COUNTRIES } from "@/lib/shipping"
 // Stripe-managed promo codes can be applied via the Checkout UI when
 // the request doesn't include one of these.
 const PROMO_CODES: Record<string, number> = {
-  BATSCLUB10: 10, // 10% off total
+  // No active promo codes. Add new ones here as needed.
 }
 
 interface CartItem {
