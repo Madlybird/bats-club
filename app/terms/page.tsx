@@ -4,7 +4,7 @@ import InfoPageShell from "@/components/InfoPageShell"
 export const metadata: Metadata = {
   title: "Terms of Service | Bats Club",
   description:
-    "Bats Club terms of service. Operated by Sinbiox Limited, Hong Kong.",
+    "Bats Club terms of service. Operated by Sinbiox Limited.",
 }
 
 export default function TermsPage() {
@@ -12,7 +12,7 @@ export default function TermsPage() {
     <InfoPageShell title="Terms of Service">
       <section>
         <p className="text-white/70 text-sm leading-relaxed">
-          Bats Club is operated by <span className="text-white font-semibold">Sinbiox Limited</span>, Hong Kong. By placing an order you agree to the terms below.
+          Bats Club is operated by <span className="text-white font-semibold">Sinbiox Limited</span>. By placing an order you agree to the terms below.
         </p>
       </section>
 

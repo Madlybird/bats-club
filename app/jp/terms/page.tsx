@@ -4,7 +4,7 @@ import InfoPageShell from "@/components/InfoPageShell"
 export const metadata: Metadata = {
   title: "利用規約 | Bats Club",
   description:
-    "Bats Club 利用規約。運営：Sinbiox Limited（香港）。",
+    "Bats Club 利用規約。運営：Sinbiox Limited。",
 }
 
 export default function TermsJpPage() {
@@ -12,7 +12,7 @@ export default function TermsJpPage() {
     <InfoPageShell title="利用規約">
       <section>
         <p className="text-white/70 text-sm leading-relaxed">
-          Bats Clubは <span className="text-white font-semibold">Sinbiox Limited</span>（香港）によって運営されています。ご注文いただくことで、以下の規約に同意したものとみなします。
+          Bats Clubは <span className="text-white font-semibold">Sinbiox Limited</span>によって運営されています。ご注文いただくことで、以下の規約に同意したものとみなします。
         </p>
       </section>
 

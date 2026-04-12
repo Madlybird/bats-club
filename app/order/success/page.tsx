@@ -57,10 +57,10 @@ export default function OrderSuccessPage() {
             Back to Archive
           </Link>
           <Link
-            href="/account"
+            href="/shop"
             className="inline-flex items-center justify-center px-6 py-3 rounded-full font-bold text-sm border border-white/15 text-white/70 hover:text-white hover:border-white/30 transition-all"
           >
-            View Orders
+            Continue Shopping
           </Link>
         </div>
       </div>

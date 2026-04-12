@@ -4,7 +4,7 @@ import InfoPageShell from "@/components/InfoPageShell"
 export const metadata: Metadata = {
   title: "プライバシーポリシー | Bats Club",
   description:
-    "Bats Clubにおける個人情報の取り扱いについて。運営：Sinbiox Limited（香港）。",
+    "Bats Clubにおける個人情報の取り扱いについて。運営：Sinbiox Limited。",
 }
 
 export default function PrivacyJpPage() {
@@ -12,7 +12,7 @@ export default function PrivacyJpPage() {
     <InfoPageShell title="プライバシーポリシー">
       <section>
         <p className="text-white/70 text-sm leading-relaxed">
-          Bats Clubは <span className="text-white font-semibold">Sinbiox Limited</span>（香港）によって運営されています。本ポリシーでは、当社が収集するデータとその利用方法について説明します。
+          Bats Clubは <span className="text-white font-semibold">Sinbiox Limited</span>によって運営されています。本ポリシーでは、当社が収集するデータとその利用方法について説明します。
         </p>
       </section>
 

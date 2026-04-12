@@ -4,7 +4,7 @@ import InfoPageShell from "@/components/InfoPageShell"
 export const metadata: Metadata = {
   title: "Условия использования | Bats Club",
   description:
-    "Условия использования Bats Club. Сайт управляется Sinbiox Limited, Гонконг.",
+    "Условия использования Bats Club. Сайт управляется Sinbiox Limited.",
 }
 
 export default function TermsRuPage() {
@@ -12,7 +12,7 @@ export default function TermsRuPage() {
     <InfoPageShell title="Условия использования">
       <section>
         <p className="text-white/70 text-sm leading-relaxed">
-          Bats Club управляется компанией <span className="text-white font-semibold">Sinbiox Limited</span>, Гонконг. Оформляя заказ, вы соглашаетесь с условиями ниже.
+          Bats Club управляется компанией <span className="text-white font-semibold">Sinbiox Limited</span>. Оформляя заказ, вы соглашаетесь с условиями ниже.
         </p>
       </section>
 

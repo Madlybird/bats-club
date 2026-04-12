@@ -4,7 +4,7 @@ import InfoPageShell from "@/components/InfoPageShell"
 export const metadata: Metadata = {
   title: "Политика конфиденциальности | Bats Club",
   description:
-    "Как Bats Club обрабатывает ваши персональные данные. Сайт управляется Sinbiox Limited, Гонконг.",
+    "Как Bats Club обрабатывает ваши персональные данные. Сайт управляется Sinbiox Limited.",
 }
 
 export default function PrivacyRuPage() {
@@ -12,7 +12,7 @@ export default function PrivacyRuPage() {
     <InfoPageShell title="Политика конфиденциальности">
       <section>
         <p className="text-white/70 text-sm leading-relaxed">
-          Bats Club управляется компанией <span className="text-white font-semibold">Sinbiox Limited</span>, Гонконг. В этом документе описано, какие данные мы собираем и как их используем.
+          Bats Club управляется компанией <span className="text-white font-semibold">Sinbiox Limited</span>. В этом документе описано, какие данные мы собираем и как их используем.
         </p>
       </section>
 

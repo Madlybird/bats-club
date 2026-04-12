@@ -54,10 +54,10 @@ export default function OrderSuccessPageRu() {
             Вернуться в архив
           </Link>
           <Link
-            href="/account"
+            href="/ru/shop"
             className="inline-flex items-center justify-center px-6 py-3 rounded-full font-bold text-sm border border-white/15 text-white/70 hover:text-white hover:border-white/30 transition-all"
           >
-            Мои заказы
+            Продолжить покупки
           </Link>
         </div>
       </div>

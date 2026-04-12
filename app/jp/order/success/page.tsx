@@ -54,10 +54,10 @@ export default function OrderSuccessPageJp() {
             アーカイブに戻る
           </Link>
           <Link
-            href="/account"
+            href="/jp/shop"
             className="inline-flex items-center justify-center px-6 py-3 rounded-full font-bold text-sm border border-white/15 text-white/70 hover:text-white hover:border-white/30 transition-all"
           >
-            注文履歴
+            ショッピングを続ける
           </Link>
         </div>
       </div>
