@@ -7,10 +7,10 @@ import type { Dict } from "@/lib/dict"
 
 // /public/figures/ images — ?v=2 busts browser cache
 const LOCAL_FIGURES = [
-  "/figures/1.png?v=2",
-  "/figures/2.png?v=2",
-  "/figures/3.png?v=2",
-  "/figures/4.png?v=2",
+  "/figures/1.jpg?v=2",
+  "/figures/2.jpg?v=2",
+  "/figures/3.jpg?v=2",
+  "/figures/4.jpg?v=2",
 ]
 
 // Deterministic bat positions — 35 bats spread across full page height
