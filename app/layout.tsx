@@ -32,6 +32,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`dark ${inter.variable}`}>
+      <head>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-V3EEKGR3QM" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-V3EEKGR3QM');
+        ` }} />
+      </head>
       <body
         className="min-h-screen text-slate-200 antialiased font-inter"
       >
