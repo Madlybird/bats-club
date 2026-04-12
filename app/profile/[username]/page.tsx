@@ -19,35 +19,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProfilePage({ params }: Props) {
-  const [session, { data: user }] = await Promise.all([
+  const [session, { data: user, error: userError }] = await Promise.all([
     getServerSession(authOptions),
     supabaseAdmin
       .from("users")
-      .select(`
-        id, name, username, avatar, bio, isAdmin:is_admin, createdAt:created_at,
-        user_figures(
-          id, status, userId:user_id, figureId:figure_id,
-          figure:figures(id, name, series, character, manufacturer, scale, year, imageUrl:image_url)
-        )
-      `)
+      .select("id, name, username, avatar, bio, isAdmin:is_admin, createdAt:created_at")
       .eq("username", params.username)
       .single(),
   ])
 
-  if (!user) notFound()
+  if (!user || userError) {
+    console.error("[profile] user query failed:", userError)
+    notFound()
+  }
 
-  const userFigures = (user.user_figures || []) as any[]
-  const have = userFigures.filter((uf: any) => uf.status === "HAVE")
-  const wishlist = userFigures.filter((uf: any) => uf.status === "WISHLIST")
-  const userId = (user as any).id as string
+  const userId = user.id as string
 
-  // All optional queries wrapped in try-catch to prevent page crash
+  // Fetch user_figures separately so a join error doesn't kill the page
+  let have: any[] = []
+  let wishlist: any[] = []
+  try {
+    const { data: userFigures } = await supabaseAdmin
+      .from("user_figures")
+      .select(`
+        id, status, userId:user_id, figureId:figure_id,
+        figure:figures(id, name, series, character, manufacturer, scale, year, imageUrl:image_url)
+      `)
+      .eq("user_id", userId)
+    const figures = (userFigures || []) as any[]
+    have = figures.filter((uf) => uf.status === "HAVE")
+    wishlist = figures.filter((uf) => uf.status === "WISHLIST")
+  } catch (e) { console.error("[profile] user_figures query failed:", e) }
+
   let purchaseCount = 0
-  let rarityScore = 0
-  let rarityPercentile = 100
-  const huntingCounts: Record<string, number> = {}
-  let activeListings: any[] = []
-
   try {
     const { count } = await supabaseAdmin
       .from("orders")
@@ -58,6 +62,9 @@ export default async function ProfilePage({ params }: Props) {
   } catch (e) { console.error("[profile] orders query failed:", e) }
 
   const haveFigureIds = have.map((uf: any) => uf.figure?.id).filter(Boolean)
+  let rarityScore = 0
+  let rarityPercentile = 100
+  let activeListings: any[] = []
 
   if (haveFigureIds.length > 0) {
     try {
@@ -93,6 +100,7 @@ export default async function ProfilePage({ params }: Props) {
   }
 
   const wishlistFigureIds = wishlist.map((uf: any) => uf.figure?.id).filter(Boolean)
+  const huntingCounts: Record<string, number> = {}
   if (wishlistFigureIds.length > 0) {
     try {
       const { data: wishCounts } = await supabaseAdmin
