@@ -57,6 +57,7 @@ export default async function HomePageRu() {
         allManufacturers={allManufacturers}
         hasSession={!!session}
         yearsCollecting={new Date().getFullYear() - minYear}
+        figurePath="/ru/figures"
       />
     </div>
   )

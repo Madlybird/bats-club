@@ -57,6 +57,7 @@ export default async function HomePageJp() {
         allManufacturers={allManufacturers}
         hasSession={!!session}
         yearsCollecting={new Date().getFullYear() - minYear}
+        figurePath="/jp/figures"
       />
     </div>
   )

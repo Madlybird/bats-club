@@ -44,6 +44,7 @@ interface Props {
   allManufacturers: string[]
   hasSession: boolean
   yearsCollecting: number
+  figurePath?: string
 }
 
 export default function HomePageContent({
@@ -52,6 +53,7 @@ export default function HomePageContent({
   allManufacturers,
   hasSession,
   yearsCollecting,
+  figurePath = "/figures",
 }: Props) {
   const recentFigures = figures.slice(0, 4)
 
@@ -234,7 +236,7 @@ export default function HomePageContent({
                             mobile Safari/Chrome and caused the image
                             box to collapse so nothing loaded. */}
                         <Link
-                          href={`/figures/${fig.id}`}
+                          href={`${figurePath}/${fig.id}`}
                           className="figure-grid-item block relative aspect-square overflow-hidden flex-shrink-0"
                           aria-label={fig.name}
                         >
@@ -275,7 +277,7 @@ export default function HomePageContent({
                           />
                         </div>
                       </div>
-                      <Link href={`/figures/${fig.id}`} className="block">
+                      <Link href={`${figurePath}/${fig.id}`} className="block">
                         <p className="text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">
                           {fig.name}
                         </p>
@@ -364,6 +366,7 @@ export default function HomePageContent({
                 emptyTitle: dict.archive_empty_title,
                 emptySub: dict.archive_empty_sub,
                 clearAllBtn: dict.archive_clear_all_btn,
+                figurePath: figurePath,
               }}
             />
           </div>
