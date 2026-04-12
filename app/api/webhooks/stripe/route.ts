@@ -24,72 +24,83 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session
 
     try {
-      // Extract the verified shipping address Stripe collected from
-      // the buyer. The exact field path depends on the API version;
-      // try a few in priority order.
       const shippingFromStripe = extractShippingAddress(session)
+      const meta = session.metadata || {}
 
-      // Cart-flow orders are stored with a shared stripe_session_id
-      // and no metadata.orderId. Single-listing orders set both. We
-      // handle the union: prefer session_id lookup, fall back to
-      // metadata.orderId.
-      let orders: Array<{ id: string; listing_id: string; quantity: number }> = []
+      const buyerId = meta.buyer_id
+      const listingIds: string[] = meta.listing_ids ? JSON.parse(meta.listing_ids) : []
+      const listingPrices: number[] = meta.listing_prices ? JSON.parse(meta.listing_prices) : []
+      const shippingCents = Number(meta.shipping_cents || "0")
+      const promoDiscountCents = Number(meta.promo_discount_cents || "0")
+      const shippingAddress = meta.shipping_address ? JSON.parse(meta.shipping_address) : {}
 
-      const { data: bySession } = await supabaseAdmin
-        .from("orders")
-        .select("id, listing_id, quantity")
-        .eq("stripe_session_id", session.id)
-      if (bySession && bySession.length > 0) {
-        orders = bySession
+      if (!buyerId || listingIds.length === 0) {
+        // Legacy fallback: try existing orders by session id or metadata.orderId
+        let orders: Array<{ id: string; listing_id: string; quantity: number }> = []
+
+        const { data: bySession } = await supabaseAdmin
+          .from("orders")
+          .select("id, listing_id, quantity")
+          .eq("stripe_session_id", session.id)
+        if (bySession && bySession.length > 0) {
+          orders = bySession
+        } else {
+          const metadataOrderId = session.metadata?.orderId
+          if (metadataOrderId) {
+            const { data } = await supabaseAdmin
+              .from("orders")
+              .select("id, listing_id, quantity")
+              .eq("id", metadataOrderId)
+              .single()
+            if (data) orders = [data]
+          }
+        }
+
+        if (orders.length > 0) {
+          for (const order of orders) {
+            const updates: Record<string, any> = {
+              status: "PAID",
+              stripe_session_id: session.id,
+            }
+            if (shippingFromStripe) updates.shipping_address = shippingFromStripe
+
+            await supabaseAdmin.from("orders").update(updates).eq("id", order.id)
+            await decrementStock(order.listing_id, order.quantity ?? 1)
+          }
+          console.log(`[stripe webhook] legacy: session ${session.id} → marked ${orders.length} order(s) PAID`)
+        } else {
+          console.error("No orders found and no metadata for session", session.id)
+          return NextResponse.json({ error: "No order data found" }, { status: 404 })
+        }
       } else {
-        const metadataOrderId = session.metadata?.orderId
-        if (metadataOrderId) {
-          const { data } = await supabaseAdmin
-            .from("orders")
-            .select("id, listing_id, quantity")
-            .eq("id", metadataOrderId)
-            .single()
-          if (data) orders = [data]
+        // New flow: create orders NOW (after payment confirmed)
+        for (let i = 0; i < listingIds.length; i++) {
+          const listingId = listingIds[i]
+          const price = listingPrices[i] ?? 0
+          const finalShippingAddress = shippingFromStripe || shippingAddress
+
+          const { error: insertError } = await supabaseAdmin.from("orders").insert({
+            buyer_id: buyerId,
+            listing_id: listingId,
+            status: "PAID",
+            shipping_address: finalShippingAddress,
+            unit_price: price,
+            shipping_price: i === 0 ? shippingCents - promoDiscountCents : 0,
+            quantity: 1,
+            stripe_session_id: session.id,
+          })
+          if (insertError) {
+            console.error(`[stripe webhook] order insert ${i} failed:`, insertError)
+            throw insertError
+          }
+
+          await decrementStock(listingId, 1)
         }
+
+        console.log(
+          `[stripe webhook] session ${session.id} → created ${listingIds.length} order(s) as PAID`
+        )
       }
-
-      if (orders.length === 0) {
-        console.error("No orders found for session", session.id)
-        return NextResponse.json({ error: "No orders found" }, { status: 404 })
-      }
-
-      // Mark every order in the session as PAID and (if Stripe gave us
-      // one) overwrite the shipping address with the Stripe-verified
-      // version. Decrement stock per order.
-      for (const order of orders) {
-        const updates: Record<string, any> = {
-          status: "PAID",
-          stripe_session_id: session.id,
-        }
-        if (shippingFromStripe) updates.shipping_address = shippingFromStripe
-
-        await supabaseAdmin.from("orders").update(updates).eq("id", order.id)
-
-        const { data: listing } = await supabaseAdmin
-          .from("listings")
-          .select("stock")
-          .eq("id", order.listing_id)
-          .single()
-        if (listing) {
-          const newStock = listing.stock - (order.quantity ?? 1)
-          await supabaseAdmin
-            .from("listings")
-            .update({
-              stock: newStock,
-              ...(newStock <= 0 ? { active: false } : {}),
-            })
-            .eq("id", order.listing_id)
-        }
-      }
-
-      console.log(
-        `[stripe webhook] session ${session.id} → marked ${orders.length} order(s) PAID`
-      )
     } catch (error) {
       console.error("Error processing payment webhook:", error)
       return NextResponse.json({ error: "Failed to process payment" }, { status: 500 })
@@ -99,7 +110,7 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session
 
-    // Cancel every order tied to this session (cart flow may have many).
+    // Cancel any legacy orders tied to this session
     await supabaseAdmin
       .from("orders")
       .update({ status: "CANCELLED" })
@@ -108,7 +119,6 @@ export async function POST(req: Request) {
         if (error) console.error("Error cancelling orders:", error)
       })
 
-    // Single-flow fallback: legacy orders only carry the metadata.orderId.
     const metadataOrderId = session.metadata?.orderId
     if (metadataOrderId) {
       await supabaseAdmin
@@ -124,11 +134,27 @@ export async function POST(req: Request) {
   return NextResponse.json({ received: true })
 }
 
+async function decrementStock(listingId: string, quantity: number) {
+  const { data: listing } = await supabaseAdmin
+    .from("listings")
+    .select("stock")
+    .eq("id", listingId)
+    .single()
+  if (listing) {
+    const newStock = listing.stock - quantity
+    await supabaseAdmin
+      .from("listings")
+      .update({
+        stock: newStock,
+        ...(newStock <= 0 ? { active: false } : {}),
+      })
+      .eq("id", listingId)
+  }
+}
+
 /**
  * Pulls the shipping address out of a Checkout Session in a way that
- * tolerates Stripe API version drift. Returns null if Stripe didn't
- * collect one (e.g. the session was created without
- * shipping_address_collection).
+ * tolerates Stripe API version drift.
  */
 function extractShippingAddress(session: Stripe.Checkout.Session): Record<string, any> | null {
   const s = session as unknown as {

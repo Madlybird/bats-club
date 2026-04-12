@@ -64,18 +64,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  // Cancel stale PENDING orders (>30 min) so their figures become
-  // available again. Runs inline since Hobby plan limits cron to daily.
-  const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString()
-  await supabaseAdmin
-    .from("orders")
-    .update({ status: "CANCELLED" })
-    .eq("status", "PENDING")
-    .lt("created_at", cutoff)
-    .then(({ error }) => {
-      if (error) console.error("[checkout] stale order cleanup error:", error)
-    })
-
   // `stage` tracks how far we got, so the catch block can report
   // exactly which step failed instead of swallowing it as a generic
   // 500. Update it as we cross each milestone.
@@ -211,6 +199,17 @@ export async function POST(req: Request) {
       params.allow_promotion_codes = true
     }
 
+    // Pack everything the webhook needs into Stripe metadata so we
+    // can create order rows AFTER payment is confirmed — not before.
+    params.metadata = {
+      buyer_id: session.user.id,
+      listing_ids: JSON.stringify(listings.map((l) => l.id)),
+      listing_prices: JSON.stringify(listings.map((l) => l.price)),
+      shipping_cents: String(shippingCents),
+      promo_discount_cents: String(promoDiscountCents),
+      shipping_address: JSON.stringify(shippingAddress || {}),
+    }
+
     stage = "create-session"
     console.log("[checkout] creating Stripe session", {
       lineItems: params.line_items?.length,
@@ -221,28 +220,8 @@ export async function POST(req: Request) {
     const checkoutSession = await stripe.checkout.sessions.create(params)
     console.log(`[checkout] created session id=${checkoutSession.id}`)
 
-    stage = "insert-orders"
-    // Create one Order row per listing, all sharing the same
-    // stripe_session_id so the webhook can fan out and mark them PAID.
-    for (let i = 0; i < listings.length; i++) {
-      const listing = listings[i]
-      const { error: insertError } = await supabaseAdmin.from("orders").insert({
-        buyer_id: session.user.id,
-        listing_id: listing.id,
-        status: "PENDING",
-        shipping_address: shippingAddress || {},
-        unit_price: listing.price,
-        // Stash all the shipping/promo on the first row so we don't
-        // double-count it across rows when computing totals later.
-        shipping_price: i === 0 ? shippingCents - promoDiscountCents : 0,
-        quantity: 1,
-        stripe_session_id: checkoutSession.id,
-      })
-      if (insertError) {
-        console.error(`[checkout] order insert ${i} failed:`, insertError)
-        throw insertError
-      }
-    }
+    // Orders are NOT created here. They are created in the webhook
+    // handler after Stripe confirms payment (checkout.session.completed).
 
     return NextResponse.json({ url: checkoutSession.url })
   } catch (error: any) {
