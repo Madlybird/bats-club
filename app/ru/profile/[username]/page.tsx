@@ -9,22 +9,24 @@ import { Metadata } from "next"
 interface Props { params: { username: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const decodedUsername = decodeURIComponent(params.username)
   const { data: user } = await supabaseAdmin
     .from("users")
     .select("name, username")
-    .eq("username", params.username)
+    .eq("username", decodedUsername)
     .maybeSingle()
   if (!user) return { title: "User Not Found" }
   return { title: `${user.name} (@${user.username}) | Bats Club` }
 }
 
 export default async function ProfilePageRu({ params }: Props) {
+  const decodedUsername = decodeURIComponent(params.username)
   const [session, { data: user, error: userError }] = await Promise.all([
     getServerSession(authOptions),
     supabaseAdmin
       .from("users")
       .select("id, name, username, avatar, bio, isAdmin:is_admin, createdAt:created_at")
-      .eq("username", params.username)
+      .eq("username", decodedUsername)
       .maybeSingle(),
   ])
 
