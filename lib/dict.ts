@@ -151,6 +151,10 @@ export interface Dict {
   profile_also_hunting: string
   profile_view_all: string
   profile_for_sale: string
+  profile_share_profile: string
+  profile_series_dna_tooltip: string
+  profile_stamp_claim: string
+  profile_hunt_share: string
 
   // ── Share ──
   share_label: string
@@ -390,6 +394,10 @@ export const en: Dict = {
   profile_also_hunting: "also hunting",
   profile_view_all: "View all",
   profile_for_sale: "for sale",
+  profile_share_profile: "Share Profile",
+  profile_series_dna_tooltip: "Auto-calculated from your collection, grouped by series and era. The hotter the series, the brighter it glows.",
+  profile_stamp_claim: "Claim",
+  profile_hunt_share: "Share",
 
   share_label: "Share",
 
@@ -625,6 +633,10 @@ export const ru: Dict = {
   profile_also_hunting: "тоже ищут",
   profile_view_all: "Смотреть все",
   profile_for_sale: "в продаже",
+  profile_share_profile: "Поделиться профилем",
+  profile_series_dna_tooltip: "Рассчитывается автоматически из вашей коллекции по сериям и эпохе.",
+  profile_stamp_claim: "Получить",
+  profile_hunt_share: "Поделиться",
 
   share_label: "Поделиться",
 
@@ -860,6 +872,10 @@ export const jp: Dict = {
   profile_also_hunting: "人も探しています",
   profile_view_all: "すべて見る",
   profile_for_sale: "販売中",
+  profile_share_profile: "プロフィールをシェア",
+  profile_series_dna_tooltip: "コレクションからシリーズと年代別に自動計算されます。",
+  profile_stamp_claim: "受け取る",
+  profile_hunt_share: "シェア",
 
   share_label: "シェア",
 

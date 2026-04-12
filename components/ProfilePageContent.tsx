@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
+import BatsOverlay from "@/components/BatsOverlay"
 import InfoTooltip from "@/components/ui/InfoTooltip"
 import type { Dict } from "@/lib/dict"
 
@@ -112,8 +113,11 @@ export default function ProfilePageContent({
   const displayCollection = collectionExpanded ? have : have.slice(0, 6)
 
   return (
-    <div className="min-h-screen" style={{ background: "#0e0408" }}>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+    <div className="relative min-h-screen" style={{ background: "#0e0408" }}>
+      {/* 1. Bat animation */}
+      <BatsOverlay />
+
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
 
         {/* ── 1. Hero ── */}
         <section className="flex flex-col items-center text-center gap-4">
@@ -146,9 +150,25 @@ export default function ProfilePageContent({
             )}
           </div>
 
+          {/* 2. Name + username + inline edit button */}
           <div>
             <h1 className="text-2xl font-black" style={{ color: "#f0e0e0" }}>{user.name}</h1>
-            <p className="text-sm" style={{ color: "rgba(240,224,224,0.4)" }}>@{user.username}</p>
+            <div className="flex items-center justify-center gap-2 mt-0.5">
+              <p className="text-sm" style={{ color: "rgba(240,224,224,0.4)" }}>@{user.username}</p>
+              {isOwner && (
+                <Link
+                  href={`${profileBasePath}/${user.username}/edit`}
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors"
+                  style={{
+                    border: "1px solid rgba(255,45,120,0.25)",
+                    color: "rgba(240,224,224,0.5)",
+                    background: "rgba(255,45,120,0.08)",
+                  }}
+                >
+                  {dict.profile_edit}
+                </Link>
+              )}
+            </div>
           </div>
 
           {user.bio && (
@@ -159,7 +179,7 @@ export default function ProfilePageContent({
             {dict.profile_member_since} {memberSince}
           </p>
 
-          {/* Share row */}
+          {/* 3. Share row + Share Profile button */}
           <div className="flex items-center gap-3">
             <ShareIcon
               label="Telegram"
@@ -177,21 +197,8 @@ export default function ProfilePageContent({
               svg={<path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 .63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016a.63.63 0 0 1-.63.629.626.626 0 0 1-.51-.262l-2.445-3.339v2.972a.63.63 0 0 1-1.26 0V8.108a.629.629 0 0 1 .63-.63c.2 0 .385.096.51.262l2.445 3.333V8.108a.63.63 0 0 1 1.26 0v4.771zm-6.078.629a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 1.26 0v4.771a.63.63 0 0 1-.63.629zm-2.908 0H4.138a.63.63 0 0 1-.63-.629V8.108a.63.63 0 0 1 1.26 0v4.141h1.755c.349 0 .63.283.63.63a.627.627 0 0 1-.63.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" fill="currentColor"/>}
             />
             <CopyLinkButton label={dict.profile_share} />
+            <ShareProfileButton label={dict.profile_share_profile} />
           </div>
-
-          {isOwner && (
-            <Link
-              href={`${profileBasePath}/${user.username}/edit`}
-              className="text-xs font-medium px-4 py-1.5 rounded-md transition-colors"
-              style={{
-                border: "1px solid rgba(255,45,120,0.25)",
-                color: "rgba(240,224,224,0.5)",
-                background: "rgba(255,45,120,0.08)",
-              }}
-            >
-              {dict.profile_edit}
-            </Link>
-          )}
         </section>
 
         {/* ── 2. Stats Bar ── */}
@@ -204,7 +211,7 @@ export default function ProfilePageContent({
           <StatCell value={purchaseCount} label={dict.profile_purchases} />
         </section>
 
-        {/* ── 3. Rarity Score ── */}
+        {/* ── 3. Rarity Score with neon glow ── */}
         {have.length > 0 && (
           <section
             className="rounded-lg p-5 space-y-3"
@@ -217,25 +224,38 @@ export default function ProfilePageContent({
               <InfoTooltip text={dict.profile_rarity_tooltip} />
             </div>
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-black" style={{ color: "#ff2d78" }}>
+              <span
+                className="text-3xl font-black"
+                style={{
+                  color: "#ff2d78",
+                  textShadow: "0 0 10px rgba(255,45,120,0.6), 0 0 30px rgba(255,45,120,0.3), 0 0 60px rgba(255,45,120,0.15)",
+                }}
+              >
                 {rarityScore.toFixed(1)}
               </span>
               <span className="text-xs" style={{ color: "rgba(240,224,224,0.4)" }}>
                 {dict.profile_rarity_percentile.replace("{X}", String(rarityPercentile))}
               </span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,45,120,0.13)" }}>
+            <div
+              className="h-1.5 rounded-full overflow-hidden"
+              style={{ background: "rgba(255,45,120,0.13)" }}
+            >
               <div
                 className="h-full rounded-full transition-all"
-                style={{ width: `${Math.min(100, 100 - rarityPercentile)}%`, background: "#ff2d78" }}
+                style={{
+                  width: `${Math.min(100, 100 - rarityPercentile)}%`,
+                  background: "#ff2d78",
+                  boxShadow: "0 0 8px rgba(255,45,120,0.6), 0 0 20px rgba(255,45,120,0.3)",
+                }}
               />
             </div>
           </section>
         )}
 
-        {/* ── 4. Stamp Card ── */}
+        {/* ── 4. Stamp Card (compact) ── */}
         <section
-          className="rounded-lg p-5 space-y-4"
+          className="rounded-lg p-4 space-y-3"
           style={{ background: "rgba(255,45,120,0.08)", border: "1px solid rgba(255,45,120,0.13)" }}
         >
           <div className="flex items-center justify-between">
@@ -252,20 +272,26 @@ export default function ProfilePageContent({
               {dict.profile_stamps_left.replace("{X}", String(10 - stamps))}
             </span>
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-1.5 max-w-[280px] mx-auto">
             {Array.from({ length: 10 }).map((_, i) => {
               const filled = i < stamps
               const isLast = i === 9
               return (
                 <div
                   key={i}
-                  className="aspect-square rounded-md flex items-center justify-center text-lg"
+                  className="aspect-square rounded flex items-center justify-center"
                   style={{
                     background: filled ? "rgba(255,45,120,0.2)" : "rgba(255,45,120,0.04)",
                     border: `1px solid ${isLast ? "rgba(255,45,120,0.5)" : "rgba(255,45,120,0.13)"}`,
                   }}
                 >
-                  {filled ? "🦇" : isLast ? "🎁" : ""}
+                  {filled ? (
+                    <img src="/bat.png" alt="" width={20} height={20} style={{ opacity: 0.8 }} />
+                  ) : isLast ? (
+                    <span className="text-[9px] font-bold" style={{ color: "#ff2d78" }}>
+                      {dict.profile_stamp_claim}
+                    </span>
+                  ) : null}
                 </div>
               )
             })}
@@ -276,7 +302,7 @@ export default function ProfilePageContent({
               style={{ width: `${stamps * 10}%`, background: "#ff2d78" }}
             />
           </div>
-          <p className="text-[11px]" style={{ color: "rgba(240,224,224,0.35)" }}>
+          <p className="text-[10px] text-center" style={{ color: "rgba(240,224,224,0.3)" }}>
             {dict.profile_stamp_reward}
           </p>
         </section>
@@ -284,7 +310,10 @@ export default function ProfilePageContent({
         {/* ── 5. Series DNA ── */}
         {seriesDna.length > 0 && (
           <section className="space-y-3">
-            <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>Series DNA</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>Series DNA</h2>
+              <InfoTooltip text={dict.profile_series_dna_tooltip} />
+            </div>
             <div className="space-y-2">
               {seriesDna.map((entry) => {
                 const key = `${entry.series}__${entry.era}`
@@ -320,7 +349,7 @@ export default function ProfilePageContent({
         )}
 
         {/* ── 6. Hunt Board ── */}
-        <section className="space-y-3">
+        <section className="space-y-3" id="hunt-board">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>Hunt Board</h2>
             <span
@@ -330,6 +359,8 @@ export default function ProfilePageContent({
               {dict.profile_public_wishlist}
             </span>
             <InfoTooltip text={dict.profile_hunt_tooltip} />
+            {/* 7. Hunt Board share button */}
+            <HuntShareButton label={dict.profile_hunt_share} />
           </div>
           {wishlist.length === 0 ? (
             <p className="text-sm italic" style={{ color: "rgba(240,224,224,0.25)" }}>
@@ -505,6 +536,54 @@ function CopyLinkButton({ label }: { label: string }) {
           </>
         )}
       </svg>
+    </button>
+  )
+}
+
+function ShareProfileButton({ label }: { label: string }) {
+  const handleShare = () => {
+    if (typeof window !== "undefined" && navigator.share) {
+      navigator.share({ url: window.location.href, title: document.title })
+    } else if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href)
+    }
+  }
+  return (
+    <button
+      onClick={handleShare}
+      className="text-[11px] font-medium px-3 py-1 rounded-full transition-colors"
+      style={{
+        background: "rgba(255,45,120,0.08)",
+        color: "rgba(240,224,224,0.5)",
+        border: "1px solid rgba(255,45,120,0.2)",
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function HuntShareButton({ label }: { label: string }) {
+  const [copied, setCopied] = useState(false)
+  const handleShare = () => {
+    if (typeof window !== "undefined") {
+      const url = window.location.href.split("#")[0] + "#hunt-board"
+      navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    }
+  }
+  return (
+    <button
+      onClick={handleShare}
+      className="ml-auto text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors"
+      style={{
+        background: copied ? "rgba(255,45,120,0.2)" : "rgba(255,45,120,0.08)",
+        color: copied ? "#ff2d78" : "rgba(240,224,224,0.4)",
+        border: "1px solid rgba(255,45,120,0.13)",
+      }}
+    >
+      {copied ? "✓" : label}
     </button>
   )
 }
