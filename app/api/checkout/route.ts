@@ -64,6 +64,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  // Cancel stale PENDING orders (>30 min) so their figures become
+  // available again. Runs inline since Hobby plan limits cron to daily.
+  const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+  await supabaseAdmin
+    .from("orders")
+    .update({ status: "CANCELLED" })
+    .eq("status", "PENDING")
+    .lt("created_at", cutoff)
+    .then(({ error }) => {
+      if (error) console.error("[checkout] stale order cleanup error:", error)
+    })
+
   // `stage` tracks how far we got, so the catch block can report
   // exactly which step failed instead of swallowing it as a generic
   // 500. Update it as we cross each milestone.
