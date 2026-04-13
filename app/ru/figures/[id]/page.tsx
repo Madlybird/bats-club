@@ -143,26 +143,29 @@ export default async function FigureDetailPageRu({ params }: Props) {
     console.error("[ru/figures/[id]] currency conversion failed:", e)
   }
 
+  const offer: any = {
+    "@type": "Offer",
+    url: `https://batsclub.com/figures/${figure.id}`,
+    priceCurrency: "USD",
+    availability: cheapestListing ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    seller: { "@type": "Organization", name: "Bats Club" },
+  }
+  if (cheapestListing) offer.price = (cheapestListing.price / 100).toFixed(2)
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: figure.name,
-    description: `Character: ${figure.character}, Series: ${figure.series}`,
-    brand: { "@type": "Brand", name: figure.manufacturer },
+    description: (figure.description as string | null)?.trim() || `Character: ${figure.character}, Series: ${figure.series}`,
     image: figure.imageUrl,
+    brand: { "@type": "Brand", name: figure.manufacturer },
+    offers: offer,
     additionalProperty: [
-      { "@type": "PropertyValue", name: "Scale", value: figure.scale },
       { "@type": "PropertyValue", name: "Year", value: figure.year },
-      { "@type": "PropertyValue", name: "Sculptor", value: figure.sculptor },
-      { "@type": "PropertyValue", name: "Material", value: figure.material },
+      { "@type": "PropertyValue", name: "Scale", value: figure.scale },
+      { "@type": "PropertyValue", name: "Condition", value: cheapestListing?.condition },
+      { "@type": "PropertyValue", name: "Series", value: figure.series },
     ].filter((p) => p.value),
-    offers: listings.map((l: any) => ({
-      "@type": "Offer",
-      price: l.price / 100,
-      priceCurrency: "USD",
-      availability: l.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      seller: { "@type": "Person", name: (l.seller as any)?.name },
-    })),
   }
 
   return (
