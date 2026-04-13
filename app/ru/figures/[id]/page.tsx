@@ -148,23 +148,20 @@ export default async function FigureDetailPageRu({ params }: Props) {
     url: `https://batsclub.com/figures/${figure.id}`,
     priceCurrency: "USD",
     availability: cheapestListing ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    itemCondition: "https://schema.org/UsedCondition",
     seller: { "@type": "Organization", name: "Bats Club" },
-    hasMerchantReturnPolicy: {
+  }
+  if (cheapestListing) {
+    offer.price = Number((cheapestListing.price / 100).toFixed(2))
+    offer.hasMerchantReturnPolicy = {
       "@type": "MerchantReturnPolicy",
       applicableCountry: "US",
-      returnPolicyCategory: "https://schema.org/MerchantReturnFineSale",
-    },
-    shippingDetails: {
+      returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+    }
+    offer.shippingDetails = {
       "@type": "OfferShippingDetails",
-      shippingRate: {
-        "@type": "MonetaryAmount",
-        value: "17",
-        currency: "USD",
-      },
-      shippingDestination: {
-        "@type": "DefinedRegion",
-        addressCountry: "US",
-      },
+      shippingRate: { "@type": "MonetaryAmount", value: "17", currency: "USD" },
+      shippingDestination: { "@type": "DefinedRegion", addressCountry: "US" },
       deliveryTime: {
         "@type": "ShippingDeliveryTime",
         businessDays: {
@@ -172,17 +169,18 @@ export default async function FigureDetailPageRu({ params }: Props) {
           dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
         },
         cutoffTime: "17:00:00",
-        handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3 },
-        transitTime: { "@type": "QuantitativeValue", minValue: 14, maxValue: 21 },
+        handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
+        transitTime: { "@type": "QuantitativeValue", minValue: 14, maxValue: 21, unitCode: "DAY" },
       },
-    },
+    }
   }
-  if (cheapestListing) offer.price = Number((cheapestListing.price / 100).toFixed(2))
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: figure.name,
+    sku: figure.id,
+    productID: figure.id,
     description: (figure.description as string | null)?.trim() || `Character: ${figure.character}, Series: ${figure.series}`,
     image: figure.imageUrl,
     brand: { "@type": "Brand", name: figure.manufacturer },
