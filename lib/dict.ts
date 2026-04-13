@@ -62,6 +62,7 @@ export interface Dict {
   shop_condition_poor: string
   shop_stock: string
   shop_add_to_cart: string
+  shop_already_in_cart: string
   shop_view_all: string
   shop_in_stock: string
   shop_out_of_stock: string
@@ -315,6 +316,7 @@ export const en: Dict = {
   shop_condition_poor: "Poor",
   shop_stock: "Stock",
   shop_add_to_cart: "Add to Cart",
+  shop_already_in_cart: "Already in cart",
   shop_view_all: "View all",
   shop_in_stock: "in stock",
   shop_out_of_stock: "Out of stock",
@@ -559,6 +561,7 @@ export const ru: Dict = {
   shop_condition_poor: "Плохое",
   shop_stock: "В наличии",
   shop_add_to_cart: "В корзину",
+  shop_already_in_cart: "Уже в корзине",
   shop_view_all: "Смотреть все",
   shop_in_stock: "в наличии",
   shop_out_of_stock: "Нет в наличии",
@@ -803,6 +806,7 @@ export const jp: Dict = {
   shop_condition_poor: "悪い",
   shop_stock: "在庫",
   shop_add_to_cart: "カートに追加",
+  shop_already_in_cart: "すでにカートにあります",
   shop_view_all: "すべて見る",
   shop_in_stock: "在庫あり",
   shop_out_of_stock: "在庫切れ",

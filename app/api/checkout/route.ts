@@ -112,10 +112,22 @@ export async function POST(req: Request) {
     if (!listings || listings.length !== listingIds.length) {
       return NextResponse.json({ error: "One or more items are no longer available" }, { status: 400 })
     }
+    // Map requested quantity by listingId (default 1 if omitted).
+    const requestedQty = new Map<string, number>()
+    for (const i of items) {
+      requestedQty.set(i.listingId, Math.max(1, Math.floor(Number(i.quantity ?? 1))))
+    }
     for (const listing of listings) {
       const figure = listing.figure as any
       if (listing.stock < 1) {
         return NextResponse.json({ error: `${figure?.name} is out of stock` }, { status: 400 })
+      }
+      const qty = requestedQty.get(listing.id) ?? 1
+      if (qty > listing.stock) {
+        return NextResponse.json(
+          { error: `Only ${listing.stock} of ${figure?.name} available` },
+          { status: 400 }
+        )
       }
     }
 

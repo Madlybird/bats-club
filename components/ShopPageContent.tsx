@@ -83,6 +83,7 @@ function SeriesBar({ topSeries, currentSeries, dict }: { topSeries: TopSeries[];
 export default function ShopPageContent({ listings, condition, sort, series, topSeries, dict, shopBasePath = "/shop" }: Props) {
   const listingLabels = {
     addToCart: dict.shop_add_to_cart,
+    alreadyInCart: dict.shop_already_in_cart,
   }
 
   return (

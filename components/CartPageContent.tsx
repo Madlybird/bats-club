@@ -263,13 +263,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                         >
                           −
                         </button>
-                        <span className="text-white text-sm font-medium w-6 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => setQuantity(item.listingId, item.quantity + 1)}
-                          className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center"
-                        >
-                          +
-                        </button>
                       </div>
 
                       <div className="flex items-center gap-3">

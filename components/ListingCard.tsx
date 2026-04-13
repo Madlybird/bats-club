@@ -4,6 +4,7 @@ import AddToCartButton from "@/components/AddToCartButton"
 
 interface ListingCardLabels {
   addToCart?: string
+  alreadyInCart?: string
 }
 
 interface ListingCardProps {
@@ -31,6 +32,7 @@ interface ListingCardProps {
 
 export default function ListingCard({ listing, labels, basePath = "/shop", priority = false }: ListingCardProps) {
   const addToCartLabel = labels?.addToCart ?? "Add to Cart"
+  const alreadyInCartLabel = labels?.alreadyInCart ?? "Already in cart"
   const listingHref = `${basePath}/${listing.id}`
 
   const photos = (() => {
@@ -91,6 +93,7 @@ export default function ListingCard({ listing, labels, basePath = "/shop", prior
               condition: listing.condition,
             }}
             label={addToCartLabel}
+            toastAlreadyInCart={alreadyInCartLabel}
             className="w-full text-center text-sm py-2 rounded-lg font-bold text-white transition-colors"
             style={{ backgroundColor: "#ff2d78" } as React.CSSProperties}
           />

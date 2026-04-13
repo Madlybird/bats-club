@@ -133,6 +133,7 @@ export default async function ListingDetailPage({ params }: Props) {
                       condition: listing.condition,
                     }}
                     label={dict.shop_add_to_cart}
+                    toastAlreadyInCart={dict.shop_already_in_cart}
                     className="w-full py-3 text-base font-bold rounded-lg text-white transition-opacity"
                     style={{ backgroundColor: "#ff2d78" }}
                   />

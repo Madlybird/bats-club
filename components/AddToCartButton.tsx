@@ -8,6 +8,13 @@ interface AddToCartButtonProps {
   className?: string
   style?: React.CSSProperties
   label?: string
+  /** Localized toast shown when the listing is already in the cart. */
+  toastAlreadyInCart?: string
+}
+
+function showToast(message: string) {
+  if (typeof window === "undefined" || !message) return
+  window.dispatchEvent(new CustomEvent("bats:toast", { detail: message }))
 }
 
 export default function AddToCartButton({
@@ -15,12 +22,17 @@ export default function AddToCartButton({
   className,
   style,
   label = "Add to Cart",
+  toastAlreadyInCart = "Already in cart",
 }: AddToCartButtonProps) {
   const { addItem } = useCart()
   const [added, setAdded] = useState(false)
 
   const handleAdd = () => {
-    addItem(item)
+    const result = addItem(item)
+    if (result === "already") {
+      showToast(toastAlreadyInCart)
+      return
+    }
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
   }
