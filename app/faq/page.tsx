@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const FAQ: { q: string; a: string }[] = [
   {
     q: "What is Bats Club?",
-    a: "Bats Club is a private anime figure archive and marketplace. All figures come from a single collector's personal collection of 2000+ authentic Japanese originals from the 1990s–2000s.",
+    a: "Bats Club is a private anime figure archive and marketplace. All figures come from a single collector's personal collection of 10,000+ authentic Japanese originals from the 1990s–2000s.",
   },
   {
     q: "How does shipping work?",
