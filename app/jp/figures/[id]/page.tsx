@@ -149,8 +149,35 @@ export default async function FigureDetailPageJp({ params }: Props) {
     priceCurrency: "USD",
     availability: cheapestListing ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     seller: { "@type": "Organization", name: "Bats Club" },
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: "US",
+      returnPolicyCategory: "https://schema.org/MerchantReturnFineSale",
+    },
+    shippingDetails: {
+      "@type": "OfferShippingDetails",
+      shippingRate: {
+        "@type": "MonetaryAmount",
+        value: "17",
+        currency: "USD",
+      },
+      shippingDestination: {
+        "@type": "DefinedRegion",
+        addressCountry: "US",
+      },
+      deliveryTime: {
+        "@type": "ShippingDeliveryTime",
+        businessDays: {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        },
+        cutoffTime: "17:00:00",
+        handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3 },
+        transitTime: { "@type": "QuantitativeValue", minValue: 14, maxValue: 21 },
+      },
+    },
   }
-  if (cheapestListing) offer.price = (cheapestListing.price / 100).toFixed(2)
+  if (cheapestListing) offer.price = Number((cheapestListing.price / 100).toFixed(2))
 
   const jsonLd = {
     "@context": "https://schema.org",
