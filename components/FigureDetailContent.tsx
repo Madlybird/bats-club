@@ -180,7 +180,6 @@ export default function FigureDetailContent({
                             {dict.currency_approx} {convertedLowestPrice}
                           </span>
                         )}
-                        <span className="text-sm text-white/30">{dict.fig_from}</span>
                       </div>
                     )}
                   </div>

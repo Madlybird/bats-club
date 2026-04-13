@@ -86,7 +86,6 @@ export interface Dict {
   fig_have: string
   fig_my_status: string
   fig_specs: string
-  fig_from: string
   fig_for_sale: string
   fig_listings: string
   fig_view_shop: string
@@ -338,7 +337,6 @@ export const en: Dict = {
   fig_have: "Collectors Have It",
   fig_my_status: "My Collection Status",
   fig_specs: "Specifications",
-  fig_from: "starting price",
   fig_for_sale: "for sale",
   fig_listings: "Available Listings",
   fig_view_shop: "View all →",
@@ -583,7 +581,6 @@ export const ru: Dict = {
   fig_have: "Есть у коллекционеров",
   fig_my_status: "Мой статус в коллекции",
   fig_specs: "Характеристики",
-  fig_from: "минимальная цена",
   fig_for_sale: "в продаже",
   fig_listings: "Активные объявления",
   fig_view_shop: "Все объявления →",
@@ -828,7 +825,6 @@ export const jp: Dict = {
   fig_have: "所有コレクター数",
   fig_my_status: "コレクションステータス",
   fig_specs: "スペック",
-  fig_from: "最安値",
   fig_for_sale: "販売中",
   fig_listings: "出品一覧",
   fig_view_shop: "すべて見る →",
