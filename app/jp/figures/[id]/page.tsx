@@ -6,7 +6,7 @@ import { getRates, convertPrice } from "@/lib/currency"
 import { Metadata } from "next"
 
 export const dynamicParams = true
-export const revalidate = 60
+export const revalidate = 0
 
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   return []

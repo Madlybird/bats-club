@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -81,6 +82,16 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     console.error("Delete figure error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
+
+  revalidatePath(`/figures/${params.id}`)
+  revalidatePath(`/jp/figures/${params.id}`)
+  revalidatePath(`/ru/figures/${params.id}`)
+  revalidatePath("/archive")
+  revalidatePath("/jp/archive")
+  revalidatePath("/ru/archive")
+  revalidatePath("/")
+  revalidatePath("/jp")
+  revalidatePath("/ru")
 
   return NextResponse.json({ success: true })
 }

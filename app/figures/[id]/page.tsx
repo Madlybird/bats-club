@@ -5,7 +5,7 @@ import { en } from "@/lib/dict"
 import { Metadata } from "next"
 
 export const dynamicParams = true
-export const revalidate = 60
+export const revalidate = 0
 
 // Don't pre-render any figure pages at build time — generate on-demand
 // and cache via ISR so any new figure ID Just Works without a rebuild.
