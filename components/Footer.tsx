@@ -23,6 +23,7 @@ const footerDict = {
     faq: "FAQ",
     privacy: "Privacy Policy",
     terms: "Terms",
+    returns: "Returns",
     rights: "All rights reserved.",
   },
   ru: {
@@ -33,6 +34,7 @@ const footerDict = {
     faq: "FAQ",
     privacy: "Политика конфиденциальности",
     terms: "Условия использования",
+    returns: "Возвраты",
     rights: "Все права защищены.",
   },
   jp: {
@@ -43,6 +45,7 @@ const footerDict = {
     faq: "FAQ",
     privacy: "プライバシーポリシー",
     terms: "利用規約",
+    returns: "返品ポリシー",
     rights: "全著作権所有",
   },
 }
@@ -84,6 +87,7 @@ export default function Footer() {
             <a href={withLocale(locale, "/shop")} className="hover:text-[#ff2d78] transition-colors">{t.shop}</a>
             <a href={withLocale(locale, "/articles")} className="hover:text-[#ff2d78] transition-colors">{t.articles}</a>
             <a href={withLocale(locale, "/faq")} className="hover:text-[#ff2d78] transition-colors">{t.faq}</a>
+            <a href={withLocale(locale, "/returns")} className="hover:text-[#ff2d78] transition-colors">{t.returns}</a>
           </div>
 
           {/* Social + copyright */}
