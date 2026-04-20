@@ -208,6 +208,7 @@ export interface Dict {
   cart_max_warning: string
   cart_max_info: string
   cart_selected_count: string
+  cart_shipping_prompt: string
 
   // ── Register page ──
   register_heading: string
@@ -457,6 +458,7 @@ export const en: Dict = {
   cart_max_warning: "Maximum 3 figures per order. Please select which figures to include in this order.",
   cart_max_info: "Max 3 figures per order. For more, place a separate order.",
   cart_selected_count: "{X} of 3 selected",
+  cart_shipping_prompt: "Select your country to see shipping cost",
 
   register_heading: "Create Account",
   register_subtitle: "Join the collector community",
@@ -705,6 +707,7 @@ export const ru: Dict = {
   cart_max_warning: "Максимум 3 фигурки за заказ. Выберите фигурки для этого заказа.",
   cart_max_info: "Макс. 3 фигурки за заказ. Для большего количества оформите отдельный заказ.",
   cart_selected_count: "Выбрано {X} из 3",
+  cart_shipping_prompt: "Выберите страну для расчёта доставки",
 
   register_heading: "Создать аккаунт",
   register_subtitle: "Присоединяйся к сообществу коллекционеров",
@@ -953,6 +956,7 @@ export const jp: Dict = {
   cart_max_warning: "1回の注文は最大3点まで。注文に含めるフィギュアを選択してください。",
   cart_max_info: "1注文につき最大3点。それ以上は別途ご注文ください。",
   cart_selected_count: "3点中{X}点を選択",
+  cart_shipping_prompt: "配送料は国を選択後に表示されます",
 
   register_heading: "アカウント作成",
   register_subtitle: "コレクターコミュニティに参加",

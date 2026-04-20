@@ -462,17 +462,12 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                     <span>${(itemsSubtotal / 100).toFixed(2)}</span>
                   </div>
 
-                  {countryCode && !shipping.blocked && effectiveQty > 0 ? (
+                  {countryCode && !shipping.blocked && effectiveQty > 0 && (
                     <div className="flex justify-between text-white/50">
                       <span>
                         {dict.cart_shipping} ({selectedCountry?.name})
                       </span>
                       <span>{shippingDisplay}</span>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between text-white/30">
-                      <span>{dict.cart_shipping}</span>
-                      <span>{dict.cart_shipping_select}</span>
                     </div>
                   )}
 
@@ -484,14 +479,18 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   )}
                 </div>
 
-                <div className="flex justify-between font-black text-white border-t border-white/[0.06] pt-3">
-                  <span>{dict.cart_total}</span>
-                  <span style={{ color: "#ff2d78" }}>
-                    {countryCode && !shipping.blocked && effectiveQty > 0
-                      ? `$${(totalCents / 100).toFixed(2)}`
-                      : `$${(itemsSubtotal / 100).toFixed(2)} + shipping`}
-                  </span>
-                </div>
+                {countryCode && !shipping.blocked && effectiveQty > 0 ? (
+                  <div className="flex justify-between font-black text-white border-t border-white/[0.06] pt-3">
+                    <span>{dict.cart_total}</span>
+                    <span style={{ color: "#ff2d78" }}>
+                      ${(totalCents / 100).toFixed(2)}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-white/40 text-center border-t border-white/[0.06] pt-3">
+                    {dict.cart_shipping_prompt}
+                  </p>
+                )}
 
                 {overLimit && (
                   <p className="text-xs text-white/40 text-center">{selectedCountLabel}</p>
