@@ -1,50 +1,76 @@
 import { supabaseAdmin } from "@/lib/supabase"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import FigureDetailContent from "@/components/FigureDetailContent"
-import { ru } from "@/lib/dict"
-import { getRates, convertPrice } from "@/lib/currency"
+import { en } from "@/lib/dict"
 import { Metadata } from "next"
+import { isUuid } from "@/lib/slug"
 
 export const dynamicParams = true
 export const revalidate = 60
 
-export async function generateStaticParams(): Promise<{ id: string }[]> {
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
   return []
 }
 
-interface Props { params: { id: string } }
+interface Props { params: { slug: string } }
+
+async function resolveSlugFromUuid(uuid: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("figures")
+    .select("slug")
+    .eq("id", uuid)
+    .maybeSingle()
+  return ((data as any)?.slug as string | null | undefined) || null
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
+    if (isUuid(params.slug)) {
+      const slug = await resolveSlugFromUuid(params.slug)
+      if (slug) permanentRedirect(`/figures/${slug}`)
+      return { title: "Figure Not Found" }
+    }
     const { data: figure, error } = await supabaseAdmin
       .from("figures")
-      .select("name, character, series, manufacturer, scale, description")
-      .eq("id", params.id)
+      .select("name, character, series, manufacturer, scale, description, slug")
+      .eq("slug", params.slug)
       .maybeSingle()
     if (error || !figure) return { title: "Figure Not Found" }
-    const fallback = `${figure.character} · ${figure.series} · ${figure.manufacturer} ${figure.scale}`
+    const fallback = `${figure.character} from ${figure.series} — ${figure.manufacturer} ${figure.scale}`
+    const canonical = `https://batsclub.com/figures/${figure.slug}`
     return {
       title: `${figure.name} — ${figure.series} | Bats Club`,
       description: (figure.description as string | null)?.trim() || fallback,
+      alternates: {
+        canonical,
+        languages: {
+          en: canonical,
+          ru: `https://batsclub.com/ru/figures/${figure.slug}`,
+          ja: `https://batsclub.com/jp/figures/${figure.slug}`,
+          "x-default": canonical,
+        },
+      },
     }
-  } catch (e) {
-    console.error("[ru/figures/[id]] generateMetadata error:", e)
+  } catch (e: any) {
+    if (e?.digest?.startsWith?.("NEXT_")) throw e
+    console.error("[figures/[slug]] generateMetadata error:", e)
     return { title: "Figure Not Found" }
   }
 }
 
-export default async function FigureDetailPageRu({ params }: Props) {
-  // No getServerSession here on purpose: this page is ISR-cached
-  // (revalidate=60), so it must not depend on per-user request state.
-  // The current user's HAVE/WISHLIST/BUY status is fetched client-side
-  // by <StatusButton/> via /api/user-figures.
+export default async function FigureDetailPage({ params }: Props) {
+  if (isUuid(params.slug)) {
+    const slug = await resolveSlugFromUuid(params.slug)
+    if (slug) permanentRedirect(`/figures/${slug}`)
+    notFound()
+  }
 
   let figure: any = null
   try {
     const { data, error } = await supabaseAdmin
       .from("figures")
       .select(`
-        id, name, series, character, manufacturer, scale, year, sculptor, material,
+        id, slug, name, series, character, manufacturer, scale, year, sculptor, material,
         imageUrl:image_url, images, description, createdAt:created_at,
         user_figures(userId:user_id, status),
         listings(
@@ -56,42 +82,27 @@ export default async function FigureDetailPageRu({ params }: Props) {
           article:articles(id, title, slug, excerpt, published, author:users(id, name, username, avatar))
         )
       `)
-      .eq("id", params.id)
+      .eq("slug", params.slug)
       .eq("listings.active", true)
       .order("price", { ascending: true, referencedTable: "listings" })
       .maybeSingle()
     if (error) {
-      console.error("[ru/figures/[id]] main query error:", error)
+      console.error("[figures/[slug]] main query error:", error)
       notFound()
     }
     figure = data
   } catch (e: any) {
     if (e?.digest?.startsWith?.("NEXT_")) throw e
-    console.error("[ru/figures/[id]] main query threw:", e)
+    console.error("[figures/[slug]] main query threw:", e)
     notFound()
   }
 
   if (!figure) notFound()
 
-  // Fetch locale description separately — graceful if column doesn't exist yet
-  let localeDesc: { description_ru?: string | null } | null = null
-  try {
-    const { data } = await supabaseAdmin
-      .from("figures")
-      .select("description_ru")
-      .eq("id", params.id)
-      .maybeSingle()
-    localeDesc = data
-  } catch {
-    // column may not exist yet — fall back to null
-  }
-
   const userFigures = figure.user_figures || []
   const listings = (figure.listings || []) as any[]
   const articleFigures = figure.article_figures || []
 
-  // userStatus is hydrated client-side by StatusButton; the static page
-  // ships with null so the same HTML can be cached for every visitor.
   const userStatus: string | null = null
 
   const wishlistCount = userFigures.filter((uf: any) => uf.status === "WISHLIST").length
@@ -112,18 +123,18 @@ export default async function FigureDetailPageRu({ params }: Props) {
   try {
     const { data: seriesFigures } = await supabaseAdmin
       .from("figures")
-      .select("id, name, series, imageUrl:image_url, images")
+      .select("id, slug, name, series, imageUrl:image_url, images")
       .eq("series", figure.series)
-      .neq("id", params.id)
+      .neq("id", figure.id)
       .limit(4)
 
     relatedFigures = (seriesFigures || []) as any[]
     if (relatedFigures.length < 4) {
       const needed = 4 - relatedFigures.length
-      const existingIds = [params.id, ...relatedFigures.map((f: any) => f.id)]
+      const existingIds = [figure.id, ...relatedFigures.map((f: any) => f.id)]
       const { data: mfgFigures } = await supabaseAdmin
         .from("figures")
-        .select("id, name, series, imageUrl:image_url, images")
+        .select("id, slug, name, series, imageUrl:image_url, images")
         .eq("manufacturer", figure.manufacturer)
         .neq("series", figure.series)
         .not("id", "in", `(${existingIds.join(",")})`)
@@ -131,21 +142,13 @@ export default async function FigureDetailPageRu({ params }: Props) {
       relatedFigures = [...relatedFigures, ...(mfgFigures || [])]
     }
   } catch (e) {
-    console.error("[ru/figures/[id]] related figures query failed:", e)
+    console.error("[figures/[slug]] related figures query failed:", e)
     relatedFigures = []
-  }
-
-  let convertedLowestPrice: string | null = null
-  try {
-    const rates = await getRates()
-    convertedLowestPrice = lowestPrice !== null ? convertPrice(lowestPrice, "ru", rates) : null
-  } catch (e) {
-    console.error("[ru/figures/[id]] currency conversion failed:", e)
   }
 
   const offer: any = {
     "@type": "Offer",
-    url: `https://batsclub.com/figures/${figure.id}`,
+    url: `https://batsclub.com/figures/${figure.slug}`,
     priceCurrency: "USD",
     availability: cheapestListing ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     itemCondition: "https://schema.org/UsedCondition",
@@ -195,18 +198,18 @@ export default async function FigureDetailPageRu({ params }: Props) {
 
   return (
     <FigureDetailContent
-      figure={{ ...(figure as any), descriptionLocale: (localeDesc as any)?.description_ru || null, userFigures, articleFigures } as any}
+      figure={{ ...(figure as any), userFigures, articleFigures } as any}
       publishedArticles={publishedArticles}
       relatedFigures={relatedFigures}
       userStatus={userStatus}
       wishlistCount={wishlistCount}
       haveCount={haveCount}
       lowestPrice={lowestPrice}
-      convertedLowestPrice={convertedLowestPrice}
+      convertedLowestPrice={null}
       cheapestListing={cheapestListing}
       jsonLd={jsonLd}
-      dict={ru}
-      archiveHref="/ru/archive"
+      dict={en}
+      archiveHref="/archive"
     />
   )
 }

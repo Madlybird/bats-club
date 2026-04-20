@@ -29,6 +29,30 @@ const CONDITIONS = ["Mint", "Near Mint", "Good", "Fair", "Poor"]
 
 const ADMIN_SELLER_ID = "28cc57d7-86c7-4d63-ac20-e9b1b9718773"
 
+function slugify(input) {
+  return String(input)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function uniqueSlugForName(name) {
+  const base = slugify(name) || "figure"
+  const { data: collisions } = await supabase
+    .from("figures")
+    .select("slug")
+    .or(`slug.eq.${base},slug.like.${base}-%`)
+  const taken = new Set(((collisions || [])).map((r) => r.slug))
+  if (!taken.has(base)) return base
+  for (let i = 1; i < 10000; i++) {
+    const candidate = `${base}-${i}`
+    if (!taken.has(candidate)) return candidate
+  }
+  return `${base}-${Date.now()}`
+}
+
 // ── State machine ─────────────────────────────────────────────────────────────
 // Per-user state:
 // {
@@ -159,10 +183,12 @@ async function uploadAllPhotos(photoBuffers, figureName) {
 
 async function saveFigure(figureData, imageUrls) {
   const coverUrl = imageUrls[0]
+  const slug = await uniqueSlugForName(figureData.name)
   const { data, error } = await supabase
     .from("figures")
     .insert({
       name: figureData.name,
+      slug,
       series: figureData.series,
       character: figureData.character,
       manufacturer: figureData.manufacturer,
@@ -173,7 +199,7 @@ async function saveFigure(figureData, imageUrls) {
       image_url: coverUrl,
       images: imageUrls,
     })
-    .select("id, name")
+    .select("id, slug, name")
     .single()
 
   if (error) throw new Error(`DB insert failed: ${error.message}`)
@@ -363,7 +389,7 @@ bot.on("message", async (msg) => {
         resetState(userId)
         return bot.sendMessage(
           chatId,
-          `✅ *Figure added!*\n\n📎 batsclub.com/figures/${figure.id}`,
+          `✅ *Figure added!*\n\n📎 batsclub.com/figures/${figure.slug || figure.id}`,
           { parse_mode: "Markdown" }
         )
       } catch (err) {
@@ -407,7 +433,7 @@ bot.on("message", async (msg) => {
       const priceDisplay = `$${(state.price / 100).toFixed(2)}`
       return bot.sendMessage(
         chatId,
-        `✅ *Figure added to shop!*\n\n🏷️ ${figure.name}\n💰 ${priceDisplay} · ${condition}\n\n📎 batsclub.com/figures/${figure.id}`,
+        `✅ *Figure added to shop!*\n\n🏷️ ${figure.name}\n💰 ${priceDisplay} · ${condition}\n\n📎 batsclub.com/figures/${figure.slug || figure.id}`,
         { parse_mode: "Markdown" }
       )
     } catch (err) {

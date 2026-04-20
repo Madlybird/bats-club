@@ -78,9 +78,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     revalidatePath(`/ru/shop/${params.id}`)
     revalidatePath(`/jp/shop/${params.id}`)
     if (figureId) {
-      revalidatePath(`/figures/${figureId}`)
-      revalidatePath(`/ru/figures/${figureId}`)
-      revalidatePath(`/jp/figures/${figureId}`)
+      revalidatePath("/figures/[slug]", "page")
+      revalidatePath("/ru/figures/[slug]", "page")
+      revalidatePath("/jp/figures/[slug]", "page")
     }
   } catch (e) {
     console.error("revalidatePath error:", e)

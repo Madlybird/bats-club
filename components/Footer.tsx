@@ -55,6 +55,19 @@ export default function Footer() {
   return (
     <footer className="border-t border-black/10 py-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-center mb-10">
+          <div
+            className="trustpilot-widget"
+            data-locale="en-US"
+            data-template-id="56278e9abfbbba0bdcd568bc"
+            data-businessunit-id="69dd0967416bf71f23372640"
+            data-style-height="52px"
+            data-style-width="100%"
+            data-token="cbb4a6e0-11f1-43a0-9aaa-e9b4a5185c7b"
+          >
+            <a href="https://www.trustpilot.com/review/batsclub.com" target="_blank" rel="noopener">Trustpilot</a>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
 
           {/* Brand */}

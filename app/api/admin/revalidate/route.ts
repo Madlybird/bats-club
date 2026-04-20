@@ -39,9 +39,12 @@ export async function POST(req: Request) {
   push("/ru/archive")
 
   if (body.figureId) {
-    push(`/figures/${body.figureId}`)
-    push(`/jp/figures/${body.figureId}`)
-    push(`/ru/figures/${body.figureId}`)
+    // Revalidate the entire /figures/[slug] page template rather than a
+    // single path — slug-based routes don't match a UUID segment literal.
+    revalidatePath("/figures/[slug]", "page")
+    revalidatePath("/jp/figures/[slug]", "page")
+    revalidatePath("/ru/figures/[slug]", "page")
+    revalidated.push("/figures/[slug]", "/jp/figures/[slug]", "/ru/figures/[slug]")
   }
 
   for (const p of body.paths ?? []) {

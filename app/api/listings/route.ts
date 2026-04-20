@@ -86,9 +86,9 @@ export async function POST(req: Request) {
       revalidatePath("/ru/shop")
       revalidatePath("/jp/shop")
       if (figureId) {
-        revalidatePath(`/figures/${figureId}`)
-        revalidatePath(`/ru/figures/${figureId}`)
-        revalidatePath(`/jp/figures/${figureId}`)
+        revalidatePath("/figures/[slug]", "page")
+        revalidatePath("/ru/figures/[slug]", "page")
+        revalidatePath("/jp/figures/[slug]", "page")
       }
     } catch (e) {
       console.error("revalidatePath error:", e)

@@ -83,9 +83,9 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 
-  revalidatePath(`/figures/${params.id}`)
-  revalidatePath(`/jp/figures/${params.id}`)
-  revalidatePath(`/ru/figures/${params.id}`)
+  revalidatePath("/figures/[slug]", "page")
+  revalidatePath("/jp/figures/[slug]", "page")
+  revalidatePath("/ru/figures/[slug]", "page")
   revalidatePath("/archive")
   revalidatePath("/jp/archive")
   revalidatePath("/ru/archive")

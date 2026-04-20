@@ -11,6 +11,7 @@ interface UserFigure {
   id: string
   figure: {
     id: string
+    slug?: string | null
     name: string
     series: string
     character: string
@@ -363,7 +364,7 @@ export default function ProfilePageContent({
               {wishlist.map((item) => (
                 <Link
                   key={item.id}
-                  href={`/figures/${item.figure.id}`}
+                  href={`/figures/${item.figure.slug || item.figure.id}`}
                   className="group rounded-lg overflow-hidden"
                   style={{ background: "#0a0408", border: "1px solid rgba(255,45,120,0.13)" }}
                 >
@@ -431,7 +432,7 @@ export default function ProfilePageContent({
                   return (
                     <Link
                       key={item.id}
-                      href={`/figures/${item.figure.id}`}
+                      href={`/figures/${item.figure.slug || item.figure.id}`}
                       className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:border-[#ff2d78]/30"
                       style={{ background: "rgba(255,45,120,0.04)", border: "1px solid rgba(255,45,120,0.13)" }}
                     >

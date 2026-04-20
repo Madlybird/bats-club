@@ -25,7 +25,7 @@ export default async function ArticleDetailPage({ params }: Props) {
       coverImage:cover_image, authorId:author_id,
       createdAt:created_at, updatedAt:updated_at,
       author:users(id, name, username, avatar, bio),
-      article_figures(figure:figures(id, name, series, character, scale, manufacturer, imageUrl:image_url))
+      article_figures(figure:figures(id, slug, name, series, character, scale, manufacturer, imageUrl:image_url))
     `)
     .or(`slug.eq.${params.id},id.eq.${params.id}`)
     .eq("published", true)

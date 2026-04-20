@@ -7,6 +7,7 @@ import type { Dict } from "@/lib/dict"
 interface ArticleFigure {
   figure: {
     id: string
+    slug?: string | null
     name: string
     series: string
     imageUrl: string | null
@@ -158,7 +159,7 @@ export default function ArticleDetailContent({ article, dict, articlesHref }: Pr
                 {article.articleFigures.map(({ figure }) => (
                   <Link
                     key={figure.id}
-                    href={`/figures/${figure.id}`}
+                    href={`/figures/${figure.slug || figure.id}`}
                     className="group overflow-hidden rounded-xl border border-white/[0.06] hover:border-[#ff2d78]/30 transition-all duration-200"
                     style={{ background: "#0a0a0a" }}
                   >

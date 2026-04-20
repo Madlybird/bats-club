@@ -38,7 +38,7 @@ export default async function ProfilePageRu({ params }: Props) {
   try {
     const { data: userFigures } = await supabaseAdmin
       .from("user_figures")
-      .select("id, status, userId:user_id, figureId:figure_id, figure:figures(id, name, series, character, manufacturer, scale, year, imageUrl:image_url)")
+      .select("id, status, userId:user_id, figureId:figure_id, figure:figures(id, slug, name, series, character, manufacturer, scale, year, imageUrl:image_url)")
       .eq("user_id", userId)
     const figures = (userFigures || []) as any[]
     have = figures.filter((uf) => uf.status === "HAVE")

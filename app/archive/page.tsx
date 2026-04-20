@@ -24,7 +24,7 @@ function ArchiveSkeleton() {
 
 export const metadata: Metadata = {
   title: "Archive | Bats Club",
-  description: "Browse the full Bats Club anime figure archive.",
+  description: "Browse 100+ authentic rare Japanese anime figures from the 1990s-2000s. Di Gi Charat, Evangelion, Range Murata and more. Private collector archive.",
 }
 
 export const revalidate = 60

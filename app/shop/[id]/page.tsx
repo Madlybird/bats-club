@@ -50,7 +50,7 @@ export default async function ListingDetailPage({ params }: Props) {
     .from("listings")
     .select(`
       id, price, condition, photos, description, active,
-      figure:figures(id, name, series, character, scale, imageUrl:image_url, images)
+      figure:figures(id, slug, name, series, character, scale, imageUrl:image_url, images)
     `)
     .eq("id", params.id)
     .single()
@@ -118,7 +118,7 @@ export default async function ListingDetailPage({ params }: Props) {
                 )}
                 <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
                   <p className="text-xs text-white/25 uppercase tracking-wider mb-2">{dict.shop_figure_info}</p>
-                  <Link href={`/figures/${figure?.id}`} className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: "#ff2d78" }}>
+                  <Link href={`/figures/${figure?.slug || figure?.id}`} className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: "#ff2d78" }}>
                     {dict.shop_view_figure}
                   </Link>
                 </div>

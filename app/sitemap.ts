@@ -24,13 +24,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: figures } = await supabaseAdmin
       .from("figures")
-      .select("id, created_at")
+      .select("id, slug, created_at")
       .order("created_at", { ascending: false })
 
     for (const fig of figures || []) {
+      const identifier = (fig as any).slug || fig.id
       for (const locale of LOCALES) {
         entries.push({
-          url: `${BASE}${locale}/figures/${fig.id}`,
+          url: `${BASE}${locale}/figures/${identifier}`,
           lastModified: fig.created_at ? new Date(fig.created_at) : new Date(),
           changeFrequency: "weekly",
           priority: 0.7,

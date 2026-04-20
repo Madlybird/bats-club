@@ -2,6 +2,22 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
+import { slugify } from "@/lib/slug"
+
+async function uniqueSlugForName(name: string): Promise<string> {
+  const base = slugify(name) || "figure"
+  const { data: collisions } = await supabaseAdmin
+    .from("figures")
+    .select("slug")
+    .or(`slug.eq.${base},slug.like.${base}-%`)
+  const taken = new Set(((collisions || []) as any[]).map((r) => r.slug as string))
+  if (!taken.has(base)) return base
+  for (let i = 1; i < 10000; i++) {
+    const candidate = `${base}-${i}`
+    if (!taken.has(candidate)) return candidate
+  }
+  return `${base}-${Date.now()}`
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -49,10 +65,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
+    const slug = await uniqueSlugForName(name)
     const { data: figure, error } = await supabaseAdmin
       .from("figures")
       .insert({
         name,
+        slug,
         series,
         character,
         manufacturer,
@@ -63,7 +81,7 @@ export async function POST(req: Request) {
         image_url: imageUrl || null,
         description: description || null,
       })
-      .select("id, name, series, character, manufacturer, scale, year, sculptor, material, imageUrl:image_url, description, createdAt:created_at")
+      .select("id, slug, name, series, character, manufacturer, scale, year, sculptor, material, imageUrl:image_url, description, createdAt:created_at")
       .single()
 
     if (error) throw error
