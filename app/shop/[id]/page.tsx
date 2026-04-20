@@ -50,7 +50,7 @@ export default async function ListingDetailPage({ params }: Props) {
     .from("listings")
     .select(`
       id, price, condition, photos, description, active,
-      figure:figures(id, slug, name, series, character, scale, imageUrl:image_url, images)
+      figure:figures(id, name, series, character, scale, imageUrl:image_url, images)
     `)
     .eq("id", params.id)
     .single()

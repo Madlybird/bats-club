@@ -20,14 +20,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // Figure pages
+  // Figure pages — prefer slug when available, fall back to id if the
+  // slug column hasn't been added yet.
   try {
-    const { data: figures } = await supabaseAdmin
+    let figures: { id: string; slug?: string | null; created_at: string | null }[] = []
+    const withSlug = await supabaseAdmin
       .from("figures")
       .select("id, slug, created_at")
       .order("created_at", { ascending: false })
+    if (withSlug.error) {
+      const { data } = await supabaseAdmin
+        .from("figures")
+        .select("id, created_at")
+        .order("created_at", { ascending: false })
+      figures = (data || []) as any
+    } else {
+      figures = (withSlug.data || []) as any
+    }
 
-    for (const fig of figures || []) {
+    for (const fig of figures) {
       const identifier = (fig as any).slug || fig.id
       for (const locale of LOCALES) {
         entries.push({

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { supabaseAdmin } from "@/lib/supabase"
 import { parse } from "csv-parse/sync"
-import { slugify } from "@/lib/slug"
+import { insertFigureWithSlug } from "@/lib/slug"
 
 interface CsvRow {
   name: string
@@ -60,15 +59,9 @@ export async function POST(req: Request) {
         continue
       }
 
-      const base = slugify(row.name) || "figure"
-      let slug = base
-      let attempt = 1
-      let inserted = false
-      let lastErrorMsg = ""
-      while (!inserted && attempt < 10000) {
-        const { error } = await supabaseAdmin.from("figures").insert({
+      const { error } = await insertFigureWithSlug(
+        {
           name: row.name,
-          slug,
           series: row.series,
           character: row.character,
           manufacturer: row.manufacturer,
@@ -78,20 +71,13 @@ export async function POST(req: Request) {
           material: row.material || null,
           image_url: row.imageUrl || null,
           description: row.description || null,
-        })
-        if (!error) { inserted = true; break }
-        lastErrorMsg = error.message
-        // Unique-violation on slug → append suffix and retry.
-        if (error.code === "23505" && /slug/i.test(error.message)) {
-          slug = `${base}-${attempt}`
-          attempt++
-          continue
-        }
-        break
-      }
+        },
+        row.name,
+        "id",
+      )
 
-      if (!inserted) {
-        errors.push(`Row ${rowNum}: Database error — ${lastErrorMsg}`)
+      if (error) {
+        errors.push(`Row ${rowNum}: Database error — ${error.message}`)
       } else {
         imported++
       }

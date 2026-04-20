@@ -3,7 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation"
 import FigureDetailContent from "@/components/FigureDetailContent"
 import { en } from "@/lib/dict"
 import { Metadata } from "next"
-import { isUuid } from "@/lib/slug"
+import { isUuid, lookupIdBySlug, lookupSlugById } from "@/lib/slug"
 
 export const dynamicParams = true
 export const revalidate = 60
@@ -14,30 +14,31 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 
 interface Props { params: { slug: string } }
 
-async function resolveSlugFromUuid(uuid: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
-    .from("figures")
-    .select("slug")
-    .eq("id", uuid)
-    .maybeSingle()
-  return ((data as any)?.slug as string | null | undefined) || null
+async function resolveFigureId(param: string): Promise<string | null> {
+  if (isUuid(param)) return param
+  return lookupIdBySlug(param)
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
+    const figureId = await resolveFigureId(params.slug)
+    if (!figureId) return { title: "Figure Not Found" }
+
     if (isUuid(params.slug)) {
-      const slug = await resolveSlugFromUuid(params.slug)
+      const slug = await lookupSlugById(figureId)
       if (slug) permanentRedirect(`/figures/${slug}`)
-      return { title: "Figure Not Found" }
     }
+
     const { data: figure, error } = await supabaseAdmin
       .from("figures")
-      .select("name, character, series, manufacturer, scale, description, slug")
-      .eq("slug", params.slug)
+      .select("name, character, series, manufacturer, scale, description")
+      .eq("id", figureId)
       .maybeSingle()
     if (error || !figure) return { title: "Figure Not Found" }
+
     const fallback = `${figure.character} from ${figure.series} — ${figure.manufacturer} ${figure.scale}`
-    const canonical = `https://batsclub.com/figures/${figure.slug}`
+    const slugForUrl = isUuid(params.slug) ? (await lookupSlugById(figureId)) || figureId : params.slug
+    const canonical = `https://batsclub.com/figures/${slugForUrl}`
     return {
       title: `${figure.name} — ${figure.series} | Bats Club`,
       description: (figure.description as string | null)?.trim() || fallback,
@@ -45,8 +46,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         canonical,
         languages: {
           en: canonical,
-          ru: `https://batsclub.com/ru/figures/${figure.slug}`,
-          ja: `https://batsclub.com/jp/figures/${figure.slug}`,
+          ru: `https://batsclub.com/ru/figures/${slugForUrl}`,
+          ja: `https://batsclub.com/jp/figures/${slugForUrl}`,
           "x-default": canonical,
         },
       },
@@ -59,10 +60,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function FigureDetailPage({ params }: Props) {
+  const figureId = await resolveFigureId(params.slug)
+  if (!figureId) notFound()
+
+  // If visited via UUID and a slug exists, redirect to the clean URL.
   if (isUuid(params.slug)) {
-    const slug = await resolveSlugFromUuid(params.slug)
+    const slug = await lookupSlugById(figureId)
     if (slug) permanentRedirect(`/figures/${slug}`)
-    notFound()
   }
 
   let figure: any = null
@@ -70,7 +74,7 @@ export default async function FigureDetailPage({ params }: Props) {
     const { data, error } = await supabaseAdmin
       .from("figures")
       .select(`
-        id, slug, name, series, character, manufacturer, scale, year, sculptor, material,
+        id, name, series, character, manufacturer, scale, year, sculptor, material,
         imageUrl:image_url, images, description, createdAt:created_at,
         user_figures(userId:user_id, status),
         listings(
@@ -82,7 +86,7 @@ export default async function FigureDetailPage({ params }: Props) {
           article:articles(id, title, slug, excerpt, published, author:users(id, name, username, avatar))
         )
       `)
-      .eq("slug", params.slug)
+      .eq("id", figureId)
       .eq("listings.active", true)
       .order("price", { ascending: true, referencedTable: "listings" })
       .maybeSingle()
@@ -98,6 +102,8 @@ export default async function FigureDetailPage({ params }: Props) {
   }
 
   if (!figure) notFound()
+
+  const slugForUrl = (await lookupSlugById(figureId)) || figureId
 
   const userFigures = figure.user_figures || []
   const listings = (figure.listings || []) as any[]
@@ -123,18 +129,18 @@ export default async function FigureDetailPage({ params }: Props) {
   try {
     const { data: seriesFigures } = await supabaseAdmin
       .from("figures")
-      .select("id, slug, name, series, imageUrl:image_url, images")
+      .select("id, name, series, imageUrl:image_url, images")
       .eq("series", figure.series)
-      .neq("id", figure.id)
+      .neq("id", figureId)
       .limit(4)
 
     relatedFigures = (seriesFigures || []) as any[]
     if (relatedFigures.length < 4) {
       const needed = 4 - relatedFigures.length
-      const existingIds = [figure.id, ...relatedFigures.map((f: any) => f.id)]
+      const existingIds = [figureId, ...relatedFigures.map((f: any) => f.id)]
       const { data: mfgFigures } = await supabaseAdmin
         .from("figures")
-        .select("id, slug, name, series, imageUrl:image_url, images")
+        .select("id, name, series, imageUrl:image_url, images")
         .eq("manufacturer", figure.manufacturer)
         .neq("series", figure.series)
         .not("id", "in", `(${existingIds.join(",")})`)
@@ -148,7 +154,7 @@ export default async function FigureDetailPage({ params }: Props) {
 
   const offer: any = {
     "@type": "Offer",
-    url: `https://batsclub.com/figures/${figure.slug}`,
+    url: `https://batsclub.com/figures/${slugForUrl}`,
     priceCurrency: "USD",
     availability: cheapestListing ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     itemCondition: "https://schema.org/UsedCondition",

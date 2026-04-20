@@ -45,7 +45,7 @@ export default async function ProfilePage({ params }: Props) {
       .from("user_figures")
       .select(`
         id, status, userId:user_id, figureId:figure_id,
-        figure:figures(id, slug, name, series, character, manufacturer, scale, year, imageUrl:image_url)
+        figure:figures(id, name, series, character, manufacturer, scale, year, imageUrl:image_url)
       `)
       .eq("user_id", userId)
     const figures = (userFigures || []) as any[]

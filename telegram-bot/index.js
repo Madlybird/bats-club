@@ -183,25 +183,37 @@ async function uploadAllPhotos(photoBuffers, figureName) {
 
 async function saveFigure(figureData, imageUrls) {
   const coverUrl = imageUrls[0]
-  const slug = await uniqueSlugForName(figureData.name)
+  const base = {
+    name: figureData.name,
+    series: figureData.series,
+    character: figureData.character,
+    manufacturer: figureData.manufacturer,
+    scale: figureData.scale,
+    year: figureData.year,
+    material: figureData.material || null,
+    description: figureData.description || null,
+    image_url: coverUrl,
+    images: imageUrls,
+  }
+
+  // Probe whether the slug column exists before including it.
+  const probe = await supabase.from("figures").select("slug").limit(1)
+  if (!probe.error) {
+    const slug = await uniqueSlugForName(figureData.name)
+    const { data, error } = await supabase
+      .from("figures")
+      .insert({ ...base, slug })
+      .select("id, slug, name")
+      .single()
+    if (error) throw new Error(`DB insert failed: ${error.message}`)
+    return data
+  }
+
   const { data, error } = await supabase
     .from("figures")
-    .insert({
-      name: figureData.name,
-      slug,
-      series: figureData.series,
-      character: figureData.character,
-      manufacturer: figureData.manufacturer,
-      scale: figureData.scale,
-      year: figureData.year,
-      material: figureData.material || null,
-      description: figureData.description || null,
-      image_url: coverUrl,
-      images: imageUrls,
-    })
-    .select("id, slug, name")
+    .insert(base)
+    .select("id, name")
     .single()
-
   if (error) throw new Error(`DB insert failed: ${error.message}`)
   return data
 }
