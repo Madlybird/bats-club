@@ -9,8 +9,22 @@ import { isUuid, lookupIdBySlug } from "@/lib/slug"
 export const dynamicParams = true
 export const revalidate = 300
 
+// Pre-generate the 100 most recently added figures at build time so
+// archive clicks (which emit UUID URLs) hit an ISR cache entry instead
+// of a cold miss. Any figure not in this set still renders via
+// dynamicParams — just with the cold-miss penalty on first hit.
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  return []
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("figures")
+      .select("id")
+      .order("created_at", { ascending: false })
+      .limit(100)
+    if (error) return []
+    return (data || []).map((f: { id: string }) => ({ slug: f.id }))
+  } catch {
+    return []
+  }
 }
 
 interface Props { params: { slug: string } }

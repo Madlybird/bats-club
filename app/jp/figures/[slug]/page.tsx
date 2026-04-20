@@ -11,7 +11,17 @@ export const dynamicParams = true
 export const revalidate = 300
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  return []
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("figures")
+      .select("id")
+      .order("created_at", { ascending: false })
+      .limit(100)
+    if (error) return []
+    return (data || []).map((f: { id: string }) => ({ slug: f.id }))
+  } catch {
+    return []
+  }
 }
 
 interface Props { params: { slug: string } }
