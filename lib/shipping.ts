@@ -14,6 +14,17 @@ export const ALLOWED_COUNTRIES = new Set([
   "RU",                                     // Russia
 ])
 
+// Orders are capped at 3 figures; rates below cover the full 1–3 range.
+export const MAX_ORDER_QUANTITY = 3
+
+// Tiered shipping rates per region [qty1, qty2, qty3] in cents.
+const RATES_RU: readonly [number, number, number] = [900, 1400, 2200]
+const RATES_EUROPE: readonly [number, number, number] = [1700, 2600, 4200]
+const RATES_US_CA: readonly [number, number, number] = [2000, 3000, 5000]
+// Asia-tier regions share Europe's pricing (IL, AE, SA, TR, JP).
+const RATES_ASIA: readonly [number, number, number] = [1700, 2600, 4200]
+const RATES_REST: readonly [number, number, number] = [2200, 3300, 5500]
+
 export interface ShippingInfo {
   blocked: boolean
   priceCents: number
@@ -21,7 +32,16 @@ export interface ShippingInfo {
   blockedMessage: string
 }
 
-export function getShippingInfo(countryCode: string): ShippingInfo {
+function tierFor(countryCode: string): readonly [number, number, number] | null {
+  if (countryCode === "RU") return RATES_RU
+  if (EUROPE.has(countryCode)) return RATES_EUROPE
+  if (countryCode === "US" || countryCode === "CA") return RATES_US_CA
+  if (["IL","AE","SA","TR","JP"].includes(countryCode)) return RATES_ASIA
+  if (ALLOWED_COUNTRIES.has(countryCode)) return RATES_REST
+  return null
+}
+
+export function getShippingInfo(countryCode: string, quantity: number = 1): ShippingInfo {
   const BLOCKED_MSG =
     "Unfortunately, we don't ship to this region at this time. Please contact us at support@batsclub.com for alternative options."
 
@@ -31,18 +51,18 @@ export function getShippingInfo(countryCode: string): ShippingInfo {
   if (!ALLOWED_COUNTRIES.has(countryCode)) {
     return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: BLOCKED_MSG }
   }
-  if (countryCode === "RU") {
-    return { blocked: false, priceCents: 900, priceDisplay: "$9.00", blockedMessage: "" }
+
+  const tier = tierFor(countryCode)
+  if (!tier) {
+    return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: BLOCKED_MSG }
   }
-  if (EUROPE.has(countryCode)) {
-    return { blocked: false, priceCents: 1700, priceDisplay: "$17.00", blockedMessage: "" }
+
+  const qty = Math.max(1, Math.min(MAX_ORDER_QUANTITY, Math.floor(quantity)))
+  const priceCents = tier[qty - 1]
+  return {
+    blocked: false,
+    priceCents,
+    priceDisplay: `$${(priceCents / 100).toFixed(2)}`,
+    blockedMessage: "",
   }
-  if (countryCode === "US" || countryCode === "CA") {
-    return { blocked: false, priceCents: 2000, priceDisplay: "$20.00", blockedMessage: "" }
-  }
-  if (countryCode === "IL" || countryCode === "AE" || countryCode === "SA" || countryCode === "TR" || countryCode === "JP") {
-    return { blocked: false, priceCents: 1700, priceDisplay: "$17.00", blockedMessage: "" }
-  }
-  // Americas (MX, BR, AR, CL, CO, PE) + AU + NZ
-  return { blocked: false, priceCents: 2200, priceDisplay: "$22.00", blockedMessage: "" }
 }

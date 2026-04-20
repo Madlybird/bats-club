@@ -205,6 +205,9 @@ export interface Dict {
   cart_empty_heading: string
   cart_empty_sub: string
   cart_go_shop: string
+  cart_max_warning: string
+  cart_max_info: string
+  cart_selected_count: string
 
   // ── Register page ──
   register_heading: string
@@ -451,6 +454,9 @@ export const en: Dict = {
   cart_empty_heading: "Your cart is empty",
   cart_empty_sub: "Browse the shop to find rare figures.",
   cart_go_shop: "Go to Shop",
+  cart_max_warning: "Maximum 3 figures per order. Please select which figures to include in this order.",
+  cart_max_info: "Max 3 figures per order. For more, place a separate order.",
+  cart_selected_count: "{X} of 3 selected",
 
   register_heading: "Create Account",
   register_subtitle: "Join the collector community",
@@ -696,6 +702,9 @@ export const ru: Dict = {
   cart_empty_heading: "Корзина пуста",
   cart_empty_sub: "Загляните в магазин за редкими фигурками.",
   cart_go_shop: "В магазин",
+  cart_max_warning: "Максимум 3 фигурки за заказ. Выберите фигурки для этого заказа.",
+  cart_max_info: "Макс. 3 фигурки за заказ. Для большего количества оформите отдельный заказ.",
+  cart_selected_count: "Выбрано {X} из 3",
 
   register_heading: "Создать аккаунт",
   register_subtitle: "Присоединяйся к сообществу коллекционеров",
@@ -941,6 +950,9 @@ export const jp: Dict = {
   cart_empty_heading: "カートは空です",
   cart_empty_sub: "ショップでレアフィギュアを探してみましょう。",
   cart_go_shop: "ショップへ",
+  cart_max_warning: "1回の注文は最大3点まで。注文に含めるフィギュアを選択してください。",
+  cart_max_info: "1注文につき最大3点。それ以上は別途ご注文ください。",
+  cart_selected_count: "3点中{X}点を選択",
 
   register_heading: "アカウント作成",
   register_subtitle: "コレクターコミュニティに参加",

@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import { stripe } from "@/lib/stripe"
-import { getShippingInfo, ALLOWED_COUNTRIES } from "@/lib/shipping"
+import { getShippingInfo, ALLOWED_COUNTRIES, MAX_ORDER_QUANTITY } from "@/lib/shipping"
 
 // In-app promo codes (server-side, applied as a Stripe coupon).
 // Stripe-managed promo codes can be applied via the Checkout UI when
@@ -87,11 +87,17 @@ export async function POST(req: Request) {
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 })
     }
+    if (items.length > MAX_ORDER_QUANTITY) {
+      return NextResponse.json(
+        { error: `Order limit exceeded: maximum ${MAX_ORDER_QUANTITY} figures per order` },
+        { status: 400 }
+      )
+    }
     if (!country) {
       return NextResponse.json({ error: "Country is required" }, { status: 400 })
     }
 
-    const shippingInfo = getShippingInfo(country)
+    const shippingInfo = getShippingInfo(country, items.length)
     if (shippingInfo.blocked) {
       return NextResponse.json({ error: shippingInfo.blockedMessage }, { status: 400 })
     }
@@ -131,11 +137,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // 40% shipping discount when buying 2+ items in one order.
-    // Kept in sync with components/CartPageContent.tsx.
-    const multiItemDiscount = listings.length >= 2
-    let shippingCents = shippingInfo.priceCents
-    if (multiItemDiscount) shippingCents = Math.round(shippingCents * 0.60)
+    // Shipping is quantity-tiered directly in getShippingInfo (1/2/3).
+    const shippingCents = shippingInfo.priceCents
 
     const itemsSubtotal = listings.reduce((sum, l) => sum + l.price, 0)
 
@@ -173,8 +176,7 @@ export async function POST(req: Request) {
       }
     })
 
-    let shippingLabel = `Shipping to ${country}`
-    if (multiItemDiscount) shippingLabel += " (15% multi-item discount)"
+    const shippingLabel = `Shipping to ${country} (${listings.length} ${listings.length === 1 ? "figure" : "figures"})`
     stripeLineItems.push({
       price_data: {
         currency: "usd",

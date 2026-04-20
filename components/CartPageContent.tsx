@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
-import { getShippingInfo } from "@/lib/shipping"
+import { getShippingInfo, MAX_ORDER_QUANTITY } from "@/lib/shipping"
 import BatsOverlay from "@/components/BatsOverlay"
 import type { Dict } from "@/lib/dict"
 
@@ -56,24 +56,53 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const [promoInput, setPromoInput] = useState("")
   const [appliedPromo, setAppliedPromo] = useState("")
   const [promoError, setPromoError] = useState("")
-  const [upsellDismissed, setUpsellDismissed] = useState(false)
 
   const [showAddress, setShowAddress] = useState(false)
   const [address, setAddress] = useState<AddressForm>(emptyAddress)
   const [loading, setLoading] = useState(false)
-  // Once Stripe gives us a redirect URL we set this to keep the
-  // loading UI mounted until the browser actually navigates away.
-  // Without it the empty-cart guard would briefly render between
-  // clearCart() and the actual navigation. We also stopped clearing
-  // the cart here entirely — the /order/success page does it.
+  // Keep loading UI mounted until the browser actually navigates to
+  // Stripe — stops the empty-cart flash between clearCart() and
+  // navigation. Cart is cleared on /order/success instead.
   const [redirecting, setRedirecting] = useState(false)
   const [error, setError] = useState("")
+
+  // ── Selection (3-item order cap) ────────────────────────────────
+  const overLimit = items.length > MAX_ORDER_QUANTITY
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
+  // Prune selection when items are removed from the cart.
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const next = new Set<string>()
+      for (const id of Array.from(prev)) {
+        if (items.some((i) => i.listingId === id)) next.add(id)
+      }
+      return next
+    })
+  }, [items])
+
+  const effectiveItems = overLimit
+    ? items.filter((i) => selectedIds.has(i.listingId))
+    : items
+  const effectiveQty = effectiveItems.length
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else if (next.size < MAX_ORDER_QUANTITY) {
+        next.add(id)
+      }
+      return next
+    })
+  }
 
   const filteredCountries = COUNTRIES.filter((c) =>
     c.name.toLowerCase().includes(countrySearch.toLowerCase())
   )
   const selectedCountry = COUNTRIES.find((c) => c.code === countryCode)
-  const shipping = getShippingInfo(countryCode)
+  const shipping = getShippingInfo(countryCode, Math.max(1, effectiveQty))
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -85,14 +114,10 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     return () => document.removeEventListener("mousedown", handler)
   }, [])
 
-  const itemsSubtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  // Multi-item shipping discount: 40% off shipping when the cart has
-  // 2+ distinct figures. Kept in sync with app/api/checkout/route.ts.
-  const multiDiscount = items.length >= 2
-  const shippingCents = countryCode && !shipping.blocked
-    ? multiDiscount ? Math.round(shipping.priceCents * 0.60) : shipping.priceCents
+  const itemsSubtotal = effectiveItems.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const shippingCents = countryCode && !shipping.blocked && effectiveQty > 0
+    ? shipping.priceCents
     : 0
-  const shippingOriginal = countryCode && !shipping.blocked ? shipping.priceCents : 0
   const shippingDisplay = `$${(shippingCents / 100).toFixed(2)}`
 
   const PROMO_RATES: Record<string, number> = {}
@@ -113,9 +138,18 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     }
   }
 
+  // Can the user move past the selection step?
+  const selectionValid = overLimit
+    ? effectiveQty >= 1 && effectiveQty <= MAX_ORDER_QUANTITY
+    : items.length >= 1 && items.length <= MAX_ORDER_QUANTITY
+
   const handlePay = async () => {
     if (!address.fullName || !address.addressLine1 || !address.city || !address.state || !address.zip || !address.phone) {
       setError("Please fill in all required fields")
+      return
+    }
+    if (!selectionValid) {
+      setError(dict.cart_max_warning)
       return
     }
     setLoading(true)
@@ -125,7 +159,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
+          items: effectiveItems.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
           country: countryCode,
           promoCode: appliedPromo || undefined,
           shippingAddress: { ...address, country: countryCode },
@@ -190,6 +224,9 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     { key: "phone", label: dict.cart_field_phone, placeholder: "+1 555 000 0000", type: "tel" },
   ] as const
 
+  const selectedCount = overLimit ? selectedIds.size : items.length
+  const selectedCountLabel = dict.cart_selected_count.replace("{X}", String(selectedCount))
+
   return (
     <div className="relative min-h-screen">
       <BatsOverlay />
@@ -218,71 +255,126 @@ export default function CartPageContent({ dict, shopHref }: Props) {
             </p>
           </div>
 
+          {overLimit && (
+            <div
+              className="mb-6 rounded-2xl border border-amber-400/40 p-4 flex items-start gap-3"
+              style={{ background: "rgba(251,191,36,0.06)" }}
+            >
+              <svg className="w-5 h-5 flex-shrink-0 text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-white/90 leading-snug">{dict.cart_max_warning}</p>
+                <p className="text-xs text-amber-300 mt-1">{selectedCountLabel}</p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left: Items list */}
             <div className="lg:col-span-2 space-y-4">
-              {items.map((item) => (
-                <div
-                  key={item.listingId}
-                  className="flex gap-4 rounded-2xl border border-white/[0.06] p-4"
-                  style={{ background: "rgba(255,255,255,0.02)" }}
-                >
-                  <Link href={`/shop/${item.listingId}`} className="flex-shrink-0">
-                    <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: "#0a0a0a" }}>
-                      {item.figureImageUrl ? (
-                        <Image
-                          src={item.figureImageUrl}
-                          alt={item.figureName}
-                          fill
-                          // Bypass Vercel image optimizer; same fix
-                          // as FigureCard / ListingCard.
-                          unoptimized
-                          className="object-cover object-top"
-                          sizes="80px"
+              {items.map((item) => {
+                const isSelected = selectedIds.has(item.listingId)
+                const canSelectMore = selectedIds.size < MAX_ORDER_QUANTITY
+                const checkboxDisabled = overLimit && !isSelected && !canSelectMore
+                return (
+                  <div
+                    key={item.listingId}
+                    className={`flex gap-4 rounded-2xl border p-4 transition-colors ${
+                      overLimit && isSelected
+                        ? "border-[#ff2d78]/50"
+                        : "border-white/[0.06]"
+                    } ${overLimit && !isSelected ? "opacity-70" : ""}`}
+                    style={{ background: "rgba(255,255,255,0.02)" }}
+                  >
+                    {overLimit && (
+                      <label className="flex-shrink-0 self-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          disabled={checkboxDisabled}
+                          onChange={() => toggleSelect(item.listingId)}
+                          className="sr-only peer"
                         />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-2xl opacity-30">🦇</div>
-                      )}
-                    </div>
-                  </Link>
-
-                  <div className="flex-1 min-w-0">
-                    <Link href={`/shop/${item.listingId}`}>
-                      <h3 className="font-bold text-white text-sm leading-tight hover:text-[#ff2d78] transition-colors line-clamp-2">
-                        {item.figureName}
-                      </h3>
-                    </Link>
-                    <p className="text-white/35 text-xs mt-0.5">{item.figureSeries}</p>
-                    <span className="badge badge-violet text-[10px] mt-1 inline-block">{item.condition}</span>
-
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setQuantity(item.listingId, item.quantity - 1)}
-                          className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center"
+                        <span
+                          className={`block w-5 h-5 rounded border-2 transition-colors flex items-center justify-center ${
+                            checkboxDisabled
+                              ? "border-white/10 bg-white/[0.02] cursor-not-allowed"
+                              : isSelected
+                                ? "border-[#ff2d78] bg-[#ff2d78]"
+                                : "border-white/30 bg-transparent hover:border-white/60"
+                          }`}
                         >
-                          −
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-white">
-                          ${((item.price * item.quantity) / 100).toFixed(2)}
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
                         </span>
-                        <button
-                          onClick={() => removeItem(item.listingId)}
-                          className="text-white/20 hover:text-red-400 transition-colors"
-                          title={dict.cart_promo_remove}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                      </label>
+                    )}
+
+                    <Link href={`/shop/${item.listingId}`} className="flex-shrink-0">
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: "#0a0a0a" }}>
+                        {item.figureImageUrl ? (
+                          <Image
+                            src={item.figureImageUrl}
+                            alt={item.figureName}
+                            fill
+                            // Bypass Vercel image optimizer; same fix
+                            // as FigureCard / ListingCard.
+                            unoptimized
+                            className="object-cover object-top"
+                            sizes="80px"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-2xl opacity-30">🦇</div>
+                        )}
+                      </div>
+                    </Link>
+
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/shop/${item.listingId}`}>
+                        <h3 className="font-bold text-white text-sm leading-tight hover:text-[#ff2d78] transition-colors line-clamp-2">
+                          {item.figureName}
+                        </h3>
+                      </Link>
+                      <p className="text-white/35 text-xs mt-0.5">{item.figureSeries}</p>
+                      <span className="badge badge-violet text-[10px] mt-1 inline-block">{item.condition}</span>
+
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setQuantity(item.listingId, item.quantity - 1)}
+                            className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center"
+                          >
+                            −
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-white">
+                            ${((item.price * item.quantity) / 100).toFixed(2)}
+                          </span>
+                          <button
+                            onClick={() => removeItem(item.listingId)}
+                            className="text-white/20 hover:text-red-400 transition-colors"
+                            title={dict.cart_promo_remove}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
+
+              {!overLimit && items.length > 0 && (
+                <p className="text-xs text-white/35 pt-1">{dict.cart_max_info}</p>
+              )}
             </div>
 
             {/* Right: Order summary */}
@@ -318,39 +410,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                 {countryCode && shipping.blocked && (
                   <p className="mt-3 text-sm text-amber-400 leading-relaxed">{shipping.blockedMessage}</p>
                 )}
-                {countryCode && !shipping.blocked && multiDiscount && (
-                  <p className="mt-2 text-xs text-emerald-400 flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {dict.cart_multi_discount}
-                  </p>
-                )}
               </div>
-
-              {/* Upsell banner — shown only when cart has exactly 1 item */}
-              {items.length === 1 && !upsellDismissed && (
-                <div
-                  className="relative rounded-2xl border border-[#ff2d78]/40 p-4 pr-10"
-                  style={{ background: "rgba(255,45,120,0.06)" }}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-xl leading-none mt-0.5">🦇</span>
-                    <p className="text-sm text-white/85 font-medium leading-snug">
-                      {dict.cart_upsell_banner}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setUpsellDismissed(true)}
-                    aria-label="Dismiss"
-                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              )}
 
               {/* Promo code */}
               <div className="rounded-2xl border border-white/[0.06] p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
@@ -398,33 +458,17 @@ export default function CartPageContent({ dict, shopHref }: Props) {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-white/50">
-                    <span>{dict.cart_subtotal} ({items.length})</span>
+                    <span>{dict.cart_subtotal} ({effectiveQty})</span>
                     <span>${(itemsSubtotal / 100).toFixed(2)}</span>
                   </div>
 
-                  {countryCode && !shipping.blocked ? (
-                    <>
-                      <div className="flex justify-between text-white/50">
-                        <span>
-                          {dict.cart_shipping} ({selectedCountry?.name})
-                          {multiDiscount && <span className="text-emerald-400 ml-1 text-xs">{dict.cart_multi_discount_percent}</span>}
-                        </span>
-                        <span>
-                          {multiDiscount && (
-                            <span className="text-white/25 line-through mr-1 text-xs">
-                              ${(shippingOriginal / 100).toFixed(2)}
-                            </span>
-                          )}
-                          {shippingDisplay}
-                        </span>
-                      </div>
-                      {multiDiscount && (
-                        <div className="flex justify-between text-emerald-400 text-xs">
-                          <span>{dict.cart_multi_discount_line}</span>
-                          <span>−${((shippingOriginal - shippingCents) / 100).toFixed(2)}</span>
-                        </div>
-                      )}
-                    </>
+                  {countryCode && !shipping.blocked && effectiveQty > 0 ? (
+                    <div className="flex justify-between text-white/50">
+                      <span>
+                        {dict.cart_shipping} ({selectedCountry?.name})
+                      </span>
+                      <span>{shippingDisplay}</span>
+                    </div>
                   ) : (
                     <div className="flex justify-between text-white/30">
                       <span>{dict.cart_shipping}</span>
@@ -443,16 +487,20 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                 <div className="flex justify-between font-black text-white border-t border-white/[0.06] pt-3">
                   <span>{dict.cart_total}</span>
                   <span style={{ color: "#ff2d78" }}>
-                    {countryCode && !shipping.blocked
+                    {countryCode && !shipping.blocked && effectiveQty > 0
                       ? `$${(totalCents / 100).toFixed(2)}`
                       : `$${(itemsSubtotal / 100).toFixed(2)} + shipping`}
                   </span>
                 </div>
 
+                {overLimit && (
+                  <p className="text-xs text-white/40 text-center">{selectedCountLabel}</p>
+                )}
+
                 {!showAddress && (
                   <button
                     onClick={() => setShowAddress(true)}
-                    disabled={!countryCode || shipping.blocked}
+                    disabled={!countryCode || shipping.blocked || !selectionValid}
                     className="w-full py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed mt-1"
                     style={{ backgroundColor: "#ff2d78" }}
                   >
@@ -488,7 +536,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   <div className="flex gap-2">
                     <button
                       onClick={handlePay}
-                      disabled={loading || redirecting}
+                      disabled={loading || redirecting || !selectionValid}
                       className="flex-1 py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ backgroundColor: "#ff2d78" }}
                     >
