@@ -113,23 +113,24 @@ export default function FigureDetailContent({
         />
 
         <div className="relative">
-          {/* Breadcrumb */}
-          <ScrollReveal>
-            <div className="border-b border-white/[0.05]">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <nav className="flex items-center gap-2 text-sm text-white/30">
-                  <Link href={archiveHref} className="hover:text-[#ff2d78] transition-colors">
-                    {dict.fig_breadcrumb}
-                  </Link>
-                  <span>/</span>
-                  <span className="text-white/60">{figure.name}</span>
-                </nav>
-              </div>
+          {/* Breadcrumb — no ScrollReveal so above-the-fold paints
+              immediately and users don't see the footer fade in first
+              while hero content is still at opacity 0 waiting for the
+              IntersectionObserver to fire post-hydration. */}
+          <div className="border-b border-white/[0.05]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <nav className="flex items-center gap-2 text-sm text-white/30">
+                <Link href={archiveHref} className="hover:text-[#ff2d78] transition-colors">
+                  {dict.fig_breadcrumb}
+                </Link>
+                <span>/</span>
+                <span className="text-white/60">{figure.name}</span>
+              </nav>
             </div>
-          </ScrollReveal>
+          </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <ScrollReveal>
+            <div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Left: Image */}
                 <div className="space-y-4">
@@ -220,7 +221,7 @@ export default function FigureDetailContent({
                   </div>
                 </div>
               </div>
-            </ScrollReveal>
+            </div>
 
             {/* You may also like */}
             {relatedFigures.length > 0 && (
