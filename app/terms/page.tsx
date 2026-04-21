@@ -31,6 +31,13 @@ export default function TermsPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">Customs and Import Taxes</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          International orders may be subject to customs duties, import taxes, and fees imposed by the destination country. These charges are the sole responsibility of the recipient. Bats Club has no control over these charges and cannot predict their amount. By placing an order, you accept responsibility for any applicable customs fees. If a package is refused due to unpaid customs fees and returned to us, the original shipping cost will not be refunded.
+        </p>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">Orders &amp; Returns</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           All figures are single unique pieces. Once placed, orders cannot be modified. Returns are accepted only for figures damaged in transit within 14 days of delivery — see our <a href="/returns" className="text-[#ff2d78] hover:opacity-80 transition-opacity">Returns Policy</a>.

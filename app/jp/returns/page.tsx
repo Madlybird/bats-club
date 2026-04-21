@@ -51,6 +51,29 @@ export default function ReturnsJpPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">開封動画の要件</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          配送中の破損に備えて、購入者には開封動画の撮影をお願いしています。動画は以下の条件を満たす必要があります：
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-1 mt-2">
+          <li>連続撮影・無編集（カット無し）</li>
+          <li>開封前に配送ラベル（お届け先住所）が明確に映っていること</li>
+          <li>封をした状態から内容物まで、全開封過程を記録していること</li>
+        </ul>
+        <p className="text-white/60 text-sm leading-relaxed mt-3">
+          配送破損による返品は、この要件を満たした開封動画が添付されている場合のみ受け付けます。
+        </p>
+        <p className="text-white/60 text-sm leading-relaxed mt-3">
+          以下の場合は返品をお受けできません：
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-1 mt-2">
+          <li>商品説明や写真に明記されている状態（傷、箱の劣化など）に関するもの</li>
+          <li>ヴィンテージ品（10〜20年以上経過）の素材劣化（プラスチックの脆化など）による経年変化</li>
+          <li>購入者がメーカーの封印を破った未開封商品（MISB）</li>
+        </ul>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">返送料</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           承認された返品については、返送料は当社が負担いたします。

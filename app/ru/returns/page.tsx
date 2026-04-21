@@ -51,6 +51,29 @@ export default function ReturnsRuPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">Требование к видео распаковки</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          Для защиты обеих сторон в случае повреждений при транспортировке мы просим покупателей записывать видео распаковки. Видео должно быть:
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-1 mt-2">
+          <li>Непрерывным, без монтажа (один дубль, без склеек)</li>
+          <li>Чётко показывать этикетку с вашим адресом до вскрытия посылки</li>
+          <li>Полностью фиксировать процесс распаковки от запечатанной коробки до содержимого</li>
+        </ul>
+        <p className="text-white/60 text-sm leading-relaxed mt-3">
+          Возвраты по причине повреждений при транспортировке принимаются только при наличии видео распаковки, соответствующего этим требованиям.
+        </p>
+        <p className="text-white/60 text-sm leading-relaxed mt-3">
+          Также мы не принимаем возвраты:
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-1 mt-2">
+          <li>За состояние, которое было указано в описании или видно на фото (потёртости, износ коробки и т.д.)</li>
+          <li>За возрастные изменения материалов: хрупкость пластика или износ, связанные с возрастом винтажных изделий (10–20+ лет)</li>
+          <li>За запечатанные товары (MISB), у которых покупатель нарушил заводские пломбы</li>
+        </ul>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">Обратная доставка</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           Для одобренных возвратов стоимость обратной доставки оплачиваем мы.

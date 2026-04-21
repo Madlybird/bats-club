@@ -31,6 +31,13 @@ export default function TermsJpPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">関税・輸入税について</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          国際注文には、お届け先の国の関税・輸入税・手数料が課される場合があります。これらの費用はすべて受取人の負担となります。Bats Clubはこれらの費用を管理することができず、金額を事前に予測することもできません。ご注文いただくことで、関税費用に関する責任を受け入れたものとみなします。未払いの関税により荷物が返送された場合、元の送料は返金されません。
+        </p>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">注文・返品について</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           すべてのフィギュアは一点物です。ご注文後の内容変更は承っておりません。返品は配送中に破損したフィギュアに限り、受け取りから14日以内に承ります — <a href="/jp/returns" className="text-[#ff2d78] hover:opacity-80 transition-opacity">返品ポリシー</a>をご覧ください。

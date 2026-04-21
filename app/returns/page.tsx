@@ -51,6 +51,29 @@ export default function ReturnsPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">Unboxing Video Requirement</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          To protect both parties in case of transit damage, we require buyers to record an unboxing video. The video must be:
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-1 mt-2">
+          <li>Continuous and unedited (single take, no cuts)</li>
+          <li>Clearly showing the shipping label with your address before opening</li>
+          <li>Showing the full unpacking process from sealed box to contents</li>
+        </ul>
+        <p className="text-white/60 text-sm leading-relaxed mt-3">
+          Returns for transit damage will only be accepted if accompanied by an unboxing video meeting these requirements. This is standard practice among vintage collectible sellers and protects you as a buyer.
+        </p>
+        <p className="text-white/60 text-sm leading-relaxed mt-3">
+          We also do not accept returns for:
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-1 mt-2">
+          <li>Condition issues clearly described in the listing or visible in product photos (scuffs, box wear, etc.)</li>
+          <li>Age-related material changes such as plastic brittleness or material wear on vintage items (10-20+ years old)</li>
+          <li>Sealed items (MISB) where factory seals have been broken by the buyer</li>
+        </ul>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">Return shipping</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           For approved returns, we cover return shipping costs.
