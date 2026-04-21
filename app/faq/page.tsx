@@ -18,7 +18,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Which regions do you ship to?",
-    a: "We ship to Europe, Russia, USA, Canada, Australia, New Zealand, Israel, UAE, Saudi Arabia, Turkey and Japan. We do not ship to Africa, China, Hong Kong, Macau and Thailand.",
+    a: "We ship to Europe, Russia, USA, Canada, Australia, New Zealand and Japan. We do not ship to Africa, China, Hong Kong, Macau, Thailand, Israel, UAE, Saudi Arabia and Turkey.",
   },
   {
     q: "How do I place an order?",

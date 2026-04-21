@@ -10,7 +10,7 @@ export const ALLOWED_COUNTRIES = new Set([
   ...Array.from(EUROPE),
   "US","CA","MX","BR","AR","CL","CO","PE", // Americas
   "JP",                                     // Asia (limited)
-  "AU","NZ","IL","AE","SA","TR",            // Other
+  "AU","NZ",                                // Other
   "RU",                                     // Russia
 ])
 
@@ -21,7 +21,7 @@ export const MAX_ORDER_QUANTITY = 3
 const RATES_RU: readonly [number, number, number] = [900, 1400, 2200]
 const RATES_EUROPE: readonly [number, number, number] = [1700, 2600, 4200]
 const RATES_US_CA: readonly [number, number, number] = [2000, 3000, 5000]
-// Asia-tier regions share Europe's pricing (IL, AE, SA, TR, JP).
+// Asia-tier regions share Europe's pricing (JP).
 const RATES_ASIA: readonly [number, number, number] = [1700, 2600, 4200]
 const RATES_REST: readonly [number, number, number] = [2200, 3300, 5500]
 
@@ -36,7 +36,7 @@ function tierFor(countryCode: string): readonly [number, number, number] | null 
   if (countryCode === "RU") return RATES_RU
   if (EUROPE.has(countryCode)) return RATES_EUROPE
   if (countryCode === "US" || countryCode === "CA") return RATES_US_CA
-  if (["IL","AE","SA","TR","JP"].includes(countryCode)) return RATES_ASIA
+  if (countryCode === "JP") return RATES_ASIA
   if (ALLOWED_COUNTRIES.has(countryCode)) return RATES_REST
   return null
 }

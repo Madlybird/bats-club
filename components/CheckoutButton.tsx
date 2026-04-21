@@ -46,11 +46,7 @@ const COUNTRIES = [
   { code: "JP", name: "Japan" },
   // Other
   { code: "AU", name: "Australia" },
-  { code: "IL", name: "Israel" },
   { code: "NZ", name: "New Zealand" },
-  { code: "SA", name: "Saudi Arabia" },
-  { code: "TR", name: "Turkey" },
-  { code: "AE", name: "United Arab Emirates" },
   // Russia
   { code: "RU", name: "Russia" },
 ]
