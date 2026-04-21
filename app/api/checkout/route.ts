@@ -31,27 +31,7 @@ interface CartItem {
  * (Stripe rejects both options at once.)
  */
 export async function POST(req: Request) {
-  console.log("ENV CHECK:", {
-    hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
-    keyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10),
-  })
-
-  // ── Diagnostics ────────────────────────────────────────────────
-  // Log a sanitized fingerprint of the secret key on every request
-  // so Vercel logs make it obvious whether we're hitting Stripe in
-  // live mode, test mode, or with a missing/empty key. We never log
-  // the full key.
   const secret = process.env.STRIPE_SECRET_KEY
-  const keyMode = !secret
-    ? "MISSING"
-    : secret.startsWith("sk_live_")
-      ? "live"
-      : secret.startsWith("sk_test_")
-        ? "test"
-        : "unknown"
-  const keyFingerprint = secret ? `${secret.slice(0, 8)}…${secret.slice(-4)}` : "(none)"
-  console.log(`[checkout] STRIPE_SECRET_KEY mode=${keyMode} fingerprint=${keyFingerprint}`)
-
   if (!secret) {
     return NextResponse.json(
       { error: "STRIPE_SECRET_KEY is not configured on the server" },

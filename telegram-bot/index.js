@@ -83,8 +83,7 @@ function resetState(userId) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function isAdmin(userId) {
-  if (ADMIN_IDS.length === 0) return true
-  return ADMIN_IDS.includes(userId)
+  return ADMIN_IDS.length > 0 && ADMIN_IDS.includes(userId)
 }
 
 function slugify(text) {
