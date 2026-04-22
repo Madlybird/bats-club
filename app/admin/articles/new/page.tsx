@@ -24,6 +24,7 @@ export default function NewArticlePage() {
   const [selectedFigures, setSelectedFigures] = useState<string[]>([])
   const [published, setPublished] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [lastResponse, setLastResponse] = useState<{ status: number; data: any } | null>(null)
 
   useEffect(() => {
     fetch("/api/figures")
@@ -71,6 +72,7 @@ export default function NewArticlePage() {
 
     setLoading(true)
     setError("")
+    setLastResponse(null)
 
     const res = await fetch("/api/articles", {
       method: "POST",
@@ -79,6 +81,7 @@ export default function NewArticlePage() {
     })
 
     const data = await res.json()
+    setLastResponse({ status: res.status, data })
     if (!res.ok) {
       const bits = [data.error || "Failed to create article"]
       if (data.stage) bits.push(`stage: ${data.stage}`)
@@ -88,6 +91,7 @@ export default function NewArticlePage() {
       setError(bits.join(" · "))
       setLoading(false)
     } else {
+      setLoading(false)
       router.push("/admin/articles")
     }
   }
@@ -104,10 +108,27 @@ export default function NewArticlePage() {
         <h1 className="text-2xl font-bold text-white">New Article</h1>
       </div>
 
+      <div className="mb-4 rounded-lg border border-violet-700/30 bg-violet-900/10 p-3 text-xs text-slate-400">
+        Having trouble? Visit{" "}
+        <a href="/admin/diag" className="text-violet-400 underline">/admin/diag</a>{" "}
+        to run a test insert against the live DB and see the exact failure.
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <div className="bg-red-900/30 border border-red-700/50 text-red-300 px-4 py-3 rounded-lg text-sm">
             {error}
+          </div>
+        )}
+
+        {lastResponse && !lastResponse.data?.id && (
+          <div className="rounded-lg border border-[#1a1a3a] bg-[#0a0a12] p-3">
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
+              Last API response · HTTP {lastResponse.status}
+            </p>
+            <pre className="text-xs text-slate-300 overflow-x-auto whitespace-pre-wrap break-words">
+              {JSON.stringify(lastResponse.data, null, 2)}
+            </pre>
           </div>
         )}
 
