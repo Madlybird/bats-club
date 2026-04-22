@@ -14,7 +14,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How does shipping work?",
-    a: "We ship worldwide to supported regions with tracking. Average delivery time is 21 business days (14–28 day window). Maximum 3 figures per order. Shipping rates (per order) — Russia: $9 for 1 figure / $14 for 2 / $22 for 3. Europe: $17 for 1 figure / $26 for 2 / $42 for 3. USA & Canada: $20 for 1 figure / $30 for 2 / $50 for 3. Asia: $17 for 1 figure / $26 for 2 / $42 for 3. Rest of World: $22 for 1 figure / $33 for 2 / $55 for 3. All orders ship within 1–3 business days of payment confirmation.",
+    a: "We ship worldwide to supported regions with tracking. Average delivery time is 21 business days (14–28 day window). Maximum 3 figures per order. Shipping rates (per order) — Russia: $9 for 1 figure / $14 for 2 / $22 for 3. Europe: $12 for 1 figure / $18 for 2 / $26 for 3. USA & Canada: $12 for 1 figure / $18 for 2 / $26 for 3. Asia (Japan): $17 for 1 figure / $26 for 2 / $42 for 3. Rest of World: $15 for 1 figure / $20 for 2 / $30 for 3. All orders ship within 1–3 business days of payment confirmation.",
   },
   {
     q: "Which regions do you ship to?",

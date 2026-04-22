@@ -19,11 +19,11 @@ export const MAX_ORDER_QUANTITY = 3
 
 // Tiered shipping rates per region [qty1, qty2, qty3] in cents.
 const RATES_RU: readonly [number, number, number] = [900, 1400, 2200]
-const RATES_EUROPE: readonly [number, number, number] = [1700, 2600, 4200]
-const RATES_US_CA: readonly [number, number, number] = [2000, 3000, 5000]
-// Asia-tier regions share Europe's pricing (JP).
+const RATES_EUROPE: readonly [number, number, number] = [1200, 1800, 2600]
+const RATES_US_CA: readonly [number, number, number] = [1200, 1800, 2600]
+// Asia (JP only) kept at the higher tier — local post rates are pricier.
 const RATES_ASIA: readonly [number, number, number] = [1700, 2600, 4200]
-const RATES_REST: readonly [number, number, number] = [2200, 3300, 5500]
+const RATES_REST: readonly [number, number, number] = [1500, 2000, 3000]
 
 export interface ShippingInfo {
   blocked: boolean
