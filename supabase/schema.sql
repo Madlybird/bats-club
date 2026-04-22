@@ -14,15 +14,16 @@ $$ LANGUAGE plpgsql;
 
 -- ── Users ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.users (
-  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  email       TEXT UNIQUE NOT NULL,
-  name        TEXT NOT NULL,
-  username    TEXT UNIQUE NOT NULL,
-  password    TEXT NOT NULL,
-  avatar      TEXT,
-  bio         TEXT,
-  is_admin    BOOLEAN DEFAULT FALSE,
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  email           TEXT UNIQUE NOT NULL,
+  name            TEXT NOT NULL,
+  username        TEXT UNIQUE NOT NULL,
+  password        TEXT NOT NULL,
+  avatar          TEXT,
+  bio             TEXT,
+  is_admin        BOOLEAN DEFAULT FALSE,
+  email_verified  BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ── Figures ──────────────────────────────────────────────────
@@ -120,6 +121,20 @@ CREATE TABLE IF NOT EXISTS public.password_reset_tokens (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ── Email Verification Tokens ────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.verification_tokens (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id    TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  token      TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used       BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, token)
+);
+
+CREATE INDEX IF NOT EXISTS verification_tokens_user_id_idx
+  ON public.verification_tokens (user_id);
+
 -- ── Article ↔ Figure join ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.article_figures (
   article_id TEXT NOT NULL REFERENCES public.articles(id) ON DELETE CASCADE,
@@ -149,6 +164,7 @@ ALTER TABLE public.listings              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.articles              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.password_reset_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.verification_tokens   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.article_figures       ENABLE ROW LEVEL SECURITY;
 
 -- Figures: publicly readable

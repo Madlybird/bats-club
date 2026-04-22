@@ -3,7 +3,20 @@ import { supabaseAdmin } from "@/lib/supabase"
 import { sendVerificationEmail } from "@/lib/email"
 import bcrypt from "bcryptjs"
 
+function errorResponse(stage: string, error: any, status = 500) {
+  const payload = {
+    error: error?.message || "Request failed",
+    stage,
+    code: error?.code,
+    details: error?.details,
+    hint: error?.hint,
+  }
+  console.error(`[register] ${stage} failed`, payload)
+  return NextResponse.json(payload, { status })
+}
+
 export async function POST(req: Request) {
+  let stage = "parse-body"
   try {
     const { name, username, email, password } = await req.json()
 
@@ -15,51 +28,58 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 })
     }
 
-    const { data: existingEmail } = await supabaseAdmin
+    stage = "check-email"
+    const { data: existingEmail, error: emailError } = await supabaseAdmin
       .from("users")
       .select("id")
       .eq("email", email)
-      .single()
-
+      .maybeSingle()
+    if (emailError) return errorResponse(stage, emailError)
     if (existingEmail) {
       return NextResponse.json({ error: "Email already in use" }, { status: 409 })
     }
 
-    const { data: existingUsername } = await supabaseAdmin
+    stage = "check-username"
+    const { data: existingUsername, error: usernameError } = await supabaseAdmin
       .from("users")
       .select("id")
       .eq("username", username)
-      .single()
-
+      .maybeSingle()
+    if (usernameError) return errorResponse(stage, usernameError)
     if (existingUsername) {
       return NextResponse.json({ error: "Username already taken" }, { status: 409 })
     }
 
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    const { data: user, error } = await supabaseAdmin
+    stage = "insert-user"
+    const { data: user, error: insertError } = await supabaseAdmin
       .from("users")
       .insert({ name, username, email, password: hashedPassword, email_verified: false })
       .select("id, name, username, email")
       .single()
+    if (insertError || !user) {
+      return errorResponse(stage, insertError || new Error("insert returned no row"))
+    }
 
-    if (error) throw error
-
-    // Generate 6-digit verification code
     const code = String(Math.floor(100000 + Math.random() * 900000))
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
 
-    await supabaseAdmin.from("verification_tokens").insert({
-      user_id: user.id,
-      token: code,
-      expires_at: expiresAt,
-    })
+    stage = "insert-token"
+    const { error: tokenError } = await supabaseAdmin
+      .from("verification_tokens")
+      .insert({ user_id: user.id, token: code, expires_at: expiresAt })
+    if (tokenError) return errorResponse(stage, tokenError)
 
-    await sendVerificationEmail(email, code)
+    stage = "send-email"
+    try {
+      await sendVerificationEmail(email, code)
+    } catch (mailErr: any) {
+      return errorResponse(stage, mailErr)
+    }
 
     return NextResponse.json({ ...user, needsVerification: true }, { status: 201 })
-  } catch (error) {
-    console.error("Register error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  } catch (error: any) {
+    return errorResponse(stage, error)
   }
 }
