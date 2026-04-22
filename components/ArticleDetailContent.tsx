@@ -43,7 +43,15 @@ export default function ArticleDetailContent({ article, dict, articlesHref }: Pr
     day: "numeric",
   })
 
-  const paragraphs = article.body.split("\n").filter(Boolean)
+  const blocks = article.body
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((line) =>
+      line.startsWith("## ")
+        ? ({ type: "h2" as const, text: line.slice(3).trim() })
+        : ({ type: "p" as const, text: line })
+    )
 
   return (
     <div className="relative min-h-screen">
@@ -136,11 +144,21 @@ export default function ArticleDetailContent({ article, dict, articlesHref }: Pr
         {/* Body */}
         <ScrollReveal>
           <div className="space-y-5">
-            {paragraphs.map((para, i) => (
-              <p key={i} className="text-white/70 leading-8 text-base">
-                {para}
-              </p>
-            ))}
+            {blocks.map((block, i) =>
+              block.type === "h2" ? (
+                <h2
+                  key={i}
+                  className="text-2xl font-black tracking-tight pt-4"
+                  style={{ color: "#ff2d78" }}
+                >
+                  {block.text}
+                </h2>
+              ) : (
+                <p key={i} className="text-white/70 leading-8 text-base">
+                  {block.text}
+                </p>
+              )
+            )}
           </div>
         </ScrollReveal>
 

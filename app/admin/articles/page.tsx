@@ -6,10 +6,11 @@ export default async function AdminArticlesPage() {
   const { data: articles } = await supabaseAdmin
     .from("articles")
     .select(`
-      id, title, slug, published, createdAt:created_at,
+      id, title, slug, published, pinned, createdAt:created_at,
       author:users(name, username),
       article_figures(id)
     `)
+    .order("pinned", { ascending: false })
     .order("created_at", { ascending: false })
 
   const result = (articles || []).map((a) => ({

@@ -95,17 +95,22 @@ CREATE TRIGGER orders_updated_at
 
 -- ── Articles ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.articles (
-  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  title       TEXT NOT NULL,
-  slug        TEXT UNIQUE NOT NULL,
-  body        TEXT NOT NULL,
-  excerpt     TEXT,
-  cover_image TEXT,
-  author_id   TEXT NOT NULL REFERENCES public.users(id),
-  published   BOOLEAN DEFAULT FALSE,
-  created_at  TIMESTAMPTZ DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ DEFAULT NOW()
+  id               TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  title            TEXT NOT NULL,
+  slug             TEXT UNIQUE NOT NULL,
+  body             TEXT NOT NULL,
+  excerpt          TEXT,
+  meta_description TEXT,
+  cover_image      TEXT,
+  author_id        TEXT NOT NULL REFERENCES public.users(id),
+  published        BOOLEAN DEFAULT FALSE,
+  pinned           BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS articles_pinned_created_at_idx
+  ON public.articles (pinned DESC, created_at DESC);
 
 CREATE TRIGGER articles_updated_at
   BEFORE UPDATE ON public.articles

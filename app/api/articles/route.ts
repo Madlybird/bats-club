@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   let query = supabaseAdmin
     .from("articles")
     .select(`
-      id, title, slug, body, excerpt, published,
+      id, title, slug, body, excerpt, published, pinned,
       coverImage:cover_image, authorId:author_id,
       createdAt:created_at, updatedAt:updated_at,
       author:users(id, name, username, avatar),
@@ -33,6 +33,7 @@ export async function GET(req: Request) {
         figure:figures(id, name, imageUrl:image_url)
       )
     `)
+    .order("pinned", { ascending: false })
     .order("created_at", { ascending: false })
 
   if (!(all && isAdmin)) {
