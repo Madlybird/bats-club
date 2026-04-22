@@ -8,7 +8,7 @@ export default async function AdminArticlesPage() {
     .select(`
       id, title, slug, published, createdAt:created_at,
       author:users(name, username),
-      article_figures(id)
+      article_figures(figure_id)
     `)
     .order("created_at", { ascending: false })
 

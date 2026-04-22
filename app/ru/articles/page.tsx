@@ -18,7 +18,7 @@ export default async function ArticlesPageRu() {
       id, title, slug, excerpt, published,
       coverImage:cover_image, createdAt:created_at,
       author:users(id, name, username, avatar),
-      article_figures(id)
+      article_figures(figure_id)
     `)
     .eq("published", true)
     .order("created_at", { ascending: false })
