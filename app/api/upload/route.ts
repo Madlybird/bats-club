@@ -35,8 +35,11 @@ export async function POST(req: Request) {
       .upload(safeName, Buffer.from(bytes), { contentType: file.type, upsert: false })
 
     if (error) {
-      console.error("Supabase storage upload error:", error)
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 })
+      console.error("[upload] Supabase storage error:", error)
+      return NextResponse.json(
+        { error: (error as any).message || "Upload failed", stage: "storage", details: (error as any) },
+        { status: 500 }
+      )
     }
 
     const { data: { publicUrl } } = supabaseAdmin.storage
@@ -44,8 +47,11 @@ export async function POST(req: Request) {
       .getPublicUrl(safeName)
 
     return NextResponse.json({ url: publicUrl })
-  } catch (error) {
-    console.error("Upload error:", error)
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 })
+  } catch (error: any) {
+    console.error("[upload] unexpected error:", error)
+    return NextResponse.json(
+      { error: error?.message || "Upload failed", stage: "unexpected" },
+      { status: 500 }
+    )
   }
 }

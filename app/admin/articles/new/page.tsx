@@ -43,12 +43,20 @@ export default function NewArticlePage() {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
-    const fd = new FormData()
-    fd.append("file", file)
-    const res = await fetch("/api/upload", { method: "POST", body: fd })
-    const data = await res.json()
-    if (data.url) setCoverImage(data.url)
-    setUploading(false)
+    setError("")
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(`Upload failed: ${data.error || res.statusText}${data.stage ? ` (stage: ${data.stage})` : ""}`)
+      } else if (data.url) {
+        setCoverImage(data.url)
+      }
+    } finally {
+      setUploading(false)
+    }
   }
 
   const toggleFigure = (id: string) => {
@@ -72,7 +80,12 @@ export default function NewArticlePage() {
 
     const data = await res.json()
     if (!res.ok) {
-      setError(data.error || "Failed to create article")
+      const bits = [data.error || "Failed to create article"]
+      if (data.stage) bits.push(`stage: ${data.stage}`)
+      if (data.code) bits.push(`code: ${data.code}`)
+      if (data.details) bits.push(`details: ${data.details}`)
+      if (data.hint) bits.push(`hint: ${data.hint}`)
+      setError(bits.join(" · "))
       setLoading(false)
     } else {
       router.push("/admin/articles")

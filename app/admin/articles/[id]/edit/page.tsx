@@ -18,7 +18,7 @@ interface Article {
   excerpt: string | null
   coverImage: string | null
   published: boolean
-  articleFigures: { figureId: string }[]
+  articleFigures: { figure: { id: string } }[]
 }
 
 export default function EditArticlePage() {
@@ -52,7 +52,7 @@ export default function EditArticlePage() {
         setExcerpt(article.excerpt || "")
         setCoverImage(article.coverImage || "")
         setPublished(article.published)
-        setSelectedFigures(article.articleFigures.map((af) => af.figureId))
+        setSelectedFigures((article.articleFigures || []).map((af) => af.figure?.id).filter(Boolean))
         setFigures(figs)
       })
       .catch(() => setError("Failed to load article"))
@@ -63,12 +63,20 @@ export default function EditArticlePage() {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
-    const fd = new FormData()
-    fd.append("file", file)
-    const res = await fetch("/api/upload", { method: "POST", body: fd })
-    const data = await res.json()
-    if (data.url) setCoverImage(data.url)
-    setUploading(false)
+    setError("")
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(`Upload failed: ${data.error || res.statusText}${data.stage ? ` (stage: ${data.stage})` : ""}`)
+      } else if (data.url) {
+        setCoverImage(data.url)
+      }
+    } finally {
+      setUploading(false)
+    }
   }
 
   const toggleFigure = (id: string) => {
@@ -92,7 +100,12 @@ export default function EditArticlePage() {
 
     const data = await res.json()
     if (!res.ok) {
-      setError(data.error || "Failed to update article")
+      const bits = [data.error || "Failed to update article"]
+      if (data.stage) bits.push(`stage: ${data.stage}`)
+      if (data.code) bits.push(`code: ${data.code}`)
+      if (data.details) bits.push(`details: ${data.details}`)
+      if (data.hint) bits.push(`hint: ${data.hint}`)
+      setError(bits.join(" · "))
       setLoading(false)
     } else {
       router.push("/admin/articles")

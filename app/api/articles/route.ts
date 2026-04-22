@@ -3,6 +3,18 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 
+function errorResponse(stage: string, error: any, status = 500) {
+  const payload = {
+    error: error?.message || "Request failed",
+    stage,
+    code: error?.code,
+    details: error?.details,
+    hint: error?.hint,
+  }
+  console.error(`[articles] ${stage} failed`, payload)
+  return NextResponse.json(payload, { status })
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const all = searchParams.get("all") === "true"
@@ -28,11 +40,7 @@ export async function GET(req: Request) {
   }
 
   const { data: articles, error } = await query
-
-  if (error) {
-    console.error("Get articles error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
+  if (error) return errorResponse("list", error)
 
   const result = (articles || []).map((a) => ({
     ...a,
@@ -49,6 +57,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
+  let stage = "parse-body"
   try {
     const { title, slug, body, excerpt, coverImage, figureIds, published } = await req.json()
 
@@ -56,19 +65,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Title and body are required" }, { status: 400 })
     }
 
-    const finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    const finalSlug =
+      (slug && String(slug).trim()) ||
+      title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 
-    const { data: existing } = await supabaseAdmin
+    stage = "check-slug"
+    const { data: existing, error: slugError } = await supabaseAdmin
       .from("articles")
       .select("id")
       .eq("slug", finalSlug)
-      .single()
-
+      .maybeSingle()
+    if (slugError) return errorResponse(stage, slugError)
     if (existing) {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 409 })
+      return NextResponse.json({ error: "Slug already exists", stage }, { status: 409 })
     }
 
-    const { data: article, error } = await supabaseAdmin
+    stage = "insert"
+    const { data: article, error: insertError } = await supabaseAdmin
       .from("articles")
       .insert({
         title,
@@ -79,20 +92,20 @@ export async function POST(req: Request) {
         author_id: session.user.id,
         published: published || false,
       })
-      .select("id, title, slug, body, excerpt, published, coverImage:cover_image, authorId:author_id, createdAt:created_at")
+      .select("id")
       .single()
+    if (insertError || !article) return errorResponse(stage, insertError || new Error("insert returned no row"))
 
-    if (error) throw error
-
-    // Link figures
     if (figureIds?.length) {
-      await supabaseAdmin.from("article_figures").insert(
-        figureIds.map((fid: string) => ({ article_id: article.id, figure_id: fid }))
-      )
+      stage = "link-figures"
+      const { error: linkError } = await supabaseAdmin
+        .from("article_figures")
+        .insert(figureIds.map((fid: string) => ({ article_id: article.id, figure_id: fid })))
+      if (linkError) return errorResponse(stage, linkError)
     }
 
-    // Fetch full article with relations
-    const { data: fullArticle } = await supabaseAdmin
+    stage = "fetch-full"
+    const { data: fullArticle, error: fetchError } = await supabaseAdmin
       .from("articles")
       .select(`
         id, title, slug, published, coverImage:cover_image, createdAt:created_at,
@@ -101,6 +114,7 @@ export async function POST(req: Request) {
       `)
       .eq("id", article.id)
       .single()
+    if (fetchError) return errorResponse(stage, fetchError)
 
     return NextResponse.json(
       {
@@ -109,8 +123,7 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     )
-  } catch (error) {
-    console.error("Create article error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  } catch (error: any) {
+    return errorResponse(stage, error)
   }
 }
