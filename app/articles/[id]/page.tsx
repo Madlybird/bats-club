@@ -9,14 +9,14 @@ interface Props { params: { id: string } }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: article } = await supabaseAdmin
     .from("articles")
-    .select("title, excerpt, meta_description")
+    .select("title, excerpt")
     .or(`slug.eq.${params.id},id.eq.${params.id}`)
     .eq("published", true)
     .single()
   if (!article) return { title: "Article Not Found" }
   return {
     title: `${article.title} | Bats Club`,
-    description: (article as any).meta_description || article.excerpt || undefined,
+    description: article.excerpt || undefined,
   }
 }
 

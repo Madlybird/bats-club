@@ -14,19 +14,10 @@ interface ArticleFigure {
   }
 }
 
-interface Author {
-  name: string
-  username: string
-  avatar: string | null
-}
-
 interface Article {
   title: string
-  excerpt: string | null
   coverImage: string | null
   body: string
-  createdAt: Date | string
-  author: Author
   articleFigures: ArticleFigure[]
 }
 
@@ -37,12 +28,6 @@ interface Props {
 }
 
 export default function ArticleDetailContent({ article, dict, articlesHref }: Props) {
-  const date = new Date(article.createdAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
-
   const blocks = article.body
     .split("\n")
     .map((l) => l.trim())
@@ -82,63 +67,13 @@ export default function ArticleDetailContent({ article, dict, articlesHref }: Pr
       )}
 
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 py-10">
-        {/* Breadcrumb */}
-        <ScrollReveal>
-          <nav className="flex items-center gap-2 text-sm text-white/30 mb-8">
-            <Link href={articlesHref} className="hover:text-[#ff2d78] transition-colors">
-              {dict.nav_articles}
-            </Link>
-            <span>/</span>
-            <span className="text-white/50 truncate">{article.title}</span>
-          </nav>
-        </ScrollReveal>
-
         {/* Title */}
         <ScrollReveal>
           <header className="mb-8">
-            <span className="inline-block w-8 h-px bg-[#ff2d78] mb-4" />
-            <h1 className="text-4xl font-black text-white leading-tight mb-4">
+            <h1 className="text-4xl font-black text-white leading-tight">
               {article.title}
             </h1>
-            {article.excerpt && (
-              <p className="text-lg text-white/50 leading-relaxed">
-                {article.excerpt}
-              </p>
-            )}
           </header>
-        </ScrollReveal>
-
-        {/* Author */}
-        <ScrollReveal>
-          <div className="flex items-center gap-3 mb-8 pb-8 border-b border-white/[0.06]">
-            {article.author.avatar ? (
-              <Image
-                src={article.author.avatar}
-                alt={article.author.name}
-                width={44}
-                height={44}
-                className="rounded-full border-2 border-[#ff2d78]/60"
-              />
-            ) : (
-              <div
-                className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold border-2 border-[#ff2d78]/60"
-                style={{ background: "#0a0a0a", boxShadow: "0 0 12px rgba(255,45,120,0.2)" }}
-              >
-                {article.author.name.charAt(0)}
-              </div>
-            )}
-            <div>
-              <Link
-                href={`/profile/${article.author.username}`}
-                className="font-medium text-white hover:text-[#ff2d78] transition-colors"
-              >
-                {article.author.name}
-              </Link>
-              <p className="text-xs text-white/30">
-                @{article.author.username} · {dict.article_published} {date}
-              </p>
-            </div>
-          </div>
         </ScrollReveal>
 
         {/* Body */}
