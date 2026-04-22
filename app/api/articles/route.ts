@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -115,6 +116,10 @@ export async function POST(req: Request) {
       .eq("id", article.id)
       .single()
     if (fetchError) return errorResponse(stage, fetchError)
+
+    revalidatePath("/articles")
+    revalidatePath("/ru/articles")
+    revalidatePath("/jp/articles")
 
     return NextResponse.json(
       {

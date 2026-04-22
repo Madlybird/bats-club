@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
+
+function revalidateArticle(slug?: string | null) {
+  revalidatePath("/articles")
+  revalidatePath("/ru/articles")
+  revalidatePath("/jp/articles")
+  if (slug) {
+    revalidatePath(`/articles/${slug}`)
+    revalidatePath(`/ru/articles/${slug}`)
+    revalidatePath(`/jp/articles/${slug}`)
+  }
+  revalidatePath("/articles/[id]", "page")
+  revalidatePath("/ru/articles/[id]", "page")
+  revalidatePath("/jp/articles/[id]", "page")
+}
 
 function errorResponse(stage: string, error: any, status = 500) {
   const payload = {
@@ -95,6 +110,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       .single()
     if (fetchError) return errorResponse(stage, fetchError)
 
+    revalidateArticle((fullArticle as any)?.slug)
+
     return NextResponse.json({
       ...fullArticle,
       articleFigures: ((fullArticle as any)?.article_figures || []).map((af: any) => ({ figure: af.figure })),
@@ -110,8 +127,17 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
+  const { data: existing } = await supabaseAdmin
+    .from("articles")
+    .select("slug")
+    .eq("id", params.id)
+    .maybeSingle()
+
   const { error } = await supabaseAdmin.from("articles").delete().eq("id", params.id)
   if (error) return errorResponse("delete", error)
+
+  revalidateArticle(existing?.slug)
+
   return NextResponse.json({ success: true })
 }
 
@@ -131,5 +157,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     .single()
 
   if (error) return errorResponse("patch", error)
+
+  revalidateArticle(article?.slug)
+
   return NextResponse.json(article)
 }
