@@ -28,13 +28,34 @@ export default function AdminDiagPage() {
         why article saves are failing. No DevTools needed — the full response appears below.
       </p>
 
-      <button
-        onClick={run}
-        disabled={loading}
-        className="bg-violet-700 hover:bg-violet-600 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
-      >
-        {loading ? "Running…" : "Run diagnostic"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={run}
+          disabled={loading}
+          className="bg-violet-700 hover:bg-violet-600 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+        >
+          {loading ? "Running…" : "Run diagnostic"}
+        </button>
+        <button
+          onClick={async () => {
+            setLoading(true)
+            setResult(null)
+            try {
+              const res = await fetch("/api/admin/seed-welcome", { method: "POST", cache: "no-store" })
+              const data = await res.json()
+              setResult({ status: res.status, data })
+            } catch (e: any) {
+              setResult({ status: 0, data: { error: e?.message || String(e) } })
+            } finally {
+              setLoading(false)
+            }
+          }}
+          disabled={loading}
+          className="bg-pink-700 hover:bg-pink-600 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+        >
+          {loading ? "Working…" : "Seed Welcome article"}
+        </button>
+      </div>
 
       {result && (
         <div className="mt-6 space-y-4">
