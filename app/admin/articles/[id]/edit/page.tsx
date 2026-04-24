@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Link from "next/link"
+import MarkdownEditor from "@/components/MarkdownEditor"
 
 interface Figure {
   id: string
@@ -154,12 +155,7 @@ export default function EditArticlePage() {
 
         <div>
           <label className={labelCls}>Body *</label>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            className={`${inputCls} min-h-[300px] resize-y font-mono text-sm`}
-            required
-          />
+          <MarkdownEditor value={body} onChange={setBody} />
         </div>
 
         <div>

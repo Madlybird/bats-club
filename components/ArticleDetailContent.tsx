@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
+import MarkdownRenderer from "@/components/MarkdownRenderer"
 import type { Dict } from "@/lib/dict"
 
 interface ArticleFigure {
@@ -28,16 +29,6 @@ interface Props {
 }
 
 export default function ArticleDetailContent({ article, dict, articlesHref }: Props) {
-  const blocks = article.body
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map((line) =>
-      line.startsWith("## ")
-        ? ({ type: "h2" as const, text: line.slice(3).trim() })
-        : ({ type: "p" as const, text: line })
-    )
-
   return (
     <div className="relative min-h-screen">
       <BatsOverlay />
@@ -51,22 +42,24 @@ export default function ArticleDetailContent({ article, dict, articlesHref }: Pr
         }}
       />
 
-      {/* Cover Image */}
+      {/* Cover Image — full-width, at top, no background/overlay */}
       {article.coverImage && (
-        <div className="relative h-64 sm:h-80 md:h-96 w-full overflow-hidden">
-          <Image
+        <div className="relative w-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={article.coverImage}
             alt={article.title}
-            fill
-            className="object-cover object-top"
-            priority
-            sizes="100vw"
+            style={{
+              width: "100%",
+              maxHeight: 500,
+              objectFit: "cover",
+              display: "block",
+            }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent" />
         </div>
       )}
 
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 py-10">
+      <div className="relative mx-auto px-4 sm:px-6 py-10" style={{ maxWidth: 720 }}>
         {/* Title */}
         <ScrollReveal>
           <header className="mb-8">
@@ -78,23 +71,7 @@ export default function ArticleDetailContent({ article, dict, articlesHref }: Pr
 
         {/* Body */}
         <ScrollReveal>
-          <div className="space-y-5">
-            {blocks.map((block, i) =>
-              block.type === "h2" ? (
-                <h2
-                  key={i}
-                  className="text-2xl font-black tracking-tight pt-4"
-                  style={{ color: "#ff2d78" }}
-                >
-                  {block.text}
-                </h2>
-              ) : (
-                <p key={i} className="text-white/70 leading-8 text-base">
-                  {block.text}
-                </p>
-              )
-            )}
-          </div>
+          <MarkdownRenderer source={article.body} />
         </ScrollReveal>
 
         {/* Linked Figures */}
