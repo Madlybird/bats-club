@@ -51,12 +51,12 @@ export default function RootLayout({
         <script type="text/javascript" src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js" async />
       </head>
       <body
-        className="min-h-screen text-slate-200 antialiased font-inter"
+        className="min-h-screen text-slate-200 antialiased font-inter overflow-x-hidden"
       >
         <Providers>
           <Navbar />
           <Toaster />
-          <main>{children}</main>
+          <main className="overflow-x-hidden">{children}</main>
           <Footer />
         </Providers>
       </body>

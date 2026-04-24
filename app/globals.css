@@ -29,6 +29,14 @@
 /* Base styles */
 html {
   background-color: #0a0a0a;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal drag on mobile caused by absolutely-positioned
+   decorations (bats, blurs) drifting past the viewport edge. */
+body {
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* Scroll-driven gradient: black at top → deep pink at bottom */
