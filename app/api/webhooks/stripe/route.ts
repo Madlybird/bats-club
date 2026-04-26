@@ -60,11 +60,11 @@ export async function POST(req: Request) {
 
       if (!buyerId || listingIds.length === 0) {
         // Legacy fallback: try existing orders by session id or metadata.orderId
-        let orders: Array<{ id: string; listing_id: string; quantity: number }> = []
+        let orders: Array<{ id: string; listing_id: string; quantity: number; buyer_id: string }> = []
 
         const { data: bySession } = await supabaseAdmin
           .from("orders")
-          .select("id, listing_id, quantity")
+          .select("id, listing_id, quantity, buyer_id")
           .eq("stripe_session_id", session.id)
         if (bySession && bySession.length > 0) {
           orders = bySession
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
           if (metadataOrderId) {
             const { data } = await supabaseAdmin
               .from("orders")
-              .select("id, listing_id, quantity")
+              .select("id, listing_id, quantity, buyer_id")
               .eq("id", metadataOrderId)
               .single()
             if (data) orders = [data]
@@ -90,6 +90,8 @@ export async function POST(req: Request) {
 
             await supabaseAdmin.from("orders").update(updates).eq("id", order.id)
             await decrementStock(order.listing_id, order.quantity ?? 1)
+            const legacyBuyerId = (order as any).buyer_id || meta.buyer_id
+            if (legacyBuyerId) await addFigureToCollection(legacyBuyerId, order.listing_id)
           }
           console.log(`[stripe webhook] legacy: session ${session.id} → marked ${orders.length} order(s) PAID`)
           try {
@@ -143,6 +145,7 @@ export async function POST(req: Request) {
           console.log(`[stripe webhook] order ${inserted?.id} created (PAID)`)
 
           await decrementStock(listingId, 1)
+          await addFigureToCollection(buyerId, listingId)
         }
 
         console.log(
@@ -240,6 +243,40 @@ async function decrementStock(listingId: string, quantity: number) {
   }
   console.log(
     `[stripe webhook] listing ${listingId} stock=${newStock}${newStock <= 0 ? " active=false" : ""}`
+  )
+}
+
+/**
+ * Adds the purchased figure to the buyer's `HAVE` collection. Looks
+ * up the figure_id from the listing and upserts on (user_id,
+ * figure_id), so re-buying or already-owned doesn't duplicate the
+ * row but does promote a WISHLIST/BUY entry to HAVE.
+ */
+async function addFigureToCollection(userId: string, listingId: string) {
+  const { data: listing, error: listingError } = await supabaseAdmin
+    .from("listings")
+    .select("figure_id")
+    .eq("id", listingId)
+    .single()
+  if (listingError || !listing?.figure_id) {
+    console.error(`[stripe webhook] addFigureToCollection: listing ${listingId} lookup failed:`, listingError)
+    return
+  }
+  const { error: upsertError } = await supabaseAdmin
+    .from("user_figures")
+    .upsert(
+      { user_id: userId, figure_id: listing.figure_id, status: "HAVE" },
+      { onConflict: "user_id,figure_id" }
+    )
+  if (upsertError) {
+    console.error(
+      `[stripe webhook] addFigureToCollection upsert failed for user=${userId} figure=${listing.figure_id}:`,
+      upsertError
+    )
+    return
+  }
+  console.log(
+    `[stripe webhook] user_figures user=${userId} figure=${listing.figure_id} status=HAVE`
   )
 }
 

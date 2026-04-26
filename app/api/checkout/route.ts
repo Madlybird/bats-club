@@ -179,6 +179,7 @@ export async function POST(req: Request) {
       shipping_address_collection: {
         allowed_countries: Array.from(ALLOWED_COUNTRIES) as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
       },
+      phone_number_collection: { enabled: true },
     }
 
     if (promoDiscountCents > 0) {
