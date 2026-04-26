@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { stripe } from "@/lib/stripe"
 import { supabaseAdmin } from "@/lib/supabase"
 import { sendOrderConfirmationEmail } from "@/lib/email"
@@ -7,22 +8,35 @@ import Stripe from "stripe"
 export async function POST(req: Request) {
   const body = await req.text()
   const sig = req.headers.get("stripe-signature")
+  console.log("[stripe webhook] received request", {
+    hasSig: !!sig,
+    bodyLen: body.length,
+    hasSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+  })
 
   if (!sig) {
+    console.error("[stripe webhook] missing stripe-signature header")
     return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 })
   }
 
   let event: Stripe.Event
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    console.log(`[stripe webhook] event verified: ${event.type} (id=${event.id})`)
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error"
-    console.error("Webhook signature verification failed:", message)
+    console.error("[stripe webhook] signature verification failed:", message)
     return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 })
   }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session
+    console.log(`[stripe webhook] processing session ${session.id}`, {
+      paymentStatus: session.payment_status,
+      amountTotal: session.amount_total,
+      hasMetadata: !!session.metadata && Object.keys(session.metadata).length > 0,
+      metadataKeys: Object.keys(session.metadata || {}),
+    })
 
     try {
       const shippingFromStripe = extractShippingAddress(session)
@@ -34,6 +48,15 @@ export async function POST(req: Request) {
       const shippingCents = Number(meta.shipping_cents || "0")
       const promoDiscountCents = Number(meta.promo_discount_cents || "0")
       const shippingAddress = meta.shipping_address ? JSON.parse(meta.shipping_address) : {}
+
+      console.log("[stripe webhook] parsed metadata", {
+        buyerId,
+        listingIds,
+        listingPrices,
+        shippingCents,
+        promoDiscountCents,
+        hasShippingFromStripe: !!shippingFromStripe,
+      })
 
       if (!buyerId || listingIds.length === 0) {
         // Legacy fallback: try existing orders by session id or metadata.orderId
@@ -69,6 +92,16 @@ export async function POST(req: Request) {
             await decrementStock(order.listing_id, order.quantity ?? 1)
           }
           console.log(`[stripe webhook] legacy: session ${session.id} → marked ${orders.length} order(s) PAID`)
+          try {
+            revalidatePath("/shop")
+            revalidatePath("/ru/shop")
+            revalidatePath("/jp/shop")
+            revalidatePath("/archive")
+            revalidatePath("/ru/archive")
+            revalidatePath("/jp/archive")
+          } catch (e) {
+            console.error("[stripe webhook] legacy revalidate failed:", e)
+          }
         } else {
           console.error("No orders found and no metadata for session", session.id)
           return NextResponse.json({ error: "No order data found" }, { status: 404 })
@@ -80,7 +113,7 @@ export async function POST(req: Request) {
           const price = listingPrices[i] ?? 0
           const finalShippingAddress = shippingFromStripe || shippingAddress
 
-          const { error: insertError } = await supabaseAdmin.from("orders").insert({
+          const orderRow = {
             buyer_id: buyerId,
             listing_id: listingId,
             status: "PAID",
@@ -89,11 +122,25 @@ export async function POST(req: Request) {
             shipping_price: i === 0 ? shippingCents - promoDiscountCents : 0,
             quantity: 1,
             stripe_session_id: session.id,
+          }
+          console.log(`[stripe webhook] inserting order ${i + 1}/${listingIds.length}`, {
+            buyer_id: orderRow.buyer_id,
+            listing_id: orderRow.listing_id,
+            unit_price: orderRow.unit_price,
+            shipping_price: orderRow.shipping_price,
+            hasShippingAddress:
+              !!orderRow.shipping_address && Object.keys(orderRow.shipping_address).length > 0,
           })
+          const { data: inserted, error: insertError } = await supabaseAdmin
+            .from("orders")
+            .insert(orderRow)
+            .select("id")
+            .single()
           if (insertError) {
             console.error(`[stripe webhook] order insert ${i} failed:`, insertError)
             throw insertError
           }
+          console.log(`[stripe webhook] order ${inserted?.id} created (PAID)`)
 
           await decrementStock(listingId, 1)
         }
@@ -101,6 +148,25 @@ export async function POST(req: Request) {
         console.log(
           `[stripe webhook] session ${session.id} → created ${listingIds.length} order(s) as PAID`
         )
+
+        // Force shop and archive to refetch immediately so the sold
+        // listing disappears from the public catalog.
+        try {
+          revalidatePath("/shop")
+          revalidatePath("/ru/shop")
+          revalidatePath("/jp/shop")
+          revalidatePath("/archive")
+          revalidatePath("/ru/archive")
+          revalidatePath("/jp/archive")
+          for (const listingId of listingIds) {
+            revalidatePath(`/shop/${listingId}`)
+            revalidatePath(`/ru/shop/${listingId}`)
+            revalidatePath(`/jp/shop/${listingId}`)
+          }
+          console.log("[stripe webhook] revalidated shop + archive paths")
+        } catch (e) {
+          console.error("[stripe webhook] revalidate failed:", e)
+        }
 
         // Send order confirmation email
         const buyerEmail = session.customer_email || session.customer_details?.email
@@ -152,21 +218,29 @@ export async function POST(req: Request) {
 }
 
 async function decrementStock(listingId: string, quantity: number) {
-  const { data: listing } = await supabaseAdmin
+  const { data: listing, error: fetchError } = await supabaseAdmin
     .from("listings")
     .select("stock")
     .eq("id", listingId)
     .single()
-  if (listing) {
-    const newStock = listing.stock - quantity
-    await supabaseAdmin
-      .from("listings")
-      .update({
-        stock: newStock,
-        ...(newStock <= 0 ? { active: false } : {}),
-      })
-      .eq("id", listingId)
+  if (fetchError || !listing) {
+    console.error(`[stripe webhook] decrementStock fetch failed for ${listingId}:`, fetchError)
+    return
   }
+  const newStock = Math.max(0, listing.stock - quantity)
+  const update: Record<string, any> = { stock: newStock }
+  if (newStock <= 0) update.active = false
+  const { error: updateError } = await supabaseAdmin
+    .from("listings")
+    .update(update)
+    .eq("id", listingId)
+  if (updateError) {
+    console.error(`[stripe webhook] decrementStock update failed for ${listingId}:`, updateError)
+    return
+  }
+  console.log(
+    `[stripe webhook] listing ${listingId} stock=${newStock}${newStock <= 0 ? " active=false" : ""}`
+  )
 }
 
 /**

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import ProfilePageContent from "@/components/ProfilePageContent"
 import { en } from "@/lib/dict"
+import { getUserPurchaseCount } from "@/lib/profile"
 import { Metadata } from "next"
 
 interface Props { params: { username: string } }
@@ -53,15 +54,7 @@ export default async function ProfilePage({ params }: Props) {
     wishlist = figures.filter((uf) => uf.status === "WISHLIST")
   } catch (e) { console.error("[profile] user_figures query failed:", e) }
 
-  let purchaseCount = 0
-  try {
-    const { count } = await supabaseAdmin
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("buyer_id", userId)
-      .eq("status", "PAID")
-    purchaseCount = count ?? 0
-  } catch (e) { console.error("[profile] orders query failed:", e) }
+  const purchaseCount = await getUserPurchaseCount(userId)
 
   const haveFigureIds = have.map((uf: any) => uf.figure?.id).filter(Boolean)
   let rarityScore = 0
