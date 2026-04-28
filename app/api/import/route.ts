@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { parse } from "csv-parse/sync"
@@ -81,6 +82,15 @@ export async function POST(req: Request) {
       } else {
         imported++
       }
+    }
+
+    if (imported > 0) {
+      revalidatePath("/")
+      revalidatePath("/jp")
+      revalidatePath("/ru")
+      revalidatePath("/archive")
+      revalidatePath("/jp/archive")
+      revalidatePath("/ru/archive")
     }
 
     return NextResponse.json({

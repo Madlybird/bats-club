@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     "プライベートコレクターによる本物のレアアニメフィギュア。1990〜2000年代の日本オリジナル品。デジ・キャラット、エヴァンゲリオンなど。世界中に発送。",
 }
 
-export const revalidate = 60
+export const revalidate = 3600
 
 export default async function HomePageJp() {
   const session = await getServerSession(authOptions)

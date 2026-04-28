@@ -7,7 +7,7 @@ import { Metadata } from "next"
 import { isUuid, lookupIdBySlug } from "@/lib/slug"
 
 export const dynamicParams = true
-export const revalidate = 300
+export const revalidate = 86400
 
 // Pre-generate the 100 most recently added figures at build time so
 // archive clicks (which emit UUID URLs) hit an ISR cache entry instead

@@ -67,6 +67,22 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 
+  const { data: slugRow } = await supabaseAdmin
+    .from("figures")
+    .select("slug")
+    .eq("id", params.id)
+    .maybeSingle()
+  const slugForPath = slugRow?.slug || params.id
+  revalidatePath("/")
+  revalidatePath("/jp")
+  revalidatePath("/ru")
+  revalidatePath("/archive")
+  revalidatePath("/jp/archive")
+  revalidatePath("/ru/archive")
+  revalidatePath(`/figures/${slugForPath}`)
+  revalidatePath(`/jp/figures/${slugForPath}`)
+  revalidatePath(`/ru/figures/${slugForPath}`)
+
   return NextResponse.json(figure)
 }
 

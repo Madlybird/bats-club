@@ -8,7 +8,7 @@ import { Metadata } from "next"
 import { isUuid, lookupIdBySlug } from "@/lib/slug"
 
 export const dynamicParams = true
-export const revalidate = 300
+export const revalidate = 86400
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   try {

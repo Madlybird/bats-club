@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     "Подлинные редкие аниме-фигурки из частной коллекции. Японские оригиналы 1990-х — 2000-х: Di Gi Charat, Evangelion и другие. Доставка по миру.",
 }
 
-export const revalidate = 60
+export const revalidate = 3600
 
 export default async function HomePageRu() {
   const session = await getServerSession(authOptions)

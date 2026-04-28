@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   description: "Browse the full Bats Club anime figure archive.",
 }
 
-export const revalidate = 60
+export const revalidate = 3600
 
 interface Props {
   searchParams: { series?: string }

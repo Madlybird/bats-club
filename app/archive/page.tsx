@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   description: "Browse 100+ authentic rare Japanese anime figures from the 1990s-2000s. Di Gi Charat, Evangelion, Range Murata and more. Private collector archive.",
 }
 
-export const revalidate = 60
+export const revalidate = 3600
 
 interface Props {
   searchParams: { series?: string }

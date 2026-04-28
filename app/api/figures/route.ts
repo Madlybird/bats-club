@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -68,6 +69,19 @@ export async function POST(req: Request) {
     )
 
     if (error) throw error
+
+    const slugForPath = (figure as any)?.slug || (figure as any)?.id
+    revalidatePath("/")
+    revalidatePath("/jp")
+    revalidatePath("/ru")
+    revalidatePath("/archive")
+    revalidatePath("/jp/archive")
+    revalidatePath("/ru/archive")
+    if (slugForPath) {
+      revalidatePath(`/figures/${slugForPath}`)
+      revalidatePath(`/jp/figures/${slugForPath}`)
+      revalidatePath(`/ru/figures/${slugForPath}`)
+    }
 
     return NextResponse.json(figure, { status: 201 })
   } catch (error) {
