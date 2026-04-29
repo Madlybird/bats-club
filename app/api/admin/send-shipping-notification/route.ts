@@ -28,31 +28,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 })
   }
 
+  const requestBody = {
+    from: "Support <support@batsclub.com>",
+    to: [customerEmail],
+    template_id: "0c11d6d7-40f1-483a-ad83-a31f58c72478",
+    template_variables: {
+      order_number: orderId,
+      tracking_number: trackingNumber,
+    },
+  }
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: "Support <support@batsclub.com>",
-      to: [customerEmail],
-      template_id: "0c11d6d7-40f1-483a-ad83-a31f58c72478",
-      template_variables: {
-        order_number: orderId,
-        tracking_number: trackingNumber,
-      },
-    }),
+    body: JSON.stringify(requestBody),
   })
 
+  const rawBody = await res.text().catch(() => "")
+  let parsedBody: any = null
+  try {
+    parsedBody = rawBody ? JSON.parse(rawBody) : null
+  } catch {
+    parsedBody = null
+  }
+
   if (!res.ok) {
-    const detail = await res.text().catch(() => "")
+    console.error("[shipping-notification] Resend error", {
+      status: res.status,
+      statusText: res.statusText,
+      body: parsedBody ?? rawBody,
+      requestBody,
+    })
     return NextResponse.json(
-      { error: "Resend request failed", status: res.status, detail },
+      {
+        error: "Resend request failed",
+        status: res.status,
+        detail: parsedBody ?? rawBody ?? null,
+      },
       { status: 502 },
     )
   }
 
-  const data = await res.json().catch(() => ({}))
-  return NextResponse.json({ ok: true, id: data?.id ?? null })
+  console.log("[shipping-notification] Resend sent", { id: parsedBody?.id, to: customerEmail })
+  return NextResponse.json({ ok: true, id: parsedBody?.id ?? null })
 }

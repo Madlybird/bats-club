@@ -61,7 +61,14 @@ export default function AdminOrderRow({ order }: AdminOrderRowProps) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        setSendError(data?.error || `Failed (${res.status})`)
+        const baseMsg = data?.error || `Failed (${res.status})`
+        const detailStr =
+          typeof data?.detail === "string"
+            ? data.detail
+            : data?.detail
+            ? JSON.stringify(data.detail)
+            : ""
+        setSendError(detailStr ? `${baseMsg}: ${detailStr}` : baseMsg)
         return
       }
       setSent(true)
