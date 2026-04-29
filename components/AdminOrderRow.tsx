@@ -150,22 +150,26 @@ export default function AdminOrderRow({ order }: AdminOrderRowProps) {
           >
             {saving ? "..." : saved ? "Saved ✓" : "Update"}
           </button>
-          <button
-            onClick={handleSendNotification}
-            disabled={sending}
-            title="Send shipping notification email"
-            className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
-              sent
-                ? "bg-emerald-900/30 text-emerald-400 border border-emerald-800/50"
-                : "bg-pink-900/30 text-pink-300 border border-pink-800/50 hover:bg-pink-900/50"
-            }`}
-          >
-            {sending ? "Sending..." : sent ? "Sent ✓" : "Send Shipping Notification"}
-          </button>
-          {sendError && (
-            <span className="text-[10px] text-red-400 max-w-[160px] break-words">
-              {sendError}
-            </span>
+          {order.status === "SHIPPED" && order.trackingNumber && (
+            <>
+              <button
+                onClick={handleSendNotification}
+                disabled={sending}
+                title="Send shipping notification email"
+                className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
+                  sent
+                    ? "bg-emerald-900/30 text-emerald-400 border border-emerald-800/50"
+                    : "bg-pink-900/30 text-pink-300 border border-pink-800/50 hover:bg-pink-900/50"
+                }`}
+              >
+                {sending ? "Sending..." : sent ? "Sent ✓" : "Send Shipping Notification"}
+              </button>
+              {sendError && (
+                <span className="text-[10px] text-red-400 max-w-[160px] break-words">
+                  {sendError}
+                </span>
+              )}
+            </>
           )}
         </div>
       </td>
