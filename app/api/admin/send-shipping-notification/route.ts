@@ -92,7 +92,7 @@ export async function POST(req: Request) {
 </html>`
 
   const requestBody = {
-    from: "Support <support@batsclub.com>",
+    from: "Bats Club <support@batsclub.com>",
     to: [customerEmail],
     subject: "Bats Club: your order is on its way",
     html,
