@@ -31,7 +31,7 @@ export default async function AdminOrdersPage() {
         ? JSON.stringify(addr)
         : String(addr ?? ""),
       createdAt: new Date(o.createdAt as string),
-      buyer: { name: buyer?.name ?? "", username: buyer?.username ?? "" },
+      buyer: { name: buyer?.name ?? "", username: buyer?.username ?? "", email: buyer?.email ?? "" },
       listing: { figure: { name: figure?.name ?? "", series: figure?.series ?? "" } },
     }
   })

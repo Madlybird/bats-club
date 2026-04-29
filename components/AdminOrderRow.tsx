@@ -23,7 +23,7 @@ interface AdminOrderRowProps {
     unitPrice: number
     shippingPrice: number
     createdAt: Date
-    buyer: { username: string; name: string }
+    buyer: { username: string; name: string; email: string }
     listing: { figure: { name: string; series: string } }
   }
 }
@@ -34,6 +34,44 @@ export default function AdminOrderRow({ order }: AdminOrderRowProps) {
   const [tracking, setTracking] = useState(order.trackingNumber || "")
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+
+  const handleSendNotification = async () => {
+    setSendError(null)
+    if (!tracking.trim()) {
+      setSendError("Enter tracking #")
+      return
+    }
+    if (!order.buyer.email) {
+      setSendError("No buyer email")
+      return
+    }
+    setSending(true)
+    try {
+      const res = await fetch("/api/admin/send-shipping-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          trackingNumber: tracking,
+          customerEmail: order.buyer.email,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setSendError(data?.error || `Failed (${res.status})`)
+        return
+      }
+      setSent(true)
+      setTimeout(() => setSent(false), 2500)
+    } catch (e: any) {
+      setSendError(e?.message || "Network error")
+    } finally {
+      setSending(false)
+    }
+  }
 
   const total = (order.unitPrice * order.quantity + order.shippingPrice) / 100
 
@@ -100,17 +138,36 @@ export default function AdminOrderRow({ order }: AdminOrderRowProps) {
         />
       </td>
       <td className="px-4 py-3">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
-            saved
-              ? "bg-emerald-900/30 text-emerald-400 border border-emerald-800/50"
-              : "bg-violet-900/30 text-violet-300 border border-violet-800/50 hover:bg-violet-900/50"
-          }`}
-        >
-          {saving ? "..." : saved ? "Saved ✓" : "Update"}
-        </button>
+        <div className="flex flex-col gap-1.5">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
+              saved
+                ? "bg-emerald-900/30 text-emerald-400 border border-emerald-800/50"
+                : "bg-violet-900/30 text-violet-300 border border-violet-800/50 hover:bg-violet-900/50"
+            }`}
+          >
+            {saving ? "..." : saved ? "Saved ✓" : "Update"}
+          </button>
+          <button
+            onClick={handleSendNotification}
+            disabled={sending}
+            title="Send shipping notification email"
+            className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
+              sent
+                ? "bg-emerald-900/30 text-emerald-400 border border-emerald-800/50"
+                : "bg-pink-900/30 text-pink-300 border border-pink-800/50 hover:bg-pink-900/50"
+            }`}
+          >
+            {sending ? "Sending..." : sent ? "Sent ✓" : "Send Shipping Notification"}
+          </button>
+          {sendError && (
+            <span className="text-[10px] text-red-400 max-w-[160px] break-words">
+              {sendError}
+            </span>
+          )}
+        </div>
       </td>
     </tr>
   )
