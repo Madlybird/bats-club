@@ -74,6 +74,16 @@ export default function ReturnsPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">Carrier handling and postal damage</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          Bats Club is not responsible for damage caused by the postal service or courier while the package is in transit. This includes a crushed or broken outer box, rough or careless handling during delivery, and similar issues that occur after the parcel leaves us. Responsibility for the handling and condition of the package during transit lies with the shipping carrier, not with Bats Club.
+        </p>
+        <p className="text-white/60 text-sm leading-relaxed mt-3">
+          For any question or claim related to this kind of damage, please contact the postal service or courier directly, as they are responsible for the parcel while it is in their possession and handle these matters on their own terms.
+        </p>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">Return shipping</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           For approved returns, we cover return shipping costs.

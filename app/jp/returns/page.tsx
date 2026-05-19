@@ -74,6 +74,16 @@ export default function ReturnsJpPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">配送業者の取り扱いと配送中の破損について</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          Bats Clubは、配送中に郵便局または配送業者の取り扱いによって生じた破損について責任を負いません。これには、外箱のつぶれや破損、配送時の乱暴または不注意な取り扱い、荷物が当社を出荷した後に発生する同様の問題が含まれます。配送中の荷物の取り扱いと状態に関する責任は、Bats Clubではなく配送業者にあります。
+        </p>
+        <p className="text-white/60 text-sm leading-relaxed mt-3">
+          この種の破損に関するご質問やご請求については、荷物が手元にある間その責任を負い、こうした案件を自社の規定に基づいて対応する郵便局または配送業者へ、直接ご連絡ください。
+        </p>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">返送料</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           承認された返品については、返送料は当社が負担いたします。
