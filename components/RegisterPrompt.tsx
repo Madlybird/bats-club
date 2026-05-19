@@ -6,7 +6,8 @@ import { useSession } from "next-auth/react"
 import Link from "next/link"
 import { en, ru, jp } from "@/lib/dict"
 
-const DELAY_MS = 15_000 // 15 seconds, on every site entry
+const DELAY_MS = 15_000 // 15 seconds after entry
+const SHOWN_KEY = "batsclub_regprompt_shown" // once per browser session
 
 export default function RegisterPrompt() {
   const pathname = usePathname() || "/"
@@ -27,7 +28,21 @@ export default function RegisterPrompt() {
 
   useEffect(() => {
     if (hasSession || onAuthPage) return
-    const t = setTimeout(() => setOpen(true), DELAY_MS)
+    let shown = false
+    try {
+      shown = window.sessionStorage.getItem(SHOWN_KEY) === "1"
+    } catch {
+      shown = false
+    }
+    if (shown) return
+    const t = setTimeout(() => {
+      try {
+        window.sessionStorage.setItem(SHOWN_KEY, "1")
+      } catch {
+        /* ignore */
+      }
+      setOpen(true)
+    }, DELAY_MS)
     return () => clearTimeout(t)
   }, [hasSession, onAuthPage, pathname])
 
