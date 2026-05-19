@@ -202,18 +202,16 @@ export default function HomePageContent({
         </div>
       </section>
 
-      {/* ────────────────────────────────────────
-          2. HOW IT WORKS  (guided bat tour)
-      ──────────────────────────────────────── */}
+      {/* Floating bat tour — explains the steps once per visitor.
+          Renders only as a fixed overlay (no on-page section). */}
       <HowItWorksTour
-        heading={dict.how_heading}
         steps={dict.how_steps}
         gotItLabel={dict.tour_got_it}
         skipLabel={dict.tour_skip}
       />
 
       {/* ────────────────────────────────────────
-          3. COLLECTIONS  (curated album sliders)
+          2. COLLECTIONS  (curated album sliders)
       ──────────────────────────────────────── */}
       {collections.length > 0 && (
         <ScrollReveal>
@@ -244,7 +242,7 @@ export default function HomePageContent({
       )}
 
       {/* ────────────────────────────────────────
-          4. LATEST RARE FIGURES  (last block)
+          3. LATEST RARE FIGURES  (last block)
       ──────────────────────────────────────── */}
       {recentFigures.length > 0 && (
         <ScrollReveal>

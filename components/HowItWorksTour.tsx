@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import Link from "next/link"
 
 interface Step {
   num: string
@@ -12,7 +11,6 @@ interface Step {
 }
 
 interface Props {
-  heading: string
   steps: Step[]
   gotItLabel: string
   skipLabel: string
@@ -28,13 +26,14 @@ const BURST = Array.from({ length: 9 }, (_, i) => ({
   size: 30 + ((i * 7) % 22),
 }))
 
+// Floating bat companion that explains the steps once per visitor.
+// Renders only as a fixed overlay — there is no on-page section.
 export default function HowItWorksTour({
-  heading,
   steps,
   gotItLabel,
   skipLabel,
 }: Props) {
-  // phase: idle (no tour) | active (bubble on a step) | flying (bat burst)
+  // phase: idle (no tour) | active (bubble visible) | flying (bat burst)
   const [phase, setPhase] = useState<"idle" | "active" | "flying">("idle")
   const [active, setActive] = useState(0)
 
@@ -54,7 +53,7 @@ export default function HowItWorksTour({
     const t = setTimeout(() => {
       setActive(0)
       setPhase("active")
-    }, 600)
+    }, 1200)
     return () => clearTimeout(t)
   }, [])
 
@@ -79,83 +78,14 @@ export default function HowItWorksTour({
     }, 950)
   }, [active, steps.length, finish])
 
-  const touring = phase !== "idle"
+  if (phase === "idle") return null
 
   return (
-    <section className="relative py-20 border-t border-white/[0.05]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-10 flex items-end justify-between gap-4">
-          <div>
-            <span className="inline-block w-8 h-0.5 bg-[#ff2d78] mb-4" />
-            <h2
-              className="font-black lowercase leading-tight tracking-tighter text-white"
-              style={{ fontSize: "clamp(1.75rem, 4vw, 2.75rem)" }}
-            >
-              {heading}
-            </h2>
-          </div>
-          {touring && (
-            <button
-              type="button"
-              onClick={finish}
-              className="text-xs font-bold text-white/30 hover:text-[#ff2d78] transition-colors lowercase tracking-wide whitespace-nowrap"
-            >
-              {skipLabel}
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {steps.map((step, i) => {
-            const isActive = touring && i === active
-            const isDone = touring && i < active
-            return (
-              <div
-                key={step.num}
-                className={`group relative p-6 rounded-2xl border bg-white/[0.015] flex flex-col transition-all duration-500 ${
-                  isActive
-                    ? "border-[#ff2d78]/60 shadow-[0_0_40px_rgba(255,45,120,0.25)] scale-[1.02]"
-                    : isDone
-                    ? "border-[#ff2d78]/20 opacity-60"
-                    : "border-white/[0.05] hover:border-[#ff2d78]/20"
-                }`}
-              >
-                {isActive && (
-                  <img
-                    src="/bat.png"
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute -top-5 -left-3 w-12 h-12 animate-float-slow drop-shadow-[0_0_12px_rgba(255,45,120,0.6)]"
-                  />
-                )}
-                <p
-                  className="text-5xl font-black leading-none select-none mb-5"
-                  style={{ color: "rgba(255,45,120,0.6)" }}
-                >
-                  {step.num}
-                </p>
-                <h3 className="text-base font-bold text-white lowercase tracking-tight">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm text-white/35 leading-relaxed flex-1">
-                  {step.body}
-                </p>
-                <Link
-                  href={step.href}
-                  className="mt-4 text-xs text-[#ff2d78] font-bold lowercase tracking-wide hover:text-white transition-colors"
-                >
-                  {step.cta} →
-                </Link>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
+    <>
       {/* Bat burst between steps */}
       {phase === "flying" && (
         <div
-          className="pointer-events-none absolute inset-0 overflow-hidden"
+          className="pointer-events-none fixed inset-0 z-[55] overflow-hidden"
           aria-hidden="true"
         >
           {BURST.map((b, i) => (
@@ -166,7 +96,7 @@ export default function HowItWorksTour({
               style={{
                 position: "absolute",
                 left: `${b.left}%`,
-                bottom: "10%",
+                bottom: "12%",
                 width: b.size,
                 height: b.size,
                 opacity: 0,
@@ -194,6 +124,13 @@ export default function HowItWorksTour({
               <p className="mt-1 text-sm text-white/70 leading-snug">
                 {steps[active]?.body}
               </p>
+              <button
+                type="button"
+                onClick={finish}
+                className="mt-1.5 text-[11px] font-bold text-white/30 hover:text-[#ff2d78] transition-colors lowercase tracking-wide"
+              >
+                {skipLabel}
+              </button>
             </div>
             <button
               type="button"
@@ -209,6 +146,6 @@ export default function HowItWorksTour({
           </div>
         </div>
       )}
-    </section>
+    </>
   )
 }
