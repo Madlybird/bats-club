@@ -16,8 +16,6 @@ interface Props {
   skipLabel: string
 }
 
-const SEEN_KEY = "batsclub_howto_seen_v1"
-
 // Deterministic bat burst — spawned between steps for the fly animation.
 const BURST = Array.from({ length: 9 }, (_, i) => ({
   left: 8 + ((i * 53) % 84),
@@ -37,15 +35,9 @@ export default function HowItWorksTour({
   const [phase, setPhase] = useState<"idle" | "active" | "flying">("idle")
   const [active, setActive] = useState(0)
 
+  // Plays on every visit (no localStorage gate).
   useEffect(() => {
     if (typeof window === "undefined") return
-    let seen = false
-    try {
-      seen = window.localStorage.getItem(SEEN_KEY) === "1"
-    } catch {
-      seen = false
-    }
-    if (seen) return
     const reduce = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)"
     )?.matches
@@ -58,11 +50,6 @@ export default function HowItWorksTour({
   }, [])
 
   const finish = useCallback(() => {
-    try {
-      window.localStorage.setItem(SEEN_KEY, "1")
-    } catch {
-      /* ignore */
-    }
     setPhase("idle")
   }, [])
 
