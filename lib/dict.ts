@@ -25,6 +25,16 @@ export interface Dict {
   // How it works
   how_heading: string
   how_steps: { num: string; title: string; body: string; cta: string; href: string }[]
+  // How-it-works guided bat tour
+  tour_got_it: string
+  tour_skip: string
+  // Homepage curated collections (albums)
+  collections_heading: string
+  // Registration prompt modal
+  register_modal_title: string
+  register_modal_body: string
+  register_modal_cta: string
+  register_modal_dismiss: string
   // CTA / Archive (homepage section)
   cta_heading1: string
   cta_heading2: string
@@ -286,6 +296,14 @@ export const en: Dict = {
       href: "/shop",
     },
   ],
+  tour_got_it: "got it",
+  tour_skip: "skip tour",
+  collections_heading: "collections",
+  register_modal_title: "join bats club",
+  register_modal_body:
+    "create a free account to track your collection, build a wishlist, and get first access to rare figures.",
+  register_modal_cta: "create account",
+  register_modal_dismiss: "maybe later",
   cta_heading1: "find your",
   cta_heading2: "rare figure.",
   cta_body: "authentic figures. fixed shipping.",
@@ -535,6 +553,14 @@ export const ru: Dict = {
       href: "/shop",
     },
   ],
+  tour_got_it: "понятно",
+  tour_skip: "пропустить",
+  collections_heading: "коллекции",
+  register_modal_title: "вступай в bats club",
+  register_modal_body:
+    "создай бесплатный аккаунт, чтобы отслеживать коллекцию, собирать вишлист и первым получать доступ к редким фигуркам.",
+  register_modal_cta: "создать аккаунт",
+  register_modal_dismiss: "позже",
   cta_heading1: "найди свою",
   cta_heading2: "редкую фигурку.",
   cta_body: "подлинные фигурки. фиксированная доставка.",
@@ -784,6 +810,14 @@ export const jp: Dict = {
       href: "/shop",
     },
   ],
+  tour_got_it: "了解",
+  tour_skip: "スキップ",
+  collections_heading: "コレクション",
+  register_modal_title: "Bats Club に参加",
+  register_modal_body:
+    "無料アカウントを作成して、コレクションを管理し、ウィッシュリストを作成し、レアフィギュアにいち早くアクセスしましょう。",
+  register_modal_cta: "アカウント作成",
+  register_modal_dismiss: "後で",
   cta_heading1: "あなたの",
   cta_heading2: "レアフィギュアを探す。",
   cta_body: "本物のフィギュア。送料固定。",

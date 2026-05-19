@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar"
 import Providers from "@/components/Providers"
 import Toaster from "@/components/Toaster"
 import Footer from "@/components/Footer"
+import RegisterPrompt from "@/components/RegisterPrompt"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -58,6 +59,7 @@ export default function RootLayout({
           <Toaster />
           <main className="overflow-x-clip">{children}</main>
           <Footer />
+          <RegisterPrompt />
         </Providers>
       </body>
     </html>

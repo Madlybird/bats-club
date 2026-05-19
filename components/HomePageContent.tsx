@@ -1,6 +1,7 @@
 import ScrollReveal from "@/components/ScrollReveal"
-import ArchiveClient from "@/components/ArchiveClient"
 import BuyToCartButton from "@/components/BuyToCartButton"
+import HowItWorksTour from "@/components/HowItWorksTour"
+import CollectionSlider from "@/components/CollectionSlider"
 import Link from "next/link"
 import Image from "next/image"
 import type { Dict } from "@/lib/dict"
@@ -38,10 +39,17 @@ interface FigureData {
   cheapestListing?: { id: string; price: number; condition: string } | null
 }
 
+interface CollectionData {
+  id: string
+  slug: string
+  name: string
+  figures: { id: string; name: string; series: string; imageUrl?: string | null }[]
+}
+
 interface Props {
   dict: Dict
   figures: FigureData[]
-  allManufacturers: string[]
+  collections: CollectionData[]
   hasSession: boolean
   yearsCollecting: number
   figurePath?: string
@@ -50,12 +58,14 @@ interface Props {
 export default function HomePageContent({
   dict,
   figures,
-  allManufacturers,
+  collections,
   hasSession,
   yearsCollecting,
   figurePath = "/figures",
 }: Props) {
   const recentFigures = figures.slice(0, 4)
+  // /figures → /archive · /ru/figures → /ru/archive · /jp/figures → /jp/archive
+  const archivePath = figurePath.replace(/\/figures$/, "/archive")
 
   return (
     <div className="relative">
@@ -141,7 +151,7 @@ export default function HomePageContent({
 
               <div className="flex flex-wrap gap-3 mt-10">
                 <Link
-                  href="/#archive"
+                  href={archivePath}
                   className="px-8 py-3.5 text-sm font-bold lowercase tracking-wide text-white rounded-full transition-all"
                   style={{ background: "#ff2d78", boxShadow: "0 0 30px rgba(255,45,120,0.3)" }}
                 >
@@ -193,7 +203,48 @@ export default function HomePageContent({
       </section>
 
       {/* ────────────────────────────────────────
-          2. RECENT ADDITIONS
+          2. HOW IT WORKS  (guided bat tour)
+      ──────────────────────────────────────── */}
+      <HowItWorksTour
+        heading={dict.how_heading}
+        steps={dict.how_steps}
+        gotItLabel={dict.tour_got_it}
+        skipLabel={dict.tour_skip}
+      />
+
+      {/* ────────────────────────────────────────
+          3. COLLECTIONS  (curated album sliders)
+      ──────────────────────────────────────── */}
+      {collections.length > 0 && (
+        <ScrollReveal>
+          <section className="py-20 border-t border-white/[0.05]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="mb-12">
+                <span className="inline-block w-8 h-0.5 bg-[#ff2d78] mb-4" />
+                <h2
+                  className="font-black lowercase leading-tight tracking-tighter text-white"
+                  style={{ fontSize: "clamp(1.75rem, 4vw, 2.75rem)" }}
+                >
+                  {dict.collections_heading}
+                </h2>
+              </div>
+
+              {collections.map((c) => (
+                <CollectionSlider
+                  key={c.id}
+                  title={c.name}
+                  figures={c.figures}
+                  figurePath={figurePath}
+                  fallbackImages={LOCAL_FIGURES}
+                />
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
+      )}
+
+      {/* ────────────────────────────────────────
+          4. LATEST RARE FIGURES  (last block)
       ──────────────────────────────────────── */}
       {recentFigures.length > 0 && (
         <ScrollReveal>
@@ -210,7 +261,7 @@ export default function HomePageContent({
                   </h2>
                 </div>
                 <Link
-                  href="/#archive"
+                  href={archivePath}
                   className="text-xs font-bold text-white/25 hover:text-[#ff2d78] transition-colors lowercase tracking-wide"
                 >
                   {dict.recent_link}
@@ -221,20 +272,7 @@ export default function HomePageContent({
                 {recentFigures.map((fig, i) => (
                   <ScrollReveal key={fig.id} delay={i * 70}>
                     <div className="group block">
-                      {/* Image area uses the same pattern as FigureCard /
-                          ListingCard: the Link is a normal-flow block that
-                          fills the tile and itself wraps <Image fill>. The
-                          BuyToCartButton sits as an absolutely-positioned
-                          sibling at a higher z-index so clicks land on the
-                          button instead of the Link, and we never nest a
-                          <button> inside an <a>. */}
                       <div className="relative mb-4">
-                        {/* Match ListingCard exactly: the Link is the
-                            direct `relative aspect-square` parent of
-                            <Image fill>. Wrapping Link inside another
-                            aspect-square div with h-full was fragile on
-                            mobile Safari/Chrome and caused the image
-                            box to collapse so nothing loaded. */}
                         <Link
                           href={`${figurePath}/${fig.id}`}
                           className="figure-grid-item block relative aspect-square overflow-hidden flex-shrink-0"
@@ -289,85 +327,6 @@ export default function HomePageContent({
           </section>
         </ScrollReveal>
       )}
-
-      {/* ────────────────────────────────────────
-          3. HOW IT WORKS
-      ──────────────────────────────────────── */}
-      <ScrollReveal>
-        <section className="py-20 border-t border-white/[0.05]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
-              <span className="inline-block w-8 h-0.5 bg-[#ff2d78] mb-4" />
-              <h2
-                className="font-black lowercase leading-tight tracking-tighter text-white"
-                style={{ fontSize: "clamp(1.75rem, 4vw, 2.75rem)" }}
-              >
-                {dict.how_heading}
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {dict.how_steps.map((step, i) => (
-                <ScrollReveal key={step.num} delay={i * 80}>
-                  <div className="group p-6 rounded-2xl border border-white/[0.05] bg-white/[0.015] hover:border-[#ff2d78]/20 transition-colors flex flex-col">
-                    <p
-                      className="text-5xl font-black leading-none select-none mb-5"
-                      style={{ color: "rgba(255,45,120,0.6)" }}
-                    >
-                      {step.num}
-                    </p>
-                    <h3 className="text-base font-bold text-white lowercase tracking-tight flex-1">
-                      {step.title}
-                    </h3>
-                    <Link
-                      href={step.href}
-                      className="mt-4 text-xs text-[#ff2d78] font-bold lowercase tracking-wide hover:text-white transition-colors"
-                    >
-                      {step.cta} →
-                    </Link>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
-
-      {/* ────────────────────────────────────────
-          4. FULL ARCHIVE
-      ──────────────────────────────────────── */}
-      <ScrollReveal>
-        <section id="archive" className="py-20 border-t border-white/[0.05]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-8">
-              <span className="inline-block w-8 h-0.5 bg-[#ff2d78] mb-4" />
-              <h2
-                className="font-black lowercase leading-tight tracking-tighter text-white"
-                style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)" }}
-              >
-                {dict.archive_heading}
-              </h2>
-            </div>
-
-            <ArchiveClient
-              figures={figures}
-              manufacturers={allManufacturers}
-              labels={{
-                collectionsHeading: dict.archive_collections,
-                searchPh: dict.archive_search_ph,
-                characterLabel: dict.archive_series_label,
-                mfgLabel: dict.archive_mfg_label,
-                resultsWord: dict.archive_results,
-                clearFilters: dict.archive_clear,
-                emptyTitle: dict.archive_empty_title,
-                emptySub: dict.archive_empty_sub,
-                clearAllBtn: dict.archive_clear_all_btn,
-                figurePath: figurePath,
-              }}
-            />
-          </div>
-        </section>
-      </ScrollReveal>
 
     </div>
   )

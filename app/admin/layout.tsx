@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/admin/orders", label: "Orders", icon: "🛒" },
   { href: "/admin/import", label: "Import CSV", icon: "📥" },
   { href: "/admin/articles", label: "Articles", icon: "📝" },
+  { href: "/admin/collections", label: "Collections", icon: "🗂️" },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

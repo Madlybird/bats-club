@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import HomePageContent from "@/components/HomePageContent"
+import { getHomeCollections } from "@/lib/collections"
 import { en } from "@/lib/dict"
 
 export const metadata: Metadata = {
@@ -46,15 +47,16 @@ export default async function HomePage() {
     }
   })
 
-  const allManufacturers = Array.from(new Set((figures || []).map((f) => f.manufacturer))).sort()
   const minYear = figures && figures.length > 0 ? Math.min(...figures.map((f) => f.year)) : new Date().getFullYear()
+
+  const collections = await getHomeCollections("en")
 
   return (
     <div className="min-h-screen">
       <HomePageContent
         dict={en}
         figures={figuresWithData}
-        allManufacturers={allManufacturers}
+        collections={collections}
         hasSession={!!session}
         yearsCollecting={new Date().getFullYear() - minYear}
       />
