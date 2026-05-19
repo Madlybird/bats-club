@@ -1,5 +1,4 @@
 import ScrollReveal from "@/components/ScrollReveal"
-import BuyToCartButton from "@/components/BuyToCartButton"
 import HowItWorksTour from "@/components/HowItWorksTour"
 import CollectionSlider from "@/components/CollectionSlider"
 import Link from "next/link"
@@ -63,7 +62,6 @@ export default function HomePageContent({
   yearsCollecting,
   figurePath = "/figures",
 }: Props) {
-  const recentFigures = figures.slice(0, 4)
   // /figures → /archive · /ru/figures → /ru/archive · /jp/figures → /jp/archive
   const archivePath = figurePath.replace(/\/figures$/, "/archive")
 
@@ -215,7 +213,7 @@ export default function HomePageContent({
       ──────────────────────────────────────── */}
       {collections.length > 0 && (
         <ScrollReveal>
-          <section className="py-20 border-t border-white/[0.05]">
+          <section className="pt-10 pb-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="mb-12">
                 <span className="inline-block w-8 h-0.5 bg-[#ff2d78] mb-4" />
@@ -236,91 +234,6 @@ export default function HomePageContent({
                   fallbackImages={LOCAL_FIGURES}
                 />
               ))}
-            </div>
-          </section>
-        </ScrollReveal>
-      )}
-
-      {/* ────────────────────────────────────────
-          3. LATEST RARE FIGURES  (last block)
-      ──────────────────────────────────────── */}
-      {recentFigures.length > 0 && (
-        <ScrollReveal>
-          <section className="py-20 border-t border-white/[0.05]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-end justify-between mb-10">
-                <div>
-                  <span className="inline-block w-8 h-0.5 bg-[#ff2d78] mb-6" />
-                  <h2
-                    className="font-black lowercase leading-tight tracking-tighter text-white"
-                    style={{ fontSize: "clamp(1.75rem, 4vw, 2.75rem)" }}
-                  >
-                    {dict.recent_heading}
-                  </h2>
-                </div>
-                <Link
-                  href={archivePath}
-                  className="text-xs font-bold text-white/25 hover:text-[#ff2d78] transition-colors lowercase tracking-wide"
-                >
-                  {dict.recent_link}
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                {recentFigures.map((fig, i) => (
-                  <ScrollReveal key={fig.id} delay={i * 70}>
-                    <div className="group block">
-                      <div className="relative mb-4">
-                        <Link
-                          href={`${figurePath}/${fig.id}`}
-                          className="figure-grid-item block relative aspect-square overflow-hidden flex-shrink-0"
-                          aria-label={fig.name}
-                        >
-                          <Image
-                            src={fig.imageUrl || LOCAL_FIGURES[i % LOCAL_FIGURES.length]}
-                            alt={fig.name}
-                            fill
-                            priority
-                            unoptimized
-                            className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 768px) 50vw, 25vw"
-                          />
-                        </Link>
-                        {fig._count.listings > 0 && (
-                          <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
-                            <span
-                              className="text-[10px] px-2.5 py-1 rounded-full font-bold text-white"
-                              style={{ background: "#ff2d78" }}
-                            >
-                              {dict.recent_for_sale}
-                            </span>
-                          </div>
-                        )}
-                        <div className="absolute bottom-2.5 right-2.5 z-20">
-                          <BuyToCartButton
-                            figureId={fig.id}
-                            figureName={fig.name}
-                            figureSeries={fig.series}
-                            figureImageUrl={fig.imageUrl ?? null}
-                            cheapestListing={fig.cheapestListing ?? null}
-                            label={dict.fig_status_buy}
-                            toastAdded={dict.fig_added_wishlist}
-                            toastAddedWithCart={dict.fig_added_wishlist_cart}
-                          />
-                        </div>
-                      </div>
-                      <Link href={`${figurePath}/${fig.id}`} className="block">
-                        <p className="text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">
-                          {fig.name}
-                        </p>
-                        <p className="text-xs text-white/25 mt-1">
-                          {fig.series} · {fig.year}
-                        </p>
-                      </Link>
-                    </div>
-                  </ScrollReveal>
-                ))}
-              </div>
             </div>
           </section>
         </ScrollReveal>

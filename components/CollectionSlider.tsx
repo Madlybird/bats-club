@@ -72,7 +72,7 @@ export default function CollectionSlider({
           <Link
             key={fig.id}
             href={`${figurePath}/${fig.id}`}
-            className="group snap-start flex-shrink-0 w-[44vw] sm:w-[220px]"
+            className="group snap-start flex-shrink-0 w-[53vw] sm:w-[264px]"
           >
             <div className="figure-grid-item relative aspect-square overflow-hidden rounded-xl">
               <Image
@@ -81,7 +81,7 @@ export default function CollectionSlider({
                 fill
                 unoptimized
                 className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                sizes="(max-width: 640px) 44vw, 220px"
+                sizes="(max-width: 640px) 53vw, 264px"
               />
             </div>
             <p className="mt-3 text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">
