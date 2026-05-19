@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase"
 import { notFound } from "next/navigation"
 import ArticleDetailContent from "@/components/ArticleDetailContent"
 import { ru } from "@/lib/dict"
+import { localizeArticle } from "@/lib/articleI18n"
 import { Metadata } from "next"
 
 interface Props { params: { id: string } }
@@ -9,14 +10,15 @@ interface Props { params: { id: string } }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: article } = await supabaseAdmin
     .from("articles")
-    .select("title, excerpt")
+    .select("title, excerpt, slug")
     .or(`slug.eq.${params.id},id.eq.${params.id}`)
     .eq("published", true)
     .single()
   if (!article) return { title: "Article Not Found" }
+  const a = localizeArticle(article as any, "ru")
   return {
-    title: `${article.title} | Bats Club`,
-    description: article.excerpt || undefined,
+    title: `${a.title} | Bats Club`,
+    description: a.excerpt || undefined,
   }
 }
 
@@ -36,10 +38,12 @@ export default async function ArticleDetailPageRu({ params }: Props) {
 
   if (!article) notFound()
 
+  const localized = localizeArticle(article as any, "ru")
+
   return (
     <ArticleDetailContent
       article={{
-        ...(article as any),
+        ...(localized as any),
         articleFigures: (article.article_figures || []).map((af: any) => ({ figure: af.figure })),
       }}
       dict={ru}
