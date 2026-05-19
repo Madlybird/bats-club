@@ -5,12 +5,12 @@ import Link from "next/link"
 import Image from "next/image"
 import type { Dict } from "@/lib/dict"
 
-// /public/figures/ images — ?v=2 busts browser cache
+// /public/figures/ images — ?v=3 busts browser cache
 const LOCAL_FIGURES = [
-  "/figures/1.jpg?v=2",
-  "/figures/2.jpg?v=2",
-  "/figures/3.jpg?v=2",
-  "/figures/4.jpg?v=2",
+  "/figures/shin-yokohama-arina-in-akihabara-1776604204385.jpg?v=3",
+  "/figures/biscuit-tan-figure-collection-1776607944177.jpg?v=3",
+  "/figures/weekly-dearest-my-brother-vol-special-edition-1776608304611.jpg?v=3",
+  "/figures/play-stationery-03-eraser-case-kasumi-1778764695155.jpg?v=3",
 ]
 
 // Deterministic bat positions — 35 bats spread across full page height
