@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase"
 import ArchiveClient from "@/components/ArchiveClient"
 import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
+import BatNudge from "@/components/BatNudge"
 import { jp } from "@/lib/dict"
 import { Metadata } from "next"
 
@@ -83,6 +84,13 @@ export default async function ArchivePageJp({ searchParams }: Props) {
   return (
     <div className="relative min-h-screen">
       <BatsOverlay />
+      <BatNudge
+        title={dict.nudge_collection_title}
+        body={dict.nudge_collection_body}
+        ctaLabel={dict.nudge_collection_cta}
+        ctaHref="/jp/register"
+        storageKey="batsclub_nudge_collection"
+      />
       <div className="absolute top-1/4 right-1/3 w-[700px] h-[700px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
       <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
       <div
@@ -117,6 +125,7 @@ export default async function ArchivePageJp({ searchParams }: Props) {
                 defaultSeries={defaultSeries}
                 labels={{
                   collectionsHeading: dict.archive_collections,
+                  popularSeries: dict.archive_popular_series,
                   searchPh: dict.archive_search_ph,
                   characterLabel: dict.archive_character_label,
                   mfgLabel: dict.archive_mfg_label,

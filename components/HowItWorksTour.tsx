@@ -1,6 +1,9 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import { useSession } from "next-auth/react"
+
+const SEEN_KEY = "batsclub_tour_seen_session"
 
 interface Step {
   num: string
@@ -34,20 +37,35 @@ export default function HowItWorksTour({
   // phase: idle (no tour) | active (bubble visible) | flying (bat burst)
   const [phase, setPhase] = useState<"idle" | "active" | "flying">("idle")
   const [active, setActive] = useState(0)
+  const { status } = useSession()
 
-  // Plays on every visit (no localStorage gate).
+  // Show once per browser session, and only for new (logged-out) users.
   useEffect(() => {
     if (typeof window === "undefined") return
+    if (status === "loading") return
+    if (status === "authenticated") return
     const reduce = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)"
     )?.matches
     if (reduce) return
+    let seen = false
+    try {
+      seen = window.sessionStorage.getItem(SEEN_KEY) === "1"
+    } catch {
+      seen = false
+    }
+    if (seen) return
     const t = setTimeout(() => {
+      try {
+        window.sessionStorage.setItem(SEEN_KEY, "1")
+      } catch {
+        /* ignore */
+      }
       setActive(0)
       setPhase("active")
     }, 1200)
     return () => clearTimeout(t)
-  }, [])
+  }, [status])
 
   const finish = useCallback(() => {
     setPhase("idle")

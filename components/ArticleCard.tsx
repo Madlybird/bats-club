@@ -62,27 +62,8 @@ export default function ArticleCard({ article, readMoreLabel = "Read More" }: Ar
           </p>
         )}
 
-        {/* Author + Date */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/[0.05]">
-          <div className="flex items-center gap-2">
-            {article.author.avatar ? (
-              <Image
-                src={article.author.avatar}
-                alt={article.author.name}
-                width={28}
-                height={28}
-                className="rounded-full"
-              />
-            ) : (
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                style={{ background: "#ff2d78" }}
-              >
-                {article.author.name.charAt(0)}
-              </div>
-            )}
-            <span className="text-xs text-white/40">{article.author.name}</span>
-          </div>
+        {/* Date */}
+        <div className="flex items-center justify-end mt-auto pt-3 border-t border-white/[0.05]">
           <span className="text-xs text-white/20">{date}</span>
         </div>
 

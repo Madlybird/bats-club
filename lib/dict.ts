@@ -35,6 +35,11 @@ export interface Dict {
   register_modal_body: string
   register_modal_cta: string
   register_modal_dismiss: string
+  // Archive popular series + collector nudge popup
+  archive_popular_series: string
+  nudge_collection_title: string
+  nudge_collection_body: string
+  nudge_collection_cta: string
   // CTA / Archive (homepage section)
   cta_heading1: string
   cta_heading2: string
@@ -304,6 +309,11 @@ export const en: Dict = {
     "create a free account to track your collection, build a wishlist, and get first access to rare figures.",
   register_modal_cta: "create account",
   register_modal_dismiss: "maybe later",
+  archive_popular_series: "popular series",
+  nudge_collection_title: "track your collection",
+  nudge_collection_body:
+    "mark what you own, build a wishlist, never buy a double. your own collector profile — free.",
+  nudge_collection_cta: "create profile",
   cta_heading1: "find your",
   cta_heading2: "rare figure.",
   cta_body: "authentic figures. fixed shipping.",
@@ -561,6 +571,11 @@ export const ru: Dict = {
     "создай бесплатный аккаунт, чтобы отслеживать коллекцию, собирать вишлист и первым получать доступ к редким фигуркам.",
   register_modal_cta: "создать аккаунт",
   register_modal_dismiss: "позже",
+  archive_popular_series: "популярные серии",
+  nudge_collection_title: "веди свою коллекцию",
+  nudge_collection_body:
+    "отмечай что уже есть, собирай вишлист, не покупай дубли. свой профиль коллекционера — бесплатно.",
+  nudge_collection_cta: "создать профиль",
   cta_heading1: "найди свою",
   cta_heading2: "редкую фигурку.",
   cta_body: "подлинные фигурки. фиксированная доставка.",
@@ -818,6 +833,11 @@ export const jp: Dict = {
     "無料アカウントを作成して、コレクションを管理し、ウィッシュリストを作成し、レアフィギュアにいち早くアクセスしましょう。",
   register_modal_cta: "アカウント作成",
   register_modal_dismiss: "後で",
+  archive_popular_series: "人気シリーズ",
+  nudge_collection_title: "コレクションを記録",
+  nudge_collection_body:
+    "持っているフィギュアを記録し、ウィッシュリストを作成。重複買いを防ぐ。自分だけのコレクタープロフィールを無料で。",
+  nudge_collection_cta: "プロフィール作成",
   cta_heading1: "あなたの",
   cta_heading2: "レアフィギュアを探す。",
   cta_body: "本物のフィギュア。送料固定。",
