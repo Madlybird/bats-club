@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase"
 import ArticlesPageContent from "@/components/ArticlesPageContent"
 import { jp } from "@/lib/dict"
+import { localizeArticle } from "@/lib/articleI18n"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default async function ArticlesPageJp() {
     .order("created_at", { ascending: false })
 
   const result = (articles || []).map((a) => ({
-    ...a,
+    ...(localizeArticle(a as any, "jp") as any),
     _count: { articleFigures: (a.article_figures || []).length },
   }))
 
