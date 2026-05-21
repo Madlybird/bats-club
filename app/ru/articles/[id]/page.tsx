@@ -47,7 +47,7 @@ export default async function ArticleDetailPageRu({ params }: Props) {
         articleFigures: (article.article_figures || []).map((af: any) => ({ figure: af.figure })),
       }}
       dict={ru}
-      articlesHref="/articles"
+      articlesHref="/ru/articles"
     />
   )
 }

@@ -6,6 +6,7 @@ import { jp } from "@/lib/dict"
 import { getRates, convertPrice } from "@/lib/currency"
 import { Metadata } from "next"
 import { isUuid, lookupIdBySlug } from "@/lib/slug"
+import { localizeArticle } from "@/lib/articleI18n"
 
 export const dynamicParams = true
 export const revalidate = 86400
@@ -133,6 +134,7 @@ export default async function FigureDetailPageJp({ params }: Props) {
   const publishedArticles = articleFigures
     .map((af) => af.article)
     .filter((a: any) => a && a.published)
+    .map((a: any) => localizeArticle(a, "jp"))
 
   let relatedFigures: any[] = []
   try {
@@ -233,6 +235,7 @@ export default async function FigureDetailPageJp({ params }: Props) {
       jsonLd={jsonLd}
       dict={jp}
       archiveHref="/jp/archive"
+      articlesHref="/jp/articles"
     />
   )
 }

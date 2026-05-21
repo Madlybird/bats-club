@@ -29,5 +29,5 @@ export default async function ArticlesPageJp() {
     _count: { articleFigures: (a.article_figures || []).length },
   }))
 
-  return <ArticlesPageContent articles={result as any} dict={jp} />
+  return <ArticlesPageContent articles={result as any} dict={jp} articlesHref="/jp/articles" />
 }

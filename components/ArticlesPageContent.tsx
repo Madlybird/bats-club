@@ -20,9 +20,10 @@ interface Article {
 interface Props {
   articles: Article[]
   dict: Dict
+  articlesHref?: string
 }
 
-export default function ArticlesPageContent({ articles, dict }: Props) {
+export default function ArticlesPageContent({ articles, dict, articlesHref = "/articles" }: Props) {
   return (
     <div className="relative min-h-screen">
       <BatsOverlay />
@@ -61,7 +62,7 @@ export default function ArticlesPageContent({ articles, dict }: Props) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {articles.map((article, i) => (
                   <ScrollReveal key={article.id} delay={i * 60}>
-                    <ArticleCard article={article} readMoreLabel={dict.articles_read_more} />
+                    <ArticleCard article={article} readMoreLabel={dict.articles_read_more} articlesHref={articlesHref} />
                   </ScrollReveal>
                 ))}
               </div>

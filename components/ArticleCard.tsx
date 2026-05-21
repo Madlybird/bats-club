@@ -16,9 +16,11 @@ interface ArticleCardProps {
     }
   }
   readMoreLabel?: string
+  articlesHref?: string
 }
 
-export default function ArticleCard({ article, readMoreLabel = "Read More" }: ArticleCardProps) {
+export default function ArticleCard({ article, readMoreLabel = "Read More", articlesHref = "/articles" }: ArticleCardProps) {
+  const href = `${articlesHref}/${article.slug}`
   const date = new Date(article.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -31,7 +33,7 @@ export default function ArticleCard({ article, readMoreLabel = "Read More" }: Ar
       style={{ background: "#0a0a0a" }}
     >
       {/* Cover Image */}
-      <Link href={`/articles/${article.slug}`} className="block relative aspect-video overflow-hidden" style={{ background: "#0a0a0a" }}>
+      <Link href={href} className="block relative aspect-video overflow-hidden" style={{ background: "#0a0a0a" }}>
         {article.coverImage ? (
           <Image
             src={article.coverImage}
@@ -50,7 +52,7 @@ export default function ArticleCard({ article, readMoreLabel = "Read More" }: Ar
 
       {/* Content */}
       <div className="p-4 flex flex-col gap-3 flex-1">
-        <Link href={`/articles/${article.slug}`} className="block">
+        <Link href={href} className="block">
           <h3 className="font-bold text-white text-base leading-tight group-hover:text-[#ff2d78] transition-colors line-clamp-2">
             {article.title}
           </h3>
@@ -68,7 +70,7 @@ export default function ArticleCard({ article, readMoreLabel = "Read More" }: Ar
         </div>
 
         <Link
-          href={`/articles/${article.slug}`}
+          href={href}
           className="text-sm font-medium transition-colors flex items-center gap-1"
           style={{ color: "#ff2d78" }}
         >

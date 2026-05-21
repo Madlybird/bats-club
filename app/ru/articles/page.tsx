@@ -29,5 +29,5 @@ export default async function ArticlesPageRu() {
     _count: { articleFigures: (a.article_figures || []).length },
   }))
 
-  return <ArticlesPageContent articles={result as any} dict={ru} />
+  return <ArticlesPageContent articles={result as any} dict={ru} articlesHref="/ru/articles" />
 }

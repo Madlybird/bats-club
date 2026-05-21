@@ -58,6 +58,7 @@ interface Props {
   jsonLd: object
   dict: Dict
   archiveHref: string
+  articlesHref?: string
 }
 
 export default function FigureDetailContent({
@@ -73,6 +74,7 @@ export default function FigureDetailContent({
   jsonLd,
   dict,
   archiveHref,
+  articlesHref = "/articles",
 }: Props) {
   const NON_SCALE_VALUES = new Set(["non-scale", "nonscale", "non scale", "1/1", "-", "n/a"])
   const scaleDisplay = figure.scale && NON_SCALE_VALUES.has(figure.scale.toLowerCase())
@@ -264,7 +266,7 @@ export default function FigureDetailContent({
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {publishedArticles.map((article) => (
-                      <ArticleCard key={article.id} article={article} readMoreLabel={dict.articles_read_more} />
+                      <ArticleCard key={article.id} article={article} readMoreLabel={dict.articles_read_more} articlesHref={articlesHref} />
                     ))}
                   </div>
                 </section>
