@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { parse } from "csv-parse/sync"
@@ -85,6 +85,7 @@ export async function POST(req: Request) {
     }
 
     if (imported > 0) {
+      revalidateTag("figures")
       revalidatePath("/")
       revalidatePath("/jp")
       revalidatePath("/ru")

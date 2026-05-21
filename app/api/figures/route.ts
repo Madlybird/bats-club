@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -71,6 +71,7 @@ export async function POST(req: Request) {
     if (error) throw error
 
     const slugForPath = (figure as any)?.slug || (figure as any)?.id
+    revalidateTag("figures")
     revalidatePath("/")
     revalidatePath("/jp")
     revalidatePath("/ru")

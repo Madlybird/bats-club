@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 
@@ -30,6 +30,9 @@ export async function POST(req: Request) {
     revalidatePath(p)
     revalidated.push(p)
   }
+
+  revalidateTag("figures")
+  revalidated.push("tag:figures")
 
   push("/")
   push("/jp")

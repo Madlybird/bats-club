@@ -1,6 +1,7 @@
 import ScrollReveal from "@/components/ScrollReveal"
 import HowItWorksTour from "@/components/HowItWorksTour"
 import CollectionSlider from "@/components/CollectionSlider"
+import JoinCta from "@/components/JoinCta"
 import Link from "next/link"
 import Image from "next/image"
 import type { Dict } from "@/lib/dict"
@@ -23,21 +24,6 @@ const BATS = Array.from({ length: 140 }, (_, i) => ({
   anim: BAT_ANIMS[i % 3],
 }))
 
-interface FigureData {
-  id: string
-  name: string
-  series: string
-  character: string
-  manufacturer: string
-  scale: string
-  year: number
-  imageUrl?: string | null
-  wishlistCount: number
-  userStatus?: string | null
-  _count: { listings: number }
-  cheapestListing?: { id: string; price: number; condition: string } | null
-}
-
 interface CollectionData {
   id: string
   slug: string
@@ -47,20 +33,16 @@ interface CollectionData {
 
 interface Props {
   dict: Dict
-  figures: FigureData[]
   collections: CollectionData[]
-  hasSession: boolean
-  yearsCollecting: number
   figurePath?: string
+  joinHref?: string
 }
 
 export default function HomePageContent({
   dict,
-  figures,
   collections,
-  hasSession,
-  yearsCollecting,
   figurePath = "/figures",
+  joinHref = "/register",
 }: Props) {
   // /figures → /archive · /ru/figures → /ru/archive · /jp/figures → /jp/archive
   const archivePath = figurePath.replace(/\/figures$/, "/archive")
@@ -155,14 +137,7 @@ export default function HomePageContent({
                 >
                   {dict.hero_cta}
                 </Link>
-                {!hasSession && (
-                  <Link
-                    href="/register"
-                    className="px-8 py-3.5 border border-white/10 hover:border-white/25 text-white/50 hover:text-white text-sm font-bold lowercase tracking-wide rounded-full transition-all"
-                  >
-                    {dict.hero_join}
-                  </Link>
-                )}
+                <JoinCta label={dict.hero_join} href={joinHref} />
               </div>
             </div>
 

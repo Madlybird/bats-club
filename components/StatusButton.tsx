@@ -2,8 +2,12 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useCart } from "@/lib/cart-context"
+import {
+  useUserFigureStatus,
+  useUserFiguresActions,
+} from "@/lib/user-figures-context"
 
 interface StatusLabels {
   have: string
@@ -44,32 +48,22 @@ function showToast(message: string) {
 }
 
 export default function StatusButton({ figureId, initialStatus, labels = DEFAULT_LABELS, buyAddsToCart }: StatusButtonProps) {
-  const { data: session, status: sessionStatus } = useSession()
+  const { data: session } = useSession()
   const router = useRouter()
   const { addItem, items: cartItems } = useCart()
-  const [currentStatus, setCurrentStatus] = useState<string | null>(initialStatus || null)
+  // Status comes from UserFiguresProvider, which fetches once per
+  // authenticated session and shares the result across every card on
+  // the page. initialStatus is a server-side fallback for pages that
+  // still pass one (the dedicated figure page, profile page).
+  const fromContext = useUserFigureStatus(figureId)
+  const { setStatus: setContextStatus } = useUserFiguresActions()
+  const [localStatus, setLocalStatus] = useState<string | null>(initialStatus || null)
   const [loading, setLoading] = useState(false)
-
-  // The figure detail page is ISR-cached, so it can't read the session
-  // server-side and ships with initialStatus=null. Once the user's
-  // session is known on the client we hydrate the real status here.
-  useEffect(() => {
-    if (sessionStatus !== "authenticated") return
-    let cancelled = false
-    fetch("/api/user-figures", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((rows: any[]) => {
-        if (cancelled) return
-        const mine = Array.isArray(rows)
-          ? rows.find((r) => r?.figureId === figureId || r?.figure?.id === figureId)
-          : null
-        if (mine?.status) setCurrentStatus(mine.status)
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [sessionStatus, figureId])
+  const currentStatus = fromContext ?? localStatus
+  const setCurrentStatus = (status: string | null) => {
+    setLocalStatus(status)
+    setContextStatus(figureId, status)
+  }
 
   const statuses = [
     { value: "HAVE",     label: labels.have,     icon: "✓",  activeClass: "bg-emerald-700 border-emerald-600 text-white" },

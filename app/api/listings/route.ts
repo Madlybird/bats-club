@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -82,6 +82,12 @@ export async function POST(req: Request) {
     if (error) throw error
 
     try {
+      // listings change the "for sale" badge and cheapest-price on
+      // archive cards, so the shared figures cache needs busting too.
+      revalidateTag("figures")
+      revalidatePath("/archive")
+      revalidatePath("/ru/archive")
+      revalidatePath("/jp/archive")
       revalidatePath("/shop")
       revalidatePath("/ru/shop")
       revalidatePath("/jp/shop")

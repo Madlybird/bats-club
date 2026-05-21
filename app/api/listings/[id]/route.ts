@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -71,6 +71,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   // Invalidate caches so the change is visible immediately on the site.
   const figureId = (listing as any)?.figureId
   try {
+    revalidateTag("figures")
+    revalidatePath("/archive")
+    revalidatePath("/ru/archive")
+    revalidatePath("/jp/archive")
     revalidatePath("/shop")
     revalidatePath("/ru/shop")
     revalidatePath("/jp/shop")
@@ -103,6 +107,18 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   if (error) {
     console.error("Delete listing error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+
+  try {
+    revalidateTag("figures")
+    revalidatePath("/archive")
+    revalidatePath("/ru/archive")
+    revalidatePath("/jp/archive")
+    revalidatePath("/shop")
+    revalidatePath("/ru/shop")
+    revalidatePath("/jp/shop")
+  } catch (e) {
+    console.error("revalidatePath error:", e)
   }
 
   return NextResponse.json({ success: true })

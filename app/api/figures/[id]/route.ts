@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -73,6 +73,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     .eq("id", params.id)
     .maybeSingle()
   const slugForPath = slugRow?.slug || params.id
+  revalidateTag("figures")
   revalidatePath("/")
   revalidatePath("/jp")
   revalidatePath("/ru")
@@ -99,6 +100,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 
+  revalidateTag("figures")
   revalidatePath("/figures/[slug]", "page")
   revalidatePath("/jp/figures/[slug]", "page")
   revalidatePath("/ru/figures/[slug]", "page")

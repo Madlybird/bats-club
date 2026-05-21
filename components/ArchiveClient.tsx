@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import FigureCard from "./FigureCard"
 
 interface CheapestListing {
@@ -70,10 +71,23 @@ export default function ArchiveClient({
   defaultSeries = null,
   labels,
 }: ArchiveClientProps) {
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState("")
+  // defaultSeries comes from the parent (used to be derived from
+  // searchParams on the server). It's null now in static-page mode —
+  // we read ?series= on the client so the page can stay cached.
   const [selectedSeries, setSelectedSeries] = useState<string | null>(
     defaultSeries
   )
+
+  useEffect(() => {
+    if (defaultSeries) return
+    const s = searchParams?.get("series")
+    if (s) setSelectedSeries(s)
+    // Intentionally run once on mount; subsequent navigations update via
+    // the pill buttons directly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const popularSeries = useMemo(
     () => seriesCounts.slice(0, POPULAR_LIMIT),

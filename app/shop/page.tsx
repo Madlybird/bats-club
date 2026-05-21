@@ -58,30 +58,33 @@ async function getTopSeries() {
 export default async function ShopPage({ searchParams }: Props) {
   const { condition, sort, series } = searchParams
 
+  // !inner promotes the figure embed from "left join" (nulls out
+  // non-matching rows) to "inner join" (drops them entirely), so the
+  // series filter actually narrows the result set in Postgres instead
+  // of in JS afterwards.
+  const figureEmbed = series
+    ? "figure:figures!inner(id, name, series, character, scale, imageUrl:image_url)"
+    : "figure:figures(id, name, series, character, scale, imageUrl:image_url)"
+
   let query = supabaseAdmin
     .from("listings")
     .select(`
       id, price, condition, stock, photos, description, active,
       figureId:figure_id, sellerId:seller_id, createdAt:created_at,
-      figure:figures(id, name, series, character, scale, imageUrl:image_url),
+      ${figureEmbed},
       seller:users(id, name, username)
     `)
     .eq("active", true)
 
   if (condition) query = query.eq("condition", condition)
-  if (series) query = query.eq("figure.series", series)
+  if (series) query = query.eq("figures.series", series)
   if (sort === "price_asc") query = query.order("price", { ascending: true })
   else if (sort === "price_desc") query = query.order("price", { ascending: false })
   else query = query.order("created_at", { ascending: false })
 
   const [{ data: listings }, topSeries] = await Promise.all([query, getTopSeries()])
 
-  const filtered = series
-    ? (listings || []).filter((l: any) => {
-        const fig = Array.isArray(l.figure) ? l.figure[0] : l.figure
-        return fig?.series === series
-      })
-    : (listings || [])
+  const filtered = (listings || []) as any[]
 
   return (
     <Suspense fallback={<ShopSkeleton />}>
