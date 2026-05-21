@@ -22,7 +22,7 @@ export default function BatsOverlay() {
           alt=""
           width={56}
           height={56}
-          className={i >= 5 ? "hidden md:block" : undefined}
+          className={`scroll-layer ${i >= 5 ? "hidden md:block" : ""}`}
           style={{
             position: "absolute",
             left: `${b.x}%`,

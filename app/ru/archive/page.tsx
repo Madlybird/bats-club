@@ -55,8 +55,8 @@ export default async function ArchivePageRu() {
         ctaHref="/ru/register"
         storageKey="batsclub_nudge_collection"
       />
-      <div className="absolute top-1/4 right-1/3 w-[700px] h-[700px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
-      <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
+      <div className="scroll-layer absolute top-1/4 right-1/3 w-[700px] h-[700px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
+      <div className="scroll-layer absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
       <div
         className="absolute inset-0 opacity-[0.025] pointer-events-none"
         style={{

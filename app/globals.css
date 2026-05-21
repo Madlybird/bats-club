@@ -227,6 +227,38 @@ body {
   pointer-events: none;
 }
 
+/* ── Scroll-smoothness helpers ───────────────────────────────────────
+   Bats and the giant blur blobs animate transforms / use heavy blurs.
+   Without explicit GPU promotion the browser may re-rasterize them on
+   every scroll frame, which shows up as jank. Pinning each one to its
+   own composite layer (transform: translateZ(0) + will-change) lets
+   the GPU just translate the existing layer during scroll. */
+.scroll-layer {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* `content-visibility: auto` lets the browser skip layout + paint for
+   off-screen items entirely. Big win on /archive where there are 100+
+   cards stacked in one grid. `contain-intrinsic-size` reserves height
+   so the scrollbar doesn't jump when items virtualize in/out. */
+.card-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: 320px 320px;
+}
+
+/* Honour OS-level reduced motion preference. The bat overlay and float
+   tags run continuous CSS animations that drive constant paint work;
+   silencing them removes the cost for users who asked for less motion
+   and incidentally smooths scroll on their machines. */
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-float"],
+  [style*="bat-wave"] {
+    animation: none !important;
+  }
+}
+
 /* Hero figure grid noise overlay */
 .figure-grid-item {
   position: relative;

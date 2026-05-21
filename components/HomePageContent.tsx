@@ -59,7 +59,7 @@ export default function HomePageContent({
             alt=""
             width={56}
             height={56}
-            className={i >= 5 ? "hidden md:block" : undefined}
+            className={`scroll-layer ${i >= 5 ? "hidden md:block" : ""}`}
             style={{
               position: "absolute",
               left: `${b.x}%`,
@@ -86,9 +86,10 @@ export default function HomePageContent({
             backgroundSize: "40px 40px",
           }}
         />
-        {/* ambient blobs */}
-        <div className="absolute top-1/3 right-1/3 w-[700px] h-[700px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
+        {/* ambient blobs — GPU-promoted so giant blur(180px) doesn't
+            re-rasterize on every scroll frame */}
+        <div className="scroll-layer absolute top-1/3 right-1/3 w-[700px] h-[700px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
+        <div className="scroll-layer absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16">
           {/* Grid container is `relative` so gap-floating tags can be positioned inside it */}

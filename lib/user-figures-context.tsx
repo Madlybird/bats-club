@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   ReactNode,
@@ -65,8 +66,15 @@ export function UserFiguresProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  // Memo the value so the provider doesn't hand a fresh object to all
+  // consumers (~100 StatusButtons on /archive) on every parent render.
+  const value = useMemo(
+    () => ({ statuses, loading, setStatus }),
+    [statuses, loading, setStatus],
+  )
+
   return (
-    <UserFiguresContext.Provider value={{ statuses, loading, setStatus }}>
+    <UserFiguresContext.Provider value={value}>
       {children}
     </UserFiguresContext.Provider>
   )
