@@ -1,6 +1,4 @@
 import { supabaseAdmin } from "@/lib/supabase"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import AddToCartButton from "@/components/AddToCartButton"
@@ -12,6 +10,31 @@ import { en } from "@/lib/dict"
 import { Metadata } from "next"
 
 interface Props { params: { id: string } }
+
+// Listing ids are server-generated UUIDs (gen_random_uuid()), not
+// guessable/enumerable, so bounding generateStaticParams to recent
+// active listings (mirrors app/figures/[slug]) can't be abused to
+// balloon ISR writes — crawlers can only ever hit real listing URLs
+// they found by following links, and that set stays small (~a few
+// hundred). dynamicParams covers the long tail with normal on-demand
+// ISR instead of a full DB+auth round trip on every single request.
+export const dynamicParams = true
+export const revalidate = 300 // 5 min — short enough that stock/price/active changes show up quickly
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("listings")
+      .select("id")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .limit(100)
+    if (error) return []
+    return (data || []).map((l: { id: string }) => ({ id: l.id }))
+  } catch {
+    return []
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: listing } = await supabaseAdmin
@@ -43,7 +66,6 @@ function parseImages(raw: unknown): string[] {
 }
 
 export default async function ListingDetailPage({ params }: Props) {
-  const session = await getServerSession(authOptions)
   const dict = en
 
   const { data: listing } = await supabaseAdmin
