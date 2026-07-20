@@ -3,8 +3,12 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
+import { isHiddenFigure } from "@/lib/hidden"
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
+  if (isHiddenFigure(params.id)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
   const { data: figure, error } = await supabaseAdmin
     .from("figures")
     .select(`
@@ -83,6 +87,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   revalidatePath(`/figures/${slugForPath}`)
   revalidatePath(`/jp/figures/${slugForPath}`)
   revalidatePath(`/ru/figures/${slugForPath}`)
+  // Slug and id resolve to different cache entries (generateStaticParams
+  // pre-renders at the UUID path, archive links can hit either). The
+  // concrete-path calls above miss whichever one isn't slugForPath, so
+  // also invalidate every path under the dynamic route.
+  revalidatePath("/figures/[slug]", "page")
+  revalidatePath("/jp/figures/[slug]", "page")
+  revalidatePath("/ru/figures/[slug]", "page")
 
   return NextResponse.json(figure)
 }
