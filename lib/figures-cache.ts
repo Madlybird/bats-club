@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache"
 import { supabaseAdmin } from "@/lib/supabase"
+import { isHiddenFigure } from "@/lib/hidden"
 
 export interface FigureListRow {
   id: string
@@ -38,7 +39,7 @@ export const getFiguresForList = unstable_cache(
       return []
     }
 
-    return (data || []).map((f: any) => {
+    return (data || []).filter((f: any) => !isHiddenFigure(f.id)).map((f: any) => {
       const activeListings = (f.listings || []).filter((l: any) => l.active)
       const cheapest = activeListings.length > 0
         ? activeListings.reduce((a: any, b: any) => (a.price <= b.price ? a : b))

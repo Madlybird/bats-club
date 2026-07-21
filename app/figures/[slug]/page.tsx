@@ -5,6 +5,7 @@ import FigureDetailContent from "@/components/FigureDetailContent"
 import { en } from "@/lib/dict"
 import { Metadata } from "next"
 import { isUuid, lookupIdBySlug } from "@/lib/slug"
+import { isHiddenFigure } from "@/lib/hidden"
 
 export const dynamicParams = true
 export const revalidate = 86400
@@ -33,8 +34,11 @@ interface Props { params: { slug: string } }
 // render within a single request. Without it, both ran their own DB
 // round-trips for the same figure — doubling cold-miss latency.
 const resolveFigureId = cache(async (param: string): Promise<string | null> => {
-  if (isUuid(param)) return param
-  return lookupIdBySlug(param)
+  const id = isUuid(param) ? param : await lookupIdBySlug(param)
+  // Suppressed figures resolve to "not found" on every surface (page +
+  // metadata both go through here), regardless of id-vs-slug URL.
+  if (isHiddenFigure(id)) return null
+  return id
 })
 
 const getFigureCore = cache(async (figureId: string) => {

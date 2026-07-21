@@ -6,6 +6,7 @@ import { jp } from "@/lib/dict"
 import { getRates, convertPrice } from "@/lib/currency"
 import { Metadata } from "next"
 import { isUuid, lookupIdBySlug } from "@/lib/slug"
+import { isHiddenFigure } from "@/lib/hidden"
 import { localizeArticle } from "@/lib/articleI18n"
 
 export const dynamicParams = true
@@ -28,8 +29,9 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 interface Props { params: { slug: string } }
 
 const resolveFigureId = cache(async (param: string): Promise<string | null> => {
-  if (isUuid(param)) return param
-  return lookupIdBySlug(param)
+  const id = isUuid(param) ? param : await lookupIdBySlug(param)
+  if (isHiddenFigure(id)) return null
+  return id
 })
 
 const getFigureCore = cache(async (figureId: string) => {
