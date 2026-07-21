@@ -4,6 +4,7 @@
 // and the API — this is the single source of truth instead.
 export const HIDDEN_FIGURE_IDS = new Set<string>([
   "c36e619e-3a31-45ae-8683-0ff079a2c095",
+  "247703db-1b52-4447-abb2-95a0a778a62f",
 ])
 
 export function isHiddenFigure(id?: string | null): boolean {
