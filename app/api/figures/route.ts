@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import { insertFigureWithSlug } from "@/lib/slug"
+import { isHiddenFigure } from "@/lib/hidden"
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 
-  const result = (figures || []).map((f) => ({
+  const result = (figures || []).filter((f) => !isHiddenFigure(f.id)).map((f) => ({
     ...f,
     userFigures: f.user_figures || [],
     _count: { listings: (f.listings || []).length },
