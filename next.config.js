@@ -25,6 +25,7 @@ const nextConfig = {
   async redirects() {
     const hiddenFigureIds = [
       "c36e619e-3a31-45ae-8683-0ff079a2c095",
+      "247703db-1b52-4447-abb2-95a0a778a62f",
     ]
     return hiddenFigureIds.flatMap((id) => [
       { source: `/figures/${id}`, destination: "/archive", permanent: true },
