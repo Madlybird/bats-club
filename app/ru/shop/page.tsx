@@ -10,7 +10,9 @@ export const metadata: Metadata = {
     "Магазин подлинных винтажных аниме-фигурок из частной японской коллекции. Доставка по миру. Все фигурки проверены и описаны.",
 }
 
-export const revalidate = 60
+// Listing counts must always be accurate (no ISR window) — this route
+// already reads searchParams so it renders dynamically anyway.
+export const dynamic = "force-dynamic"
 
 function ShopSkeleton() {
   return (

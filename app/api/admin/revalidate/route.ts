@@ -4,21 +4,23 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 
 // Manually invalidate the ISR cache for figure pages + listings pages.
-// Use after editing figures directly in Supabase (admin-panel deletes
-// already revalidate automatically via /api/figures/[id]).
+// Use after editing figures/listings directly in Supabase (admin-panel
+// deletes already revalidate automatically via /api/figures/[id] and
+// /api/listings/[id]).
 //
 // Body (all optional):
-//   { figureId?: string, paths?: string[] }
-// - figureId: also invalidates /figures/[id] for every locale
-// - paths:    extra paths to invalidate verbatim
-// No body → refresh the figure-listing pages (/, /archive) across locales.
+//   { figureId?: string, listingId?: string, paths?: string[] }
+// - figureId:  also invalidates /figures/[id] for every locale
+// - listingId: also invalidates /shop/[id] for every locale
+// - paths:     extra paths to invalidate verbatim
+// No body → refresh the figure-listing pages (/, /archive, /shop) across locales.
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  let body: { figureId?: string; paths?: string[] } = {}
+  let body: { figureId?: string; listingId?: string; paths?: string[] } = {}
   try {
     body = await req.json()
   } catch {
@@ -40,6 +42,10 @@ export async function POST(req: Request) {
   push("/archive")
   push("/jp/archive")
   push("/ru/archive")
+  push("/shop")
+  push("/jp/shop")
+  push("/ru/shop")
+  push("/feed.xml")
 
   if (body.figureId) {
     // Revalidate the entire /figures/[slug] page template rather than a
@@ -48,6 +54,12 @@ export async function POST(req: Request) {
     revalidatePath("/jp/figures/[slug]", "page")
     revalidatePath("/ru/figures/[slug]", "page")
     revalidated.push("/figures/[slug]", "/jp/figures/[slug]", "/ru/figures/[slug]")
+  }
+
+  if (body.listingId) {
+    push(`/shop/${body.listingId}`)
+    push(`/jp/shop/${body.listingId}`)
+    push(`/ru/shop/${body.listingId}`)
   }
 
   for (const p of body.paths ?? []) {

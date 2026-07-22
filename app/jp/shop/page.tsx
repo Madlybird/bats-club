@@ -10,7 +10,9 @@ export const metadata: Metadata = {
     "日本人コレクターのプライベートコレクションから本物のヴィンテージアニメフィギュアを販売。世界中に発送。全商品を検品・説明付きで出品。",
 }
 
-export const revalidate = 60
+// Listing counts must always be accurate (no ISR window) — this route
+// already reads searchParams so it renders dynamically anyway.
+export const dynamic = "force-dynamic"
 
 function ShopSkeleton() {
   return (

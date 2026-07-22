@@ -26,7 +26,8 @@ export const metadata: Metadata = {
   description: "Browse the full Bats Club anime figure archive.",
 }
 
-export const revalidate = 3600
+// Figure count must always be accurate, not up to an hour stale.
+export const dynamic = "force-dynamic"
 
 export default async function ArchivePageRu() {
   // searchParams handled client-side in ArchiveClient (keeps page static).
