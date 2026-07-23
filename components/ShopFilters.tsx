@@ -14,13 +14,15 @@ export default function ShopFilters({ currentPriceRange, currentSort, currentSer
   const router = useRouter()
   const pathname = usePathname()
 
-  // Value encodes [min, max) in cents; empty max = no upper bound.
-  // Boundaries picked from the actual price distribution of the catalog.
+  // Value encodes [min, max] in cents, both inclusive; empty max = no
+  // upper bound. Boundaries picked from the actual price distribution of
+  // the catalog, offset by 1 cent so e.g. exactly $25.00 only falls in
+  // "Under $25", not also in "$25-55".
   const PRICE_RANGES = [
-    { value: "0-2500",     label: dict.shop_price_range_under_25 },
-    { value: "2500-5500",  label: dict.shop_price_range_25_55 },
-    { value: "5500-10000", label: dict.shop_price_range_55_100 },
-    { value: "10000-",     label: dict.shop_price_range_100_plus },
+    { value: "0-2500",      label: dict.shop_price_range_under_25 },
+    { value: "2501-5500",   label: dict.shop_price_range_25_55 },
+    { value: "5501-10000",  label: dict.shop_price_range_55_100 },
+    { value: "10001-",      label: dict.shop_price_range_100_plus },
   ]
 
   const SORT_OPTIONS = [

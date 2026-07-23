@@ -1,6 +1,7 @@
 // Parses a shop price-range filter value of the form "min-max" (cents),
-// where an empty max means no upper bound (e.g. "10000-" = $100+).
-// Returns null for anything malformed so callers can just skip filtering.
+// both bounds inclusive, where an empty max means no upper bound (e.g.
+// "10001-" = $100.01+). Returns null for anything malformed so callers
+// can just skip filtering.
 export function parsePriceRange(value?: string): { min: number; max?: number } | null {
   if (!value) return null
   const match = value.match(/^(\d+)-(\d*)$/)

@@ -82,7 +82,7 @@ export default async function ShopPage({ searchParams }: Props) {
   const priceRange = parsePriceRange(price)
   if (priceRange) {
     query = query.gte("price", priceRange.min)
-    if (priceRange.max !== undefined) query = query.lt("price", priceRange.max)
+    if (priceRange.max !== undefined) query = query.lte("price", priceRange.max)
   }
   if (series) query = query.eq("figures.series", series)
   if (sort === "price_asc") query = query.order("price", { ascending: true })
