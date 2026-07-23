@@ -12,7 +12,7 @@ export default async function AdminDashboard() {
     supabaseAdmin.from("figures").select("*", { count: "exact", head: true }),
     supabaseAdmin.from("listings").select("*", { count: "exact", head: true }).eq("active", true),
     supabaseAdmin.from("orders").select("*", { count: "exact", head: true }).eq("status", "PENDING"),
-    supabaseAdmin.from("orders").select("unit_price, quantity, shipping_price").eq("status", "PAID"),
+    supabaseAdmin.from("orders").select("unit_price, quantity, shipping_price").in("status", ["PAID", "SHIPPED", "DELIVERED"]),
     supabaseAdmin.from("orders").select(`
       id, status, quantity, unitPrice:unit_price, shippingPrice:shipping_price, createdAt:created_at,
       buyer:users(username),

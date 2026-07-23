@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
+import { isUuid } from "@/lib/sanitize"
 
 function revalidateArticle(slug?: string | null) {
   revalidatePath("/articles")
@@ -19,18 +20,23 @@ function revalidateArticle(slug?: string | null) {
 }
 
 function errorResponse(stage: string, error: any, status = 500) {
-  const payload = {
-    error: error?.message || "Request failed",
-    stage,
+  // Log full Postgres detail server-side; return only a generic message
+  // to the client so we don't leak schema / column names / hints.
+  console.error(`[articles/id] ${stage} failed`, {
+    message: error?.message,
     code: error?.code,
     details: error?.details,
     hint: error?.hint,
-  }
-  console.error(`[articles/id] ${stage} failed`, payload)
-  return NextResponse.json(payload, { status })
+  })
+  return NextResponse.json({ error: "Request failed", stage }, { status })
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
+  // Look up by id OR slug, but via the safe `.eq()` builder (not raw
+  // `.or()` string interpolation, which is injectable). UUIDs go to id,
+  // everything else to slug.
+  const column = isUuid(params.id) ? "id" : "slug"
+
   const { data: article, error } = await supabaseAdmin
     .from("articles")
     .select(`
@@ -42,11 +48,19 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
         figure:figures(id, name, series, character, scale, manufacturer, imageUrl:image_url)
       )
     `)
-    .or(`id.eq.${params.id},slug.eq.${params.id}`)
+    .eq(column, params.id)
     .single()
 
   if (error || !article) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
+  // Unpublished drafts are admin-only. Don't expose them by id/slug.
+  if (!article.published) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
   }
 
   return NextResponse.json({

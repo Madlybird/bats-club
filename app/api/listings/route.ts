@@ -91,6 +91,7 @@ export async function POST(req: Request) {
       revalidatePath("/shop")
       revalidatePath("/ru/shop")
       revalidatePath("/jp/shop")
+      revalidatePath("/feed.xml")
       if (figureId) {
         revalidatePath("/figures/[slug]", "page")
         revalidatePath("/ru/figures/[slug]", "page")

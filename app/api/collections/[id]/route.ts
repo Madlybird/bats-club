@@ -5,15 +5,13 @@ import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 
 function errorResponse(stage: string, error: any, status = 500) {
-  const payload = {
-    error: error?.message || "Request failed",
-    stage,
+  console.error(`[collections/:id] ${stage} failed`, {
+    message: error?.message,
     code: error?.code,
     details: error?.details,
     hint: error?.hint,
-  }
-  console.error(`[collections/:id] ${stage} failed`, payload)
-  return NextResponse.json(payload, { status })
+  })
+  return NextResponse.json({ error: "Request failed", stage }, { status })
 }
 
 function slugify(s: string) {

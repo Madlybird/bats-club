@@ -1,8 +1,29 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { sendWelcomeEmail } from "@/lib/email"
+import { checkRateLimit, rateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: Request) {
+  // Cap brute force of the 6-digit code on two axes:
+  //  - per IP+email (10 / 10 min) — stops a single host hammering, and
+  //  - per email regardless of IP (20 / 15 min) — stops a distributed
+  //    attempt from cracking the 10^6 space across many IPs.
+  let emailForKey = ""
+  try {
+    emailForKey = String((await req.clone().json())?.email || "").toLowerCase()
+  } catch {}
+  const limited = checkRateLimit(req, "verify", 10, 10 * 60 * 1000, emailForKey)
+  if (limited) return limited
+  if (emailForKey) {
+    const perEmail = rateLimit(`verify-email:${emailForKey}`, 20, 15 * 60 * 1000)
+    if (!perEmail.ok) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please request a new code later." },
+        { status: 429, headers: { "Retry-After": String(perEmail.retryAfterSec) } },
+      )
+    }
+  }
+
   try {
     const { email, code } = await req.json()
     if (!email || !code) {

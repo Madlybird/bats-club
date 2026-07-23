@@ -97,7 +97,9 @@ export default function FigureDetailContent({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // Escape `<` so a figure field containing `</script>` can't break
+        // out of this tag and inject markup (stored XSS hardening).
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
 
       <FigureViewTracker series={figure.series} />

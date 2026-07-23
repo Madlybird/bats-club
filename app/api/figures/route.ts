@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import { insertFigureWithSlug } from "@/lib/slug"
+import { sanitizePostgrestTerm } from "@/lib/sanitize"
 import { isHiddenFigure } from "@/lib/hidden"
 
 export async function GET(req: Request) {
@@ -19,7 +20,14 @@ export async function GET(req: Request) {
 
   if (series) query = query.eq("series", series)
   if (manufacturer) query = query.eq("manufacturer", manufacturer)
-  if (q) query = query.or(`name.ilike.%${q}%,character.ilike.%${q}%,series.ilike.%${q}%`)
+  if (q) {
+    // Strip PostgREST filter delimiters so the term can't break out of
+    // the ilike expression and inject extra filters / column refs.
+    const safe = sanitizePostgrestTerm(q)
+    if (safe) {
+      query = query.or(`name.ilike.%${safe}%,character.ilike.%${safe}%,series.ilike.%${safe}%`)
+    }
+  }
 
   const { data: figures, error } = await query
 

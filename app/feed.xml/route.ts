@@ -22,20 +22,36 @@ interface FigureRow {
   manufacturer: string | null
   description: string | null
   image_url: string | null
+  images: unknown
 }
 
 interface ListingRow {
   id: string
   price: number
   stock: number
+  photos: unknown
   figure: FigureRow | FigureRow[] | null
+}
+
+function firstImage(raw: unknown): string | null {
+  if (!raw) return null
+  if (Array.isArray(raw)) return raw.find((u): u is string => typeof u === "string") || null
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed.find((u): u is string => typeof u === "string") || null : null
+    } catch {
+      return null
+    }
+  }
+  return null
 }
 
 export async function GET() {
   const { data, error } = await supabaseAdmin
     .from("listings")
     .select(
-      "id, price, stock, figure:figures(id, slug, name, series, manufacturer, description, image_url)"
+      "id, price, stock, photos, figure:figures(id, slug, name, series, manufacturer, description, image_url, images)"
     )
     .eq("active", true)
     .gt("stock", 0)
@@ -52,18 +68,22 @@ export async function GET() {
       const figure = Array.isArray(row.figure) ? row.figure[0] : row.figure
       if (!figure) return ""
 
-      const identifier = figure.slug || figure.id
+      // Link to the specific listing page (/shop/{id}), not the figure
+      // page — the figure page shows the *cheapest* listing's price via
+      // its own JSON-LD, which can differ from this item's price if the
+      // same figure has more than one active listing. Must match exactly.
       const priceUsd = (row.price / 100).toFixed(2)
       const title = `${figure.name} — ${figure.series}`
+      const imageLink = firstImage(row.photos) || firstImage(figure.images) || figure.image_url || ""
 
       return `  <item>
     <g:id>${xmlEscape(row.id)}</g:id>
     <title>${xmlEscape(title)}</title>
     <description>${xmlEscape(figure.description || title)}</description>
-    <link>${BASE}/figures/${xmlEscape(identifier)}</link>
-    <g:image_link>${xmlEscape(figure.image_url || "")}</g:image_link>
+    <link>${BASE}/shop/${xmlEscape(row.id)}</link>
+    <g:image_link>${xmlEscape(imageLink)}</g:image_link>
     <g:price>${priceUsd} USD</g:price>
-    <g:availability>in_stock</g:availability>
+    <g:availability>in stock</g:availability>
     <g:condition>used</g:condition>
     <g:brand>${xmlEscape(figure.manufacturer || "Unknown")}</g:brand>
     <g:mpn>${xmlEscape(figure.id)}</g:mpn>

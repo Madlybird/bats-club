@@ -60,11 +60,11 @@ export async function POST(req: Request) {
 
       if (!buyerId || listingIds.length === 0) {
         // Legacy fallback: try existing orders by session id or metadata.orderId
-        let orders: Array<{ id: string; listing_id: string; quantity: number; buyer_id: string }> = []
+        let orders: Array<{ id: string; listing_id: string; quantity: number; buyer_id: string; status: string }> = []
 
         const { data: bySession } = await supabaseAdmin
           .from("orders")
-          .select("id, listing_id, quantity, buyer_id")
+          .select("id, listing_id, quantity, buyer_id, status")
           .eq("stripe_session_id", session.id)
         if (bySession && bySession.length > 0) {
           orders = bySession
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
           if (metadataOrderId) {
             const { data } = await supabaseAdmin
               .from("orders")
-              .select("id, listing_id, quantity, buyer_id")
+              .select("id, listing_id, quantity, buyer_id, status")
               .eq("id", metadataOrderId)
               .single()
             if (data) orders = [data]
@@ -82,6 +82,12 @@ export async function POST(req: Request) {
 
         if (orders.length > 0) {
           for (const order of orders) {
+            // Idempotency: if this order is already PAID, a previous
+            // delivery handled it — don't decrement stock again.
+            if (order.status === "PAID") {
+              console.log(`[stripe webhook] legacy: order ${order.id} already PAID — skipping`)
+              continue
+            }
             const updates: Record<string, any> = {
               status: "PAID",
               stripe_session_id: session.id,
@@ -109,6 +115,20 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: "No order data found" }, { status: 404 })
         }
       } else {
+        // Idempotency guard: Stripe delivers webhooks at-least-once and
+        // retries on timeout/5xx. Without this, a retry would insert a
+        // second set of orders and decrement stock twice. If orders for
+        // this session already exist, we've handled it — ack and return.
+        const { data: alreadyProcessed } = await supabaseAdmin
+          .from("orders")
+          .select("id")
+          .eq("stripe_session_id", session.id)
+          .limit(1)
+        if (alreadyProcessed && alreadyProcessed.length > 0) {
+          console.log(`[stripe webhook] session ${session.id} already processed — skipping`)
+          return NextResponse.json({ received: true, duplicate: true })
+        }
+
         // New flow: create orders NOW (after payment confirmed)
         for (let i = 0; i < listingIds.length; i++) {
           const listingId = listingIds[i]
@@ -139,6 +159,16 @@ export async function POST(req: Request) {
             .select("id")
             .single()
           if (insertError) {
+            // 23505 = unique violation on (stripe_session_id, listing_id):
+            // a concurrent delivery already created this order. Treat as
+            // already-processed — skip stock/collection so we don't
+            // double-count. (Requires migration 008.)
+            if ((insertError as any).code === "23505") {
+              console.log(
+                `[stripe webhook] order for session=${session.id} listing=${listingId} already exists — skipping`,
+              )
+              continue
+            }
             console.error(`[stripe webhook] order insert ${i} failed:`, insertError)
             throw insertError
           }

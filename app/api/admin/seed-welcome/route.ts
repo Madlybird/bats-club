@@ -113,6 +113,5 @@ export async function POST() {
   return seed()
 }
 
-export async function GET() {
-  return seed()
-}
+// No GET: seeding mutates the DB (insert/update), so it must not be
+// triggerable by a cross-site GET. Use POST.

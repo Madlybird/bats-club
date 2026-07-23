@@ -15,9 +15,17 @@ import { authOptions } from "@/lib/auth"
 // - paths:     extra paths to invalidate verbatim
 // No body → refresh the figure-listing pages (/, /archive, /shop) across locales.
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  // Two ways in: a logged-in admin session (site admin panel), or a shared
+  // secret (the telegram bot, which writes to Supabase directly and has no
+  // browser session to authenticate with).
+  const providedSecret = req.headers.get("x-revalidate-secret")
+  const secretOk = !!process.env.REVALIDATE_SECRET && providedSecret === process.env.REVALIDATE_SECRET
+
+  if (!secretOk) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
   }
 
   let body: { figureId?: string; listingId?: string; paths?: string[] } = {}

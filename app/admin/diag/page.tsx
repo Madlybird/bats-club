@@ -10,7 +10,7 @@ export default function AdminDiagPage() {
     setLoading(true)
     setResult(null)
     try {
-      const res = await fetch("/api/admin/diag", { cache: "no-store" })
+      const res = await fetch("/api/admin/diag", { method: "POST", cache: "no-store" })
       const data = await res.json()
       setResult({ status: res.status, data })
     } catch (e: any) {

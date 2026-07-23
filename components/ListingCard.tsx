@@ -13,7 +13,7 @@ interface ListingCardProps {
     price: number
     condition: string
     description?: string | null
-    photos: string
+    photos: string | string[]
     figure: {
       id: string
       name: string
@@ -35,9 +35,17 @@ export default function ListingCard({ listing, labels, basePath = "/shop", prior
   const alreadyInCartLabel = labels?.alreadyInCart ?? "Already in cart"
   const listingHref = `${basePath}/${listing.id}`
 
+  // `photos` is a jsonb column — Supabase already returns it as a
+  // native array. Only fall back to JSON.parse for the (unlikely)
+  // case it comes back as a string, mirroring app/shop/[id]/page.tsx.
   const photos = (() => {
-    try { return JSON.parse(listing.photos) as string[] }
-    catch { return [] }
+    const raw = listing.photos as unknown
+    if (Array.isArray(raw)) return raw.filter((u): u is string => typeof u === "string")
+    if (typeof raw === "string") {
+      try { const p = JSON.parse(raw); return Array.isArray(p) ? p.filter((u): u is string => typeof u === "string") : [] }
+      catch { return [] }
+    }
+    return []
   })()
 
   const displayImage = photos[0] || listing.figure.imageUrl

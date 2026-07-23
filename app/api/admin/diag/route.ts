@@ -5,7 +5,10 @@ import { supabaseAdmin } from "@/lib/supabase"
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
+// POST (not GET): this handler performs a test INSERT/DELETE, so it must
+// not be triggerable by a cross-site GET (img/link). State-changing →
+// POST only.
+export async function POST() {
   const session = await getServerSession(authOptions)
 
   if (!session?.user?.isAdmin) {

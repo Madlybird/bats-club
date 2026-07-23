@@ -81,6 +81,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     revalidatePath(`/shop/${params.id}`)
     revalidatePath(`/ru/shop/${params.id}`)
     revalidatePath(`/jp/shop/${params.id}`)
+    revalidatePath("/feed.xml")
     if (figureId) {
       revalidatePath("/figures/[slug]", "page")
       revalidatePath("/ru/figures/[slug]", "page")
@@ -117,6 +118,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     revalidatePath("/shop")
     revalidatePath("/ru/shop")
     revalidatePath("/jp/shop")
+    revalidatePath("/feed.xml")
   } catch (e) {
     console.error("revalidatePath error:", e)
   }

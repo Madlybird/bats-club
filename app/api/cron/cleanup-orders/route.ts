@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server"
+import crypto from "crypto"
 import { supabaseAdmin } from "@/lib/supabase"
+
+// Constant-time compare so the secret can't be recovered via timing.
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a)
+  const bb = Buffer.from(b)
+  if (ab.length !== bb.length) return false
+  return crypto.timingSafeEqual(ab, bb)
+}
 
 /**
  * Cron job: cancels PENDING orders older than 30 minutes.
@@ -13,8 +22,9 @@ import { supabaseAdmin } from "@/lib/supabase"
  */
 export async function GET(req: Request) {
   // Verify the request comes from Vercel Cron
-  const authHeader = req.headers.get("authorization")
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const authHeader = req.headers.get("authorization") || ""
+  const expected = `Bearer ${process.env.CRON_SECRET}`
+  if (!process.env.CRON_SECRET || !safeEqual(authHeader, expected)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

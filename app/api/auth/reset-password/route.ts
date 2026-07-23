@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import bcrypt from "bcryptjs"
+import { checkRateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: Request) {
+  // Throttle token guessing: 10 / 10 min per IP.
+  const limited = checkRateLimit(req, "reset-password", 10, 10 * 60 * 1000)
+  if (limited) return limited
+
   try {
     const { token, password } = await req.json()
     if (!token || !password) return NextResponse.json({ error: "Token and password required" }, { status: 400 })
-    if (password.length < 6) return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 })
+    if (password.length < 8) return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 })
 
     const { data: record } = await supabaseAdmin
       .from("password_reset_tokens")
@@ -18,7 +23,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid or expired reset link" }, { status: 400 })
     }
 
-    const hashed = await bcrypt.hash(password, 10)
+    const hashed = await bcrypt.hash(password, 12)
 
     await supabaseAdmin
       .from("users")

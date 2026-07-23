@@ -2,12 +2,17 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
+import { checkRateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  // Curb collection-write spam.
+  const limited = checkRateLimit(req, "user-figures", 120, 60 * 1000, session.user.id)
+  if (limited) return limited
 
   const { figureId, status } = await req.json()
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
+import { checkRateLimit } from "@/lib/rate-limit"
 
 /**
  * POST /api/follow   body: { followingId }   — follow a user
@@ -26,6 +27,10 @@ export async function POST(req: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  // Curb follow-spam.
+  const limited = checkRateLimit(req, "follow", 60, 60 * 1000, session.user.id)
+  if (limited) return limited
 
   const followingId = await parseFollowingId(req)
   if (!followingId) {

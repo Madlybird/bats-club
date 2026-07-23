@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // SSRF hardening: the image optimizer fetches these URLs server-side,
+    // so an open `http://**` pattern lets it be used to probe internal
+    // services and cloud metadata endpoints (e.g. 169.254.169.254, which
+    // is plain http). We drop http entirely and never inline SVG.
+    // NOTE: `https: **` still allows any HTTPS host so admin-entered figure
+    // images keep working. For a full lockdown, replace it with an explicit
+    // host allowlist (supabase + i.postimg.cc are the only ones in use).
     remotePatterns: [
       {
         protocol: "https",
@@ -11,11 +18,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "**",
       },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
     ],
+    dangerouslyAllowSVG: false,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   experimental: {
     serverActions: {

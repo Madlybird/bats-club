@@ -7,6 +7,7 @@ import ScrollReveal from "@/components/ScrollReveal"
 import ShareButtons from "@/components/ShareButtons"
 import PhotoCarousel from "@/components/PhotoCarousel"
 import { en } from "@/lib/dict"
+import { buildListingJsonLd } from "@/lib/listing-jsonld"
 import { Metadata } from "next"
 
 interface Props { params: { id: string } }
@@ -71,8 +72,8 @@ export default async function ListingDetailPage({ params }: Props) {
   const { data: listing } = await supabaseAdmin
     .from("listings")
     .select(`
-      id, price, condition, photos, description, active,
-      figure:figures(id, name, series, character, scale, imageUrl:image_url, images)
+      id, price, condition, stock, photos, description, active,
+      figure:figures(id, name, series, character, scale, manufacturer, imageUrl:image_url, images)
     `)
     .eq("id", params.id)
     .single()
@@ -91,9 +92,14 @@ export default async function ListingDetailPage({ params }: Props) {
     : []
 
   const conditionDisplay = dict[`shop_condition_${listing.condition.toLowerCase().replace(" ", "_")}` as keyof typeof dict] as string || listing.condition
+  const jsonLd = buildListingJsonLd(listing, figure, displayImages, "")
 
   return (
     <div className="relative min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <BatsOverlay />
       <div className="absolute top-1/4 right-1/3 w-[600px] h-[600px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
       <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />

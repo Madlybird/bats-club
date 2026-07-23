@@ -1,6 +1,5 @@
 require("dotenv").config()
 const TelegramBot = require("node-telegram-bot-api")
-const Anthropic = require("@anthropic-ai/sdk")
 const { createClient } = require("@supabase/supabase-js")
 const https = require("https")
 const { Buffer } = require("buffer")
@@ -8,8 +7,6 @@ const { Buffer } = require("buffer")
 // ── Clients ──────────────────────────────────────────────────────────────────
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true })
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -20,14 +17,49 @@ const supabase = createClient(
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const ADMIN_IDS = process.env.ADMIN_TELEGRAM_IDS
-  ? process.env.ADMIN_TELEGRAM_IDS.split(",").map((id) => parseInt(id.trim()))
+  ? process.env.ADMIN_TELEGRAM_IDS.split(",").map((id) => parseInt(id.trim(), 10))
   : []
-
-const CLAUDE_MODEL = "claude-sonnet-4-0"
 
 const CONDITIONS = ["Mint", "Near Mint", "Good", "Fair", "Poor"]
 
+const FIGURE_FIELDS = ["name", "series", "character", "manufacturer", "scale", "year", "material", "description"]
+const REQUIRED_FIGURE_FIELDS = ["name", "series", "character", "manufacturer", "scale"]
+
+const DATA_TEMPLATE =
+  "📝 *Fill in the figure data and send it back in this format* (required: Name, Series, Character, Manufacturer, Scale):\n\n" +
+  "```\n" +
+  "Name: \n" +
+  "Series: \n" +
+  "Character: \n" +
+  "Manufacturer: \n" +
+  "Scale: \n" +
+  "Year: \n" +
+  "Material: \n" +
+  "Description: \n" +
+  "```"
+
 const ADMIN_SELLER_ID = "28cc57d7-86c7-4d63-ac20-e9b1b9718773"
+
+// Steps during which the photo handler should buffer incoming photos
+// (as opposed to rejecting them because another flow is in progress).
+const PHOTO_COLLECT_STEPS = ["collecting_photos", "editing_photos"]
+
+const UUID_RE = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
+
+// Pulls a listing id out of a pasted batsclub.com/shop/<id> link (any
+// locale prefix) or a bare UUID.
+function extractListingId(text) {
+  const match = text.match(UUID_RE)
+  return match ? match[0] : null
+}
+
+// Pulls the slug out of a pasted batsclub.com/figures/<slug> archive link
+// (any locale prefix). Figure detail pages use slugs, not UUIDs, so this is
+// the fallback when extractListingId() finds nothing.
+function extractFigureSlug(text) {
+  const match = text.match(/figures\/([a-z0-9-]+)/i)
+  return match ? match[1] : null
+}
 
 function slugify(input) {
   return String(input)
@@ -57,9 +89,10 @@ async function uniqueSlugForName(name) {
 // Per-user state:
 // {
 //   step: "idle"
-//       | "awaiting_confirmation"   — data extracted, waiting YES/corrections
-//       | "awaiting_more_photos"    — confirmed, collecting extra photos
-//       | "awaiting_shop"           — photos done, asking about listing
+//       | "collecting_photos"       — photo(s) received, collecting up to 10, waiting DONE
+//       | "awaiting_data"           — photos done, waiting for filled-in template
+//       | "awaiting_confirmation"   — data filled in, waiting YES/corrections
+//       | "awaiting_shop"           — data confirmed, asking about listing
 //       | "awaiting_condition",     — price set, asking for condition
 //   figureData: { name, series, character, manufacturer, scale, year, material, description },
 //   photoBuffers: Buffer[],         — all collected photo buffers (index 0 = cover)
@@ -83,6 +116,7 @@ function resetState(userId) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function isAdmin(userId) {
+  console.log("User ID:", userId, "Admin IDs:", ADMIN_IDS)
   return ADMIN_IDS.length > 0 && ADMIN_IDS.includes(userId)
 }
 
@@ -109,34 +143,24 @@ async function downloadFile(fileId) {
   })
 }
 
-async function analyzeWithClaude(imageBuffer) {
-  const base64 = imageBuffer.toString("base64")
+// Parses a "Label: value" per-line template into a figureData object.
+// Unknown labels are ignored; recognized fields overwrite `base` (if given, for corrections).
+function parseFigureTemplate(text, base = {}) {
+  const data = { ...base }
+  const lines = text.split(/\r?\n/)
 
-  const response = await anthropic.messages.create({
-    model: CLAUDE_MODEL,
-    max_tokens: 1024,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: { type: "base64", media_type: "image/jpeg", data: base64 },
-          },
-          {
-            type: "text",
-            text: 'Analyze this anime figure photo. Return JSON only: { "name": "...", "series": "...", "character": "...", "manufacturer": "...", "scale": "...", "year": 2024, "material": "...", "description": "..." }. Be specific and accurate. For year use an integer. For scale use format like "1/7" or "1/8". Return only the JSON object, no markdown.',
-          },
-        ],
-      },
-    ],
-  })
+  for (const line of lines) {
+    const match = line.match(/^\s*([A-Za-z]+)\s*:\s*(.*)$/)
+    if (!match) continue
+    const label = match[1].toLowerCase()
+    const value = match[2].trim()
+    if (!FIGURE_FIELDS.includes(label)) continue
+    if (!value) continue
+    data[label] = label === "year" ? parseYear(value) : value
+  }
 
-  const text = response.content[0].text.trim()
-  const cleaned = text.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim()
-  const parsed = JSON.parse(cleaned)
-  parsed.year = parseYear(parsed.year)
-  return parsed
+  const missing = REQUIRED_FIGURE_FIELDS.filter((f) => !data[f])
+  return { data, missing }
 }
 
 function parseYear(raw) {
@@ -229,6 +253,61 @@ async function createListing(figureId, priceCents, condition) {
   if (error) throw new Error(`Listing insert failed: ${error.message}`)
 }
 
+// Hard-deletes a figure and all of its listings (archive + shop). Refuses if
+// any listing has real orders attached — those are financial/shipping
+// records tied to the live Stripe store and must never be silently dropped.
+async function deleteFigureAndListings(figureId) {
+  const { data: listings, error: listingsErr } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("figure_id", figureId)
+  if (listingsErr) throw new Error(`Lookup failed: ${listingsErr.message}`)
+
+  const listingIds = (listings || []).map((l) => l.id)
+
+  if (listingIds.length > 0) {
+    const { data: orders, error: ordersErr } = await supabase
+      .from("orders")
+      .select("id")
+      .in("listing_id", listingIds)
+    if (ordersErr) throw new Error(`Order lookup failed: ${ordersErr.message}`)
+    if (orders && orders.length > 0) {
+      throw new Error(
+        `Cannot delete — ${orders.length} order(s) exist for this listing. Refusing to delete order history.`
+      )
+    }
+
+    const { error: delListingsErr } = await supabase.from("listings").delete().in("id", listingIds)
+    if (delListingsErr) throw new Error(`Failed to delete listing(s): ${delListingsErr.message}`)
+  }
+
+  const { error: delFigureErr } = await supabase.from("figures").delete().eq("id", figureId)
+  if (delFigureErr) throw new Error(`Failed to delete figure: ${delFigureErr.message}`)
+
+  await revalidateSite({ figureId })
+}
+
+// Bypasses the site's 24h ISR cache on /figures/[slug] (and the archive/shop
+// listing pages) right after a direct-Supabase write, since the bot has no
+// admin session to trigger Next.js's normal revalidatePath() call. Best-effort:
+// logs on failure but never blocks the delete itself, which already succeeded.
+async function revalidateSite(body) {
+  if (!process.env.REVALIDATE_SECRET || !process.env.SITE_URL) return
+  try {
+    const res = await fetch(`${process.env.SITE_URL}/api/admin/revalidate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-revalidate-secret": process.env.REVALIDATE_SECRET,
+      },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) console.error("Revalidate call failed:", res.status, await res.text())
+  } catch (err) {
+    console.error("Revalidate call error:", err)
+  }
+}
+
 function formatFigureData(d) {
   return (
     `📦 *Figure data extracted:*\n\n` +
@@ -240,7 +319,7 @@ function formatFigureData(d) {
     `*Year:* ${d.year ?? "Unknown"}\n` +
     `*Material:* ${d.material || "Unknown"}\n` +
     `*Description:* ${d.description || "—"}\n\n` +
-    `Is this correct? Reply *YES* to confirm or send corrections as text.`
+    `Is this correct? Reply *YES* to confirm, or send corrected lines in \`Label: value\` format (e.g. \`Year: 2019\`).`
   )
 }
 
@@ -264,53 +343,42 @@ bot.on("photo", async (msg) => {
   const state = getState(userId)
   const bestPhoto = msg.photo[msg.photo.length - 1]
 
-  // ── Collect extra photos ───────────────────────────────────────────────────
-  if (state.step === "awaiting_more_photos") {
-    if (state.photoBuffers.length >= 10) {
-      return bot.sendMessage(chatId, "⚠️ Maximum 10 photos reached. Type *DONE* to proceed.", { parse_mode: "Markdown" })
-    }
-
-    try {
-      const buf = await downloadFile(bestPhoto.file_id)
-      // Re-read state AFTER async download to avoid race condition when
-      // multiple photos arrive quickly and interleave at the await point
-      const freshState = getState(userId)
-      if (freshState.step !== "awaiting_more_photos") return
-      const newBuffers = [...freshState.photoBuffers, buf]
-      setState(userId, { ...freshState, photoBuffers: newBuffers })
-      return bot.sendMessage(
-        chatId,
-        `📸 Photo ${newBuffers.length} added. Send more or type *DONE* to finish.`,
-        { parse_mode: "Markdown" }
-      )
-    } catch (err) {
-      console.error("Extra photo download error:", err)
-      return bot.sendMessage(chatId, `❌ Failed to save photo: ${err.message}`)
-    }
-  }
-
-  // ── First photo — start new flow ───────────────────────────────────────────
-  if (state.step !== "idle") {
+  if (state.step !== "idle" && !PHOTO_COLLECT_STEPS.includes(state.step)) {
     return bot.sendMessage(chatId, "⚠️ Please finish the current flow first, or send /cancel to restart.")
   }
 
-  await bot.sendMessage(chatId, "📸 Photo received. Analyzing with Claude...")
+  if (PHOTO_COLLECT_STEPS.includes(state.step) && state.photoBuffers.length >= 10) {
+    return bot.sendMessage(chatId, "⚠️ Maximum 10 photos reached. Type *DONE* to continue.", { parse_mode: "Markdown" })
+  }
+
+  // Claim the "collecting_photos" step synchronously (before the async
+  // download) so photos arriving back-to-back — e.g. sent as an album —
+  // don't race each other into starting separate listings. (Not needed
+  // for "editing_photos" — that step is already claimed by the link
+  // handler before any photo arrives.)
+  if (state.step === "idle") {
+    setState(userId, { step: "collecting_photos", photoBuffers: [] })
+  }
 
   try {
-    const imageBuffer = await downloadFile(bestPhoto.file_id)
-    const figureData = await analyzeWithClaude(imageBuffer)
-
-    setState(userId, {
-      step: "awaiting_confirmation",
-      figureData,
-      photoBuffers: [imageBuffer],
-    })
-
-    await bot.sendMessage(chatId, formatFigureData(figureData), { parse_mode: "Markdown" })
+    const buf = await downloadFile(bestPhoto.file_id)
+    // Re-read state AFTER the async download to avoid a race condition when
+    // multiple photos arrive quickly and interleave at the await point.
+    const freshState = getState(userId)
+    if (!PHOTO_COLLECT_STEPS.includes(freshState.step)) return
+    const newBuffers = [...freshState.photoBuffers, buf]
+    setState(userId, { ...freshState, photoBuffers: newBuffers })
+    const doneHint = freshState.step === "editing_photos"
+      ? "Send more photos, or type *DONE* to save (replaces the listing's current photos)."
+      : "Send more photos of this figure, or type *DONE* when finished."
+    return bot.sendMessage(
+      chatId,
+      `📸 Photo ${newBuffers.length} added *(up to ${10 - newBuffers.length} more)*. ${doneHint}`,
+      { parse_mode: "Markdown" }
+    )
   } catch (err) {
-    console.error("Photo analysis error:", err)
-    resetState(userId)
-    await bot.sendMessage(chatId, `❌ Error analyzing photo: ${err.message}`)
+    console.error("Photo download error:", err)
+    return bot.sendMessage(chatId, `❌ Error saving photo: ${err.message}`)
   }
 })
 
@@ -327,7 +395,12 @@ bot.on("message", async (msg) => {
   if (text === "/start" || text === "/help") {
     return bot.sendMessage(
       chatId,
-      "👋 *Bats Club Figure Bot*\n\nSend a photo of an anime figure to add it to the catalog.\n\n/cancel — cancel current operation",
+      "👋 *Bats Club Figure Bot*\n\nSend up to 10 photos of a figure (type *DONE* when finished), then fill in the data template to add it to the catalog.\n\n" +
+        "✏️ Paste a batsclub.com/shop/... link (or just the listing ID) to manage an existing listing:\n" +
+        "• Send new photos + *DONE* — replace photos\n" +
+        "• `PRICE <amount>` — change price\n" +
+        "• *DELETE* — permanently remove from archive and shop\n\n" +
+        "/cancel — cancel current operation",
       { parse_mode: "Markdown" }
     )
   }
@@ -341,44 +414,224 @@ bot.on("message", async (msg) => {
 
   const state = getState(userId)
 
+  // ── Idle: pasted a shop/archive link or ID → start management flow ───────
+  if (state.step === "idle") {
+    const listingId = extractListingId(text)
+    const figureSlug = extractFigureSlug(text)
+    if (!listingId && !figureSlug) return // not a link/ID at all — ignore
+
+    let listing = null
+    let figureId = null
+    let figureName = null
+
+    if (listingId) {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("id, price, photos, figure_id, figure:figures(name)")
+        .eq("id", listingId)
+        .single()
+      if (!error && data) {
+        listing = data
+        figureId = data.figure_id
+        const figure = Array.isArray(data.figure) ? data.figure[0] : data.figure
+        figureName = figure?.name || "listing"
+      }
+    }
+
+    // Not a listing id (or not found as one) — try it as a figure archive
+    // link/slug instead. Falls back to treating a bare UUID as a figure id
+    // too, since figures and listings share the same id format.
+    if (!listing) {
+      const slugOrId = figureSlug || listingId
+      const { data: figure, error: figErr } = await supabase
+        .from("figures")
+        .select("id, name")
+        .or(`slug.eq.${slugOrId},id.eq.${slugOrId}`)
+        .maybeSingle()
+
+      if (!figErr && figure) {
+        figureId = figure.id
+        figureName = figure.name
+        const { data: listings } = await supabase
+          .from("listings")
+          .select("id, price, photos")
+          .eq("figure_id", figureId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+        listing = (listings && listings[0]) || null
+      }
+    }
+
+    if (!figureId) {
+      return bot.sendMessage(chatId, "❌ Not found. Check the link/ID and try again.")
+    }
+
+    setState(userId, {
+      step: "editing_photos",
+      listingId: listing ? listing.id : null,
+      figureId,
+      figureName,
+      photoBuffers: [],
+    })
+
+    if (listing) {
+      const currentCount = Array.isArray(listing.photos) ? listing.photos.length : 0
+      const priceDisplay = `$${(listing.price / 100).toFixed(2)}`
+      return bot.sendMessage(
+        chatId,
+        `✏️ *Managing listing for ${figureName}*\n\n` +
+          `Current: ${currentCount} photo${currentCount === 1 ? "" : "s"} · ${priceDisplay}\n\n` +
+          `• Send new photos (up to 10), then *DONE* — replace photos\n` +
+          `• \`PRICE <amount>\` (e.g. \`PRICE 150\`) — change price\n` +
+          `• *DELETE* — permanently remove from archive and shop\n\n` +
+          `Or /cancel.`,
+        { parse_mode: "Markdown" }
+      )
+    }
+
+    return bot.sendMessage(
+      chatId,
+      `✏️ *Managing ${figureName}* (not currently listed in the shop)\n\n` +
+        `• *DELETE* — permanently remove from the archive\n\n` +
+        `Or /cancel.`,
+      { parse_mode: "Markdown" }
+    )
+  }
+
+  // ── Step: editing_photos ──────────────────────────────────────────────────
+  if (state.step === "editing_photos") {
+    const upper = text.toUpperCase()
+
+    // PRICE/DELETE only apply before any photos have been sent in this flow —
+    // once photos start arriving we're committed to the photo-replace path.
+    if (state.photoBuffers.length === 0 && upper === "DELETE") {
+      setState(userId, { step: "confirming_delete", listingId: state.listingId, figureId: state.figureId, figureName: state.figureName })
+      return bot.sendMessage(
+        chatId,
+        `⚠️ This will *permanently delete* "${state.figureName}" from both the archive and the shop. This cannot be undone.\n\n` +
+          `Reply *DELETE CONFIRM* to proceed, or /cancel.`,
+        { parse_mode: "Markdown" }
+      )
+    }
+
+    if (state.photoBuffers.length === 0 && upper.startsWith("PRICE")) {
+      if (!state.listingId) {
+        return bot.sendMessage(chatId, "⚠️ This figure has no shop listing — nothing to price. List it for sale first, or /cancel.")
+      }
+      const parts = text.split(/\s+/)
+      const price = parseFloat(parts[1])
+
+      if (!parts[1] || isNaN(price) || price <= 0) {
+        return bot.sendMessage(chatId, "⚠️ Please include a valid price. Example: `PRICE 150`", { parse_mode: "Markdown" })
+      }
+
+      try {
+        const { error } = await supabase
+          .from("listings")
+          .update({ price: Math.round(price * 100) })
+          .eq("id", state.listingId)
+        if (error) throw new Error(`DB update failed: ${error.message}`)
+
+        resetState(userId)
+        return bot.sendMessage(
+          chatId,
+          `✅ *Price updated!*\n\n🏷️ ${state.figureName}\n💰 $${price.toFixed(2)}\n\n` +
+            `📎 batsclub.com/shop/${state.listingId}\n\n_(may take a few minutes to show on the site)_`,
+          { parse_mode: "Markdown" }
+        )
+      } catch (err) {
+        console.error("Price update error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ Failed to update price: ${err.message}`)
+      }
+    }
+
+    if (text.toUpperCase() === "DONE") {
+      if (state.photoBuffers.length === 0) {
+        return bot.sendMessage(chatId, "📸 Send at least one photo first, or /cancel.")
+      }
+      if (!state.listingId) {
+        return bot.sendMessage(chatId, "⚠️ This figure has no shop listing to attach photos to. /cancel and list it for sale first.")
+      }
+      try {
+        await bot.sendMessage(chatId, "⏳ Uploading photos...")
+        const imageUrls = await uploadAllPhotos(state.photoBuffers, state.figureName)
+        const { error } = await supabase
+          .from("listings")
+          .update({ photos: imageUrls })
+          .eq("id", state.listingId)
+        if (error) throw new Error(`DB update failed: ${error.message}`)
+
+        resetState(userId)
+        return bot.sendMessage(
+          chatId,
+          `✅ *Photos updated!*\n\n🏷️ ${state.figureName}\n📸 ${imageUrls.length} photo${imageUrls.length === 1 ? "" : "s"}\n\n` +
+            `📎 batsclub.com/shop/${state.listingId}\n\n_(may take a few minutes to show on the site)_`,
+          { parse_mode: "Markdown" }
+        )
+      } catch (err) {
+        console.error("Photo update error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ Failed to update photos: ${err.message}`)
+      }
+    }
+    return bot.sendMessage(
+      chatId,
+      "📸 Send more photos or type *DONE* to save. Or `PRICE <amount>` / *DELETE* (only before sending photos).",
+      { parse_mode: "Markdown" }
+    )
+  }
+
+  // ── Step: confirming_delete ────────────────────────────────────────────────
+  if (state.step === "confirming_delete") {
+    if (text.toUpperCase() === "DELETE CONFIRM") {
+      try {
+        await deleteFigureAndListings(state.figureId)
+        resetState(userId)
+        return bot.sendMessage(
+          chatId,
+          `🗑️ *Deleted!*\n\n"${state.figureName}" has been permanently removed from the archive and shop.`,
+          { parse_mode: "Markdown" }
+        )
+      } catch (err) {
+        console.error("Delete error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ ${err.message}`)
+      }
+    }
+    return bot.sendMessage(chatId, "⚠️ Reply *DELETE CONFIRM* to permanently delete, or /cancel.", { parse_mode: "Markdown" })
+  }
+
+  // ── Step: collecting_photos ───────────────────────────────────────────────
+  if (state.step === "collecting_photos") {
+    if (text.toUpperCase() === "DONE") {
+      if (state.photoBuffers.length === 0) {
+        return bot.sendMessage(chatId, "📸 Send at least one photo first.")
+      }
+      setState(userId, { ...state, step: "awaiting_data" })
+      return bot.sendMessage(chatId, DATA_TEMPLATE, { parse_mode: "Markdown" })
+    }
+    return bot.sendMessage(chatId, "📸 Send more photos or type *DONE* when finished.", { parse_mode: "Markdown" })
+  }
+
+  // ── Step: awaiting_data ────────────────────────────────────────────────────
+  if (state.step === "awaiting_data") {
+    const { data, missing } = parseFigureTemplate(text)
+
+    if (missing.length > 0) {
+      return bot.sendMessage(
+        chatId,
+        `⚠️ Missing required field(s): ${missing.join(", ")}. Send the template again with all required fields filled in.`
+      )
+    }
+
+    setState(userId, { ...state, step: "awaiting_confirmation", figureData: data })
+    return bot.sendMessage(chatId, formatFigureData(data), { parse_mode: "Markdown" })
+  }
+
   // ── Step: awaiting_confirmation ───────────────────────────────────────────
   if (state.step === "awaiting_confirmation") {
     if (text.toUpperCase() === "YES") {
-      setState(userId, { ...state, step: "awaiting_more_photos" })
-      return bot.sendMessage(
-        chatId,
-        `📷 Send more photos of this figure *(up to ${10 - state.photoBuffers.length} more)*, or type *DONE* to finish.`,
-        { parse_mode: "Markdown" }
-      )
-    } else {
-      // Treat message as corrections
-      await bot.sendMessage(chatId, "✏️ Got it. Applying corrections...")
-
-      try {
-        const correctionPrompt = `The figure data was previously extracted as:\n${JSON.stringify(state.figureData, null, 2)}\n\nThe admin provided these corrections: "${text}"\n\nReturn the corrected JSON only: { "name": "...", "series": "...", "character": "...", "manufacturer": "...", "scale": "...", "year": 2024, "material": "...", "description": "..." }. Return only the JSON object, no markdown.`
-
-        const response = await anthropic.messages.create({
-          model: CLAUDE_MODEL,
-          max_tokens: 512,
-          messages: [{ role: "user", content: correctionPrompt }],
-        })
-
-        const raw = response.content[0].text.trim().replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim()
-        const correctedData = JSON.parse(raw)
-        correctedData.year = parseYear(correctedData.year)
-
-        setState(userId, { ...state, figureData: correctedData })
-        return bot.sendMessage(chatId, formatFigureData(correctedData), { parse_mode: "Markdown" })
-      } catch (err) {
-        console.error("Correction error:", err)
-        return bot.sendMessage(chatId, `❌ Failed to apply corrections: ${err.message}\n\nTry again or send /cancel.`)
-      }
-    }
-  }
-
-  // ── Step: awaiting_more_photos ────────────────────────────────────────────
-  if (state.step === "awaiting_more_photos") {
-    if (text.toUpperCase() === "DONE") {
       setState(userId, { ...state, step: "awaiting_shop" })
       const count = state.photoBuffers.length
       return bot.sendMessage(
@@ -386,8 +639,13 @@ bot.on("message", async (msg) => {
         `✅ ${count} photo${count > 1 ? "s" : ""} collected.\n\n🛍️ Add to shop for sale?\n\nReply *YES [price in USD]* (e.g. \`YES 150\`) or *NO*.`,
         { parse_mode: "Markdown" }
       )
+    } else {
+      // Treat message as corrections — same "Label: value" template, only
+      // recognized lines are applied, everything else is left as-is.
+      const { data } = parseFigureTemplate(text, state.figureData)
+      setState(userId, { ...state, figureData: data })
+      return bot.sendMessage(chatId, formatFigureData(data), { parse_mode: "Markdown" })
     }
-    return bot.sendMessage(chatId, "📸 Send more photos or type *DONE* to finish.", { parse_mode: "Markdown" })
   }
 
   // ── Step: awaiting_shop ───────────────────────────────────────────────────

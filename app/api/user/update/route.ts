@@ -9,9 +9,33 @@ export async function POST(req: Request) {
 
   try {
     const { avatar, bio } = await req.json()
-    const data: { avatar?: string; bio?: string } = {}
-    if (typeof avatar !== "undefined") data.avatar = avatar
-    if (typeof bio !== "undefined") data.bio = bio.slice(0, 120)
+    const data: { avatar?: string | null; bio?: string } = {}
+
+    if (typeof avatar !== "undefined") {
+      // Avatars are rendered through next/image (server-side fetch), so an
+      // arbitrary URL here is an SSRF vector. The UI only ever sets the
+      // avatar to one of the user's figure image URLs — enforce that
+      // server-side: allow null (clear), or a string that matches an
+      // existing figure's image_url. Anything else is rejected.
+      if (avatar === null || avatar === "") {
+        data.avatar = null
+      } else if (typeof avatar === "string") {
+        const { data: match } = await supabaseAdmin
+          .from("figures")
+          .select("id")
+          .eq("image_url", avatar)
+          .limit(1)
+          .maybeSingle()
+        if (!match) {
+          return NextResponse.json({ error: "Invalid avatar" }, { status: 400 })
+        }
+        data.avatar = avatar
+      } else {
+        return NextResponse.json({ error: "Invalid avatar" }, { status: 400 })
+      }
+    }
+
+    if (typeof bio !== "undefined") data.bio = String(bio ?? "").slice(0, 120)
 
     const { data: user, error } = await supabaseAdmin
       .from("users")

@@ -249,15 +249,20 @@ export async function POST(req: Request) {
     console.error("[checkout] FAILED", JSON.stringify(payload, null, 2))
     if (error?.stack) console.error(error.stack)
 
+    // Only forward genuinely user-facing card errors (e.g. "Your card
+    // was declined"). Everything else — DB errors, config issues, raw
+    // exception messages — is logged above and returns a generic error
+    // so we don't leak internals to the browser.
+    const isCardError = error instanceof Stripe.errors.StripeError && error.type === "StripeCardError"
+
     return NextResponse.json(
       {
         error: "Failed to create checkout session",
         stage,
-        // Forwarded to the cart UI so the user/devtools see what
-        // Stripe actually said. Safe to expose: this is the same
-        // user-facing message Stripe returns from its dashboard.
-        message: payload.message,
-        ...(isStripeError && { stripe: payload.stripe }),
+        ...(isCardError && {
+          message: error.message,
+          stripe: { code: (error as any).code, decline_code: (error as any).decline_code },
+        }),
       },
       { status: 500 }
     )
