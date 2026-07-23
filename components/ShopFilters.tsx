@@ -4,22 +4,23 @@ import { useRouter, usePathname } from "next/navigation"
 import type { Dict } from "@/lib/dict"
 
 interface ShopFiltersProps {
-  currentCondition?: string
+  currentPriceRange?: string
   currentSort?: string
   currentSeries?: string
   dict: Dict
 }
 
-export default function ShopFilters({ currentCondition, currentSort, currentSeries, dict }: ShopFiltersProps) {
+export default function ShopFilters({ currentPriceRange, currentSort, currentSeries, dict }: ShopFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
 
-  const CONDITIONS = [
-    { value: "Mint",      label: dict.shop_condition_mint },
-    { value: "Near Mint", label: dict.shop_condition_near_mint },
-    { value: "Good",      label: dict.shop_condition_good },
-    { value: "Fair",      label: dict.shop_condition_fair },
-    { value: "Poor",      label: dict.shop_condition_poor },
+  // Value encodes [min, max) in cents; empty max = no upper bound.
+  // Boundaries picked from the actual price distribution of the catalog.
+  const PRICE_RANGES = [
+    { value: "0-2500",     label: dict.shop_price_range_under_25 },
+    { value: "2500-5500",  label: dict.shop_price_range_25_55 },
+    { value: "5500-10000", label: dict.shop_price_range_55_100 },
+    { value: "10000-",     label: dict.shop_price_range_100_plus },
   ]
 
   const SORT_OPTIONS = [
@@ -30,7 +31,7 @@ export default function ShopFilters({ currentCondition, currentSort, currentSeri
 
   const updateFilter = (key: string, value: string | null) => {
     const params = new URLSearchParams()
-    if (key !== "condition" && currentCondition) params.set("condition", currentCondition)
+    if (key !== "price" && currentPriceRange) params.set("price", currentPriceRange)
     if (key !== "sort" && currentSort) params.set("sort", currentSort)
     if (key !== "series" && currentSeries) params.set("series", currentSeries)
     if (value) params.set(key, value)
@@ -40,24 +41,24 @@ export default function ShopFilters({ currentCondition, currentSort, currentSeri
 
   return (
     <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 md:gap-4">
-      {/* Condition */}
+      {/* Price range */}
       <div className="flex items-center gap-2 min-w-0">
-        <span className="flex-shrink-0 text-xs text-slate-500 font-medium uppercase tracking-wider">{dict.shop_condition_label}:</span>
+        <span className="flex-shrink-0 text-xs text-slate-500 font-medium uppercase tracking-wider">{dict.shop_price_range_label}:</span>
         <div
           className="flex gap-1.5 md:flex-wrap overflow-x-auto md:overflow-visible scrollbar-none pb-1 md:pb-0"
           style={{ scrollbarWidth: "none" }}
         >
-          {CONDITIONS.map((c) => (
+          {PRICE_RANGES.map((r) => (
             <button
-              key={c.value}
-              onClick={() => updateFilter("condition", currentCondition === c.value ? null : c.value)}
+              key={r.value}
+              onClick={() => updateFilter("price", currentPriceRange === r.value ? null : r.value)}
               className={`flex-shrink-0 text-xs px-2.5 py-1.5 rounded-lg border transition-all font-medium ${
-                currentCondition === c.value
+                currentPriceRange === r.value
                   ? "bg-violet-700 border-violet-600 text-white"
                   : "bg-[#0a0a12] border-[#1a1a3a] text-slate-400 hover:border-violet-700/50 hover:text-slate-200"
               }`}
             >
-              {c.label}
+              {r.label}
             </button>
           ))}
         </div>

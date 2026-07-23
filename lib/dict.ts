@@ -66,7 +66,11 @@ export interface Dict {
   shop_empty_title: string
   shop_empty_sub: string
   shop_popular_series: string
-  shop_condition_label: string
+  shop_price_range_label: string
+  shop_price_range_under_25: string
+  shop_price_range_25_55: string
+  shop_price_range_55_100: string
+  shop_price_range_100_plus: string
   shop_sort_newest: string
   shop_sort_price_asc: string
   shop_sort_price_desc: string
@@ -337,7 +341,11 @@ export const en: Dict = {
   shop_empty_title: "No listings found",
   shop_empty_sub: "Try changing your filters",
   shop_popular_series: "Popular series",
-  shop_condition_label: "Condition",
+  shop_price_range_label: "Price",
+  shop_price_range_under_25: "Under $25",
+  shop_price_range_25_55: "$25–55",
+  shop_price_range_55_100: "$55–100",
+  shop_price_range_100_plus: "$100+",
   shop_sort_newest: "Newest First",
   shop_sort_price_asc: "Price: Low to High",
   shop_sort_price_desc: "Price: High to Low",
@@ -599,7 +607,11 @@ export const ru: Dict = {
   shop_empty_title: "Объявления не найдены",
   shop_empty_sub: "Попробуйте изменить фильтры",
   shop_popular_series: "Популярные серии",
-  shop_condition_label: "Состояние",
+  shop_price_range_label: "Цена",
+  shop_price_range_under_25: "До $25",
+  shop_price_range_25_55: "$25–55",
+  shop_price_range_55_100: "$55–100",
+  shop_price_range_100_plus: "От $100",
   shop_sort_newest: "Сначала новые",
   shop_sort_price_asc: "Цена: по возрастанию",
   shop_sort_price_desc: "Цена: по убыванию",
@@ -861,7 +873,11 @@ export const jp: Dict = {
   shop_empty_title: "出品が見つかりません",
   shop_empty_sub: "フィルターを変えてみてください",
   shop_popular_series: "人気シリーズ",
-  shop_condition_label: "状態",
+  shop_price_range_label: "価格",
+  shop_price_range_under_25: "$25以下",
+  shop_price_range_25_55: "$25〜55",
+  shop_price_range_55_100: "$55〜100",
+  shop_price_range_100_plus: "$100以上",
   shop_sort_newest: "新着順",
   shop_sort_price_asc: "価格：安い順",
   shop_sort_price_desc: "価格：高い順",

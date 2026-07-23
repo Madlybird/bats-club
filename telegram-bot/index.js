@@ -492,6 +492,7 @@ bot.on("message", async (msg) => {
     return bot.sendMessage(
       chatId,
       `✏️ *Managing ${figureName}* (not currently listed in the shop)\n\n` +
+        `• \`PRICE <amount>\` (e.g. \`PRICE 150\`) — list it for sale\n` +
         `• *DELETE* — permanently remove from the archive\n\n` +
         `Or /cancel.`,
       { parse_mode: "Markdown" }
@@ -515,14 +516,26 @@ bot.on("message", async (msg) => {
     }
 
     if (state.photoBuffers.length === 0 && upper.startsWith("PRICE")) {
-      if (!state.listingId) {
-        return bot.sendMessage(chatId, "⚠️ This figure has no shop listing — nothing to price. List it for sale first, or /cancel.")
-      }
       const parts = text.split(/\s+/)
       const price = parseFloat(parts[1])
 
       if (!parts[1] || isNaN(price) || price <= 0) {
         return bot.sendMessage(chatId, "⚠️ Please include a valid price. Example: `PRICE 150`", { parse_mode: "Markdown" })
+      }
+
+      // Archive-only figure (no listing yet) — PRICE starts the
+      // move-to-shop flow: price now, condition next, then create.
+      if (!state.listingId) {
+        setState(userId, {
+          step: "awaiting_condition_new_listing",
+          figureId: state.figureId,
+          figureName: state.figureName,
+          price: Math.round(price * 100),
+        })
+        return bot.sendMessage(
+          chatId,
+          `💬 Condition? Reply with one of:\n\n• Mint\n• Near Mint\n• Good\n• Fair\n• Poor`
+        )
       }
 
       try {
@@ -531,12 +544,13 @@ bot.on("message", async (msg) => {
           .update({ price: Math.round(price * 100) })
           .eq("id", state.listingId)
         if (error) throw new Error(`DB update failed: ${error.message}`)
+        await revalidateSite({ listingId: state.listingId, figureId: state.figureId })
 
         resetState(userId)
         return bot.sendMessage(
           chatId,
           `✅ *Price updated!*\n\n🏷️ ${state.figureName}\n💰 $${price.toFixed(2)}\n\n` +
-            `📎 batsclub.com/shop/${state.listingId}\n\n_(may take a few minutes to show on the site)_`,
+            `📎 batsclub.com/shop/${state.listingId}`,
           { parse_mode: "Markdown" }
         )
       } catch (err) {
@@ -561,12 +575,13 @@ bot.on("message", async (msg) => {
           .update({ photos: imageUrls })
           .eq("id", state.listingId)
         if (error) throw new Error(`DB update failed: ${error.message}`)
+        await revalidateSite({ listingId: state.listingId, figureId: state.figureId })
 
         resetState(userId)
         return bot.sendMessage(
           chatId,
           `✅ *Photos updated!*\n\n🏷️ ${state.figureName}\n📸 ${imageUrls.length} photo${imageUrls.length === 1 ? "" : "s"}\n\n` +
-            `📎 batsclub.com/shop/${state.listingId}\n\n_(may take a few minutes to show on the site)_`,
+            `📎 batsclub.com/shop/${state.listingId}`,
           { parse_mode: "Markdown" }
         )
       } catch (err) {
@@ -600,6 +615,32 @@ bot.on("message", async (msg) => {
       }
     }
     return bot.sendMessage(chatId, "⚠️ Reply *DELETE CONFIRM* to permanently delete, or /cancel.", { parse_mode: "Markdown" })
+  }
+
+  // ── Step: awaiting_condition_new_listing (archive figure → shop) ─────────
+  if (state.step === "awaiting_condition_new_listing") {
+    const condition = CONDITIONS.find((c) => c.toLowerCase() === text.toLowerCase())
+
+    if (!condition) {
+      return bot.sendMessage(chatId, `⚠️ Invalid condition. Choose: ${CONDITIONS.join(", ")}`)
+    }
+
+    try {
+      await createListing(state.figureId, state.price, condition)
+      await revalidateSite({ figureId: state.figureId })
+      resetState(userId)
+
+      const priceDisplay = `$${(state.price / 100).toFixed(2)}`
+      return bot.sendMessage(
+        chatId,
+        `✅ *Listed for sale!*\n\n🏷️ ${state.figureName}\n💰 ${priceDisplay} · ${condition}`,
+        { parse_mode: "Markdown" }
+      )
+    } catch (err) {
+      console.error("Create listing error:", err)
+      resetState(userId)
+      return bot.sendMessage(chatId, `❌ Failed to list: ${err.message}`)
+    }
   }
 
   // ── Step: collecting_photos ───────────────────────────────────────────────

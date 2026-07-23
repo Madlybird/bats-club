@@ -30,7 +30,7 @@ interface TopSeries {
 
 interface Props {
   listings: Listing[]
-  condition?: string
+  priceRange?: string
   sort?: string
   series?: string
   topSeries: TopSeries[]
@@ -80,7 +80,7 @@ function SeriesBar({ topSeries, currentSeries, dict }: { topSeries: TopSeries[];
   )
 }
 
-export default function ShopPageContent({ listings, condition, sort, series, topSeries, dict, shopBasePath = "/shop" }: Props) {
+export default function ShopPageContent({ listings, priceRange, sort, series, topSeries, dict, shopBasePath = "/shop" }: Props) {
   const listingLabels = {
     addToCart: dict.shop_add_to_cart,
     alreadyInCart: dict.shop_already_in_cart,
@@ -121,7 +121,7 @@ export default function ShopPageContent({ listings, condition, sort, series, top
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <ScrollReveal>
             <SeriesBar topSeries={topSeries} currentSeries={series} dict={dict} />
-            <ShopFilters currentCondition={condition} currentSort={sort} currentSeries={series} dict={dict} />
+            <ShopFilters currentPriceRange={priceRange} currentSort={sort} currentSeries={series} dict={dict} />
           </ScrollReveal>
 
           {listings.length > 0 ? (

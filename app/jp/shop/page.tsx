@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { supabaseAdmin } from "@/lib/supabase"
 import ShopPageContent from "@/components/ShopPageContent"
 import { jp } from "@/lib/dict"
+import { parsePriceRange } from "@/lib/price-range"
 
 export const metadata: Metadata = {
   title: "レアアニメフィギュア購入 | Bats Club",
@@ -30,7 +31,7 @@ function ShopSkeleton() {
   )
 }
 
-interface Props { searchParams: { condition?: string; sort?: string; series?: string } }
+interface Props { searchParams: { price?: string; sort?: string; series?: string } }
 
 async function getTopSeries() {
   const { data } = await supabaseAdmin
@@ -57,7 +58,7 @@ async function getTopSeries() {
 }
 
 export default async function ShopPageJp({ searchParams }: Props) {
-  const { condition, sort, series } = searchParams
+  const { price, sort, series } = searchParams
 
   const figureEmbed = series
     ? "figure:figures!inner(id, name, series, character, scale, imageUrl:image_url)"
@@ -73,7 +74,11 @@ export default async function ShopPageJp({ searchParams }: Props) {
     `)
     .eq("active", true)
 
-  if (condition) query = query.eq("condition", condition)
+  const priceRange = parsePriceRange(price)
+  if (priceRange) {
+    query = query.gte("price", priceRange.min)
+    if (priceRange.max !== undefined) query = query.lt("price", priceRange.max)
+  }
   if (series) query = query.eq("figures.series", series)
   if (sort === "price_asc") query = query.order("price", { ascending: true })
   else if (sort === "price_desc") query = query.order("price", { ascending: false })
@@ -87,7 +92,7 @@ export default async function ShopPageJp({ searchParams }: Props) {
     <Suspense fallback={<ShopSkeleton />}>
       <ShopPageContent
         listings={filtered as any}
-        condition={condition}
+        priceRange={price}
         sort={sort}
         series={series}
         topSeries={topSeries}
