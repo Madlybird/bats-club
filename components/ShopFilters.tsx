@@ -43,13 +43,12 @@ export default function ShopFilters({ currentPriceRange, currentSort, currentSer
 
   return (
     <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 md:gap-4">
-      {/* Price range */}
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="flex-shrink-0 text-xs text-slate-500 font-medium uppercase tracking-wider">{dict.shop_price_range_label}:</span>
-        <div
-          className="flex gap-1.5 md:flex-wrap overflow-x-auto md:overflow-visible scrollbar-none pb-1 md:pb-0"
-          style={{ scrollbarWidth: "none" }}
-        >
+      {/* Price range — wraps instead of scrolling so buttons never get
+          clipped at the viewport edge on narrow phones (4 buttons is
+          tight for a single row under ~375px wide). */}
+      <div className="flex items-start gap-2 min-w-0">
+        <span className="flex-shrink-0 text-xs text-slate-500 font-medium uppercase tracking-wider mt-1.5">{dict.shop_price_range_label}:</span>
+        <div className="flex flex-wrap gap-1.5">
           {PRICE_RANGES.map((r) => (
             <button
               key={r.value}

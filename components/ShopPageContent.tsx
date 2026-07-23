@@ -103,15 +103,15 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
       <div className="relative">
         <ScrollReveal>
           <div className="border-b border-white/[0.05]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-              <span className="inline-block w-8 h-px bg-[#ff2d78] mb-6" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+              <span className="inline-block w-8 h-px bg-[#ff2d78] mb-4" />
               <h1
                 className="font-black lowercase leading-tight tracking-tighter text-white"
-                style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
+                style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)" }}
               >
                 {dict.shop_heading}
               </h1>
-              <p className="text-white/35 mt-3 text-base font-medium">
+              <p className="text-white/35 mt-2 text-sm font-medium">
                 {listings.length} {dict.shop_listings_suffix}
               </p>
             </div>
