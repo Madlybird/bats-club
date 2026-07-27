@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
 import { getShippingInfo, MAX_ORDER_QUANTITY } from "@/lib/shipping"
+import { trackProceedToCheckout, trackBeginCheckout } from "@/lib/analytics"
 import BatsOverlay from "@/components/BatsOverlay"
 import type { Dict } from "@/lib/dict"
 
@@ -148,6 +149,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     }
     setLoading(true)
     setError("")
+    trackBeginCheckout(totalCents, effectiveQty)
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -486,7 +488,10 @@ export default function CartPageContent({ dict, shopHref }: Props) {
 
                 {!showAddress && (
                   <button
-                    onClick={() => setShowAddress(true)}
+                    onClick={() => {
+                      trackProceedToCheckout(totalCents, effectiveQty)
+                      setShowAddress(true)
+                    }}
                     disabled={!countryCode || shipping.blocked || !selectionValid}
                     className="w-full py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed mt-1"
                     style={{ backgroundColor: "#ff2d78" }}

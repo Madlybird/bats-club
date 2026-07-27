@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useCart, CartItem } from "@/lib/cart-context"
+import { trackAddToCart } from "@/lib/analytics"
 
 interface AddToCartButtonProps {
   item: Omit<CartItem, "quantity">
@@ -33,6 +34,7 @@ export default function AddToCartButton({
       showToast(toastAlreadyInCart)
       return
     }
+    trackAddToCart(item)
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
   }
