@@ -211,12 +211,6 @@ export interface Dict {
   cart_total: string
   cart_proceed: string
   cart_address_heading: string
-  cart_field_fullname: string
-  cart_field_addr1: string
-  cart_field_addr2: string
-  cart_field_city: string
-  cart_field_state: string
-  cart_field_zip: string
   cart_field_phone: string
   cart_pay: string
   cart_paying: string
@@ -477,17 +471,11 @@ export const en: Dict = {
   cart_shipping_select: "Select country",
   cart_total: "Total",
   cart_proceed: "Proceed to Checkout",
-  cart_address_heading: "Shipping Address",
-  cart_field_fullname: "Full Name *",
-  cart_field_addr1: "Address Line 1 *",
-  cart_field_addr2: "Address Line 2 (optional)",
-  cart_field_city: "City *",
-  cart_field_state: "State / Province *",
-  cart_field_zip: "ZIP / Postal Code *",
+  cart_address_heading: "Contact Info",
   cart_field_phone: "Phone Number *",
   cart_pay: "Pay with Stripe",
   cart_paying: "Redirecting to Stripe...",
-  cart_stripe_note: "Secure payment powered by Stripe",
+  cart_stripe_note: "Your shipping address is collected securely on the next step (Stripe)",
   cart_empty_heading: "Your cart is empty",
   cart_empty_sub: "Browse the shop to find rare figures.",
   cart_go_shop: "Go to Shop",
@@ -743,17 +731,11 @@ export const ru: Dict = {
   cart_shipping_select: "Выберите страну",
   cart_total: "Итого",
   cart_proceed: "Перейти к оплате",
-  cart_address_heading: "Адрес доставки",
-  cart_field_fullname: "ФИО *",
-  cart_field_addr1: "Адрес, строка 1 *",
-  cart_field_addr2: "Адрес, строка 2 (необязательно)",
-  cart_field_city: "Город *",
-  cart_field_state: "Регион / Область *",
-  cart_field_zip: "Почтовый индекс *",
+  cart_address_heading: "Контактные данные",
   cart_field_phone: "Номер телефона *",
   cart_pay: "Оплатить через Stripe",
   cart_paying: "Переход к Stripe...",
-  cart_stripe_note: "Безопасная оплата через Stripe",
+  cart_stripe_note: "Адрес доставки собирается безопасно на следующем шаге (Stripe)",
   cart_empty_heading: "Корзина пуста",
   cart_empty_sub: "Загляните в магазин за редкими фигурками.",
   cart_go_shop: "В магазин",
@@ -1009,17 +991,11 @@ export const jp: Dict = {
   cart_shipping_select: "国を選択",
   cart_total: "合計",
   cart_proceed: "チェックアウトへ",
-  cart_address_heading: "配送先住所",
-  cart_field_fullname: "お名前 *",
-  cart_field_addr1: "住所1 *",
-  cart_field_addr2: "住所2（任意）",
-  cart_field_city: "市区町村 *",
-  cart_field_state: "都道府県 *",
-  cart_field_zip: "郵便番号 *",
+  cart_address_heading: "連絡先情報",
   cart_field_phone: "電話番号 *",
   cart_pay: "Stripeで支払う",
   cart_paying: "Stripeへ移動中...",
-  cart_stripe_note: "Stripeによる安全な決済",
+  cart_stripe_note: "配送先住所は次のステップ（Stripe）で安全に収集されます",
   cart_empty_heading: "カートは空です",
   cart_empty_sub: "ショップでレアフィギュアを探してみましょう。",
   cart_go_shop: "ショップへ",

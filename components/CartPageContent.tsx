@@ -27,17 +27,11 @@ const COUNTRIES = [
 ]
 
 interface AddressForm {
-  fullName: string
-  addressLine1: string
-  addressLine2: string
-  city: string
-  state: string
-  zip: string
   phone: string
 }
 
 const emptyAddress: AddressForm = {
-  fullName: "", addressLine1: "", addressLine2: "", city: "", state: "", zip: "", phone: "",
+  phone: "",
 }
 
 interface Props {
@@ -144,7 +138,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     : items.length >= 1 && items.length <= MAX_ORDER_QUANTITY
 
   const handlePay = async () => {
-    if (!address.fullName || !address.addressLine1 || !address.city || !address.state || !address.zip || !address.phone) {
+    if (!address.phone) {
       setError("Please fill in all required fields")
       return
     }
@@ -215,12 +209,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   }
 
   const addressFields = [
-    { key: "fullName", label: dict.cart_field_fullname, placeholder: "Jane Smith", type: "text" },
-    { key: "addressLine1", label: dict.cart_field_addr1, placeholder: "123 Main St", type: "text" },
-    { key: "addressLine2", label: dict.cart_field_addr2, placeholder: "Apt 4B", type: "text" },
-    { key: "city", label: dict.cart_field_city, placeholder: "New York", type: "text" },
-    { key: "state", label: dict.cart_field_state, placeholder: "NY", type: "text" },
-    { key: "zip", label: dict.cart_field_zip, placeholder: "10001", type: "text" },
     { key: "phone", label: dict.cart_field_phone, placeholder: "+1 555 000 0000", type: "tel" },
   ] as const
 

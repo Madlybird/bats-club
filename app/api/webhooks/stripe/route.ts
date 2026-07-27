@@ -4,6 +4,8 @@ import { stripe } from "@/lib/stripe"
 import { supabaseAdmin } from "@/lib/supabase"
 import { sendOrderConfirmationEmail } from "@/lib/email"
 import Stripe from "stripe"
+import bcrypt from "bcryptjs"
+import crypto from "crypto"
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -58,7 +60,10 @@ export async function POST(req: Request) {
         hasShippingFromStripe: !!shippingFromStripe,
       })
 
-      if (!buyerId || listingIds.length === 0) {
+      // A missing buyerId is now normal — guest checkouts never had a
+      // site session. Only the legacy pre-metadata fallback path needs
+      // listingIds; buyerId (if absent) gets resolved/created below.
+      if (listingIds.length === 0) {
         // Legacy fallback: try existing orders by session id or metadata.orderId
         let orders: Array<{ id: string; listing_id: string; quantity: number; buyer_id: string; status: string }> = []
 
@@ -129,6 +134,25 @@ export async function POST(req: Request) {
           return NextResponse.json({ received: true, duplicate: true })
         }
 
+        // Guest checkout: no site session, so no buyer_id came through
+        // metadata. Resolve (or create) a user row from the email
+        // Stripe itself collected — orders.buyer_id is NOT NULL, and
+        // this also gives the guest a normal account they can later
+        // claim via "forgot password" if they want to track orders.
+        let resolvedBuyerId: string | null = buyerId
+        if (!resolvedBuyerId) {
+          const guestEmail = session.customer_email || session.customer_details?.email
+          const guestName = shippingFromStripe?.name || session.customer_details?.name
+          resolvedBuyerId = await resolveOrCreateBuyer(guestEmail, guestName)
+          if (!resolvedBuyerId) {
+            console.error(
+              `[stripe webhook] guest checkout: could not resolve/create buyer for session ${session.id} (email=${guestEmail})`
+            )
+            return NextResponse.json({ error: "Could not resolve buyer" }, { status: 500 })
+          }
+          console.log(`[stripe webhook] guest checkout resolved to buyer ${resolvedBuyerId} (email=${guestEmail})`)
+        }
+
         // New flow: create orders NOW (after payment confirmed)
         for (let i = 0; i < listingIds.length; i++) {
           const listingId = listingIds[i]
@@ -136,7 +160,7 @@ export async function POST(req: Request) {
           const finalShippingAddress = shippingFromStripe || shippingAddress
 
           const orderRow = {
-            buyer_id: buyerId,
+            buyer_id: resolvedBuyerId,
             listing_id: listingId,
             status: "PAID",
             shipping_address: finalShippingAddress,
@@ -175,7 +199,7 @@ export async function POST(req: Request) {
           console.log(`[stripe webhook] order ${inserted?.id} created (PAID)`)
 
           await decrementStock(listingId, 1)
-          await addFigureToCollection(buyerId, listingId)
+          await addFigureToCollection(resolvedBuyerId, listingId)
         }
 
         console.log(
@@ -274,6 +298,66 @@ async function decrementStock(listingId: string, quantity: number) {
   console.log(
     `[stripe webhook] listing ${listingId} stock=${newStock}${newStock <= 0 ? " active=false" : ""}`
   )
+}
+
+/**
+ * Finds an existing user by email, or creates a lightweight guest
+ * account for them. The account gets an unguessable random password
+ * (bcrypt hash of 24 random bytes — nobody knows it, including us) so
+ * it can't be logged into directly; the guest can later set a real
+ * password via the normal "forgot password" flow if they want to
+ * track orders under this email.
+ */
+async function resolveOrCreateBuyer(
+  email: string | null | undefined,
+  name?: string | null
+): Promise<string | null> {
+  if (!email) return null
+
+  const { data: existing } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle()
+  if (existing) return existing.id
+
+  const usernameBase =
+    email.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 20) || "guest"
+
+  // A couple of retries covers username collisions; an email collision
+  // (a concurrent webhook delivery for the same buyer) is resolved by
+  // re-selecting instead of retrying the insert.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const username = attempt === 0 ? usernameBase : `${usernameBase}-${crypto.randomInt(1000, 9999)}`
+    const randomPassword = await bcrypt.hash(crypto.randomBytes(24).toString("hex"), 12)
+    const { data: created, error } = await supabaseAdmin
+      .from("users")
+      .insert({
+        email,
+        name: name?.trim() || usernameBase,
+        username,
+        password: randomPassword,
+        email_verified: false,
+      })
+      .select("id")
+      .single()
+    if (!error && created) return created.id
+
+    if ((error as any)?.code === "23505") {
+      const { data: raceWinner } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle()
+      if (raceWinner) return raceWinner.id
+      // Not an email collision — must've been the username. Loop and retry.
+      continue
+    }
+
+    console.error("[stripe webhook] resolveOrCreateBuyer insert failed:", error)
+    return null
+  }
+  return null
 }
 
 /**

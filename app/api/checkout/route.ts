@@ -39,10 +39,12 @@ export async function POST(req: Request) {
     )
   }
 
+  // Guest checkout is allowed — Stripe collects a verified email +
+  // shipping address on its own hosted page, so a site account isn't
+  // required to buy. If the buyer is logged in, we still tag the
+  // order with their user id; otherwise the webhook resolves (or
+  // creates) a buyer record from the email Stripe collects.
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
 
   // `stage` tracks how far we got, so the catch block can report
   // exactly which step failed instead of swallowing it as a generic
@@ -61,7 +63,7 @@ export async function POST(req: Request) {
       country,
       hasPromo: !!promoCode,
       hasAddress: !!shippingAddress,
-      buyer: session.user.id,
+      buyer: session?.user?.id ?? "guest",
     })
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -173,7 +175,7 @@ export async function POST(req: Request) {
       mode: "payment",
       success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cart`,
-      customer_email: session.user.email || undefined,
+      customer_email: session?.user?.email || undefined,
       // Let Stripe collect a verified shipping address — the webhook
       // mirrors it back into the order row as the source of truth.
       shipping_address_collection: {
@@ -199,7 +201,9 @@ export async function POST(req: Request) {
     // Pack everything the webhook needs into Stripe metadata so we
     // can create order rows AFTER payment is confirmed — not before.
     params.metadata = {
-      buyer_id: session.user.id,
+      // Empty string, not omitted, so the webhook can reliably tell
+      // "no session" apart from a missing key when it parses metadata.
+      buyer_id: session?.user?.id || "",
       listing_ids: JSON.stringify(listings.map((l) => l.id)),
       listing_prices: JSON.stringify(listings.map((l) => l.price)),
       shipping_cents: String(shippingCents),
