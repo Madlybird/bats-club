@@ -138,7 +138,7 @@ export default function ArchiveClient({
             placeholder={labels.searchPh}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input pl-10 text-sm"
+            className="input pl-10 text-base sm:text-sm"
           />
         </div>
 

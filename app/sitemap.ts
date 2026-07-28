@@ -53,6 +53,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] figures query failed:", e)
   }
 
+  // Listing pages — individual /shop/[id] product pages weren't in the
+  // sitemap before; Google only found them via internal links, which
+  // slows discovery of new listings.
+  try {
+    const { data: listings } = await supabaseAdmin
+      .from("listings")
+      .select("id, created_at")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+
+    for (const listing of listings || []) {
+      for (const locale of LOCALES) {
+        entries.push({
+          url: `${BASE}${locale}/shop/${listing.id}`,
+          lastModified: listing.created_at ? new Date(listing.created_at) : new Date(),
+          changeFrequency: "weekly",
+          priority: 0.7,
+        })
+      }
+    }
+  } catch (e) {
+    console.error("[sitemap] listings query failed:", e)
+  }
+
   // Article pages
   try {
     const { data: articles } = await supabaseAdmin

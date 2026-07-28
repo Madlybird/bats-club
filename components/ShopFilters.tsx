@@ -70,7 +70,7 @@ export default function ShopFilters({ currentPriceRange, currentSort, currentSer
         <select
           value={currentSort || "newest"}
           onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
-          className="input text-xs py-1.5 w-full md:w-auto"
+          className="input text-base sm:text-xs py-1.5 w-full md:w-auto"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>

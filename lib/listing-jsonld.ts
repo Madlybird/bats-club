@@ -46,6 +46,37 @@ export function buildListingJsonLd(
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/UsedCondition",
       seller: { "@type": "Organization", name: "Bats Club" },
+      // Rates here must mirror the <g:shipping> blocks in app/feed.xml/route.ts
+      // (Merchant Center feed) — Google cross-checks the two and flags mismatches.
+      shippingDetails: SHIPPING_COUNTRIES.map(({ country, price }) => ({
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: price, currency: "USD" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: country },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 5, maxValue: 21, unitCode: "DAY" },
+        },
+      })),
+      // Mirrors app/returns/page.tsx: 14-day window, transit-damage only,
+      // Bats Club covers return shipping on approved returns.
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 14,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/FreeReturn",
+        applicableCountry: SHIPPING_COUNTRIES.map((c) => c.country),
+      },
     },
   }
 }
+
+// Flat shipping rates — the single source of truth referenced by both the
+// JSON-LD above and app/feed.xml/route.ts's <g:shipping> blocks.
+export const SHIPPING_COUNTRIES = [
+  { country: "US", price: 12 },
+  { country: "JP", price: 17 },
+  { country: "GB", price: 12 },
+  { country: "RU", price: 9 },
+]

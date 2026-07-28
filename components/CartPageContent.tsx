@@ -380,7 +380,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                     onFocus={() => setShowDrop(true)}
                     placeholder={dict.cart_country_ph}
                     autoComplete="off"
-                    className="input text-sm"
+                    className="input text-base sm:text-sm"
                   />
                   {showDrop && filteredCountries.length > 0 && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-44 overflow-y-auto rounded-lg border border-white/[0.08] bg-[#0f0f1a] shadow-xl">
@@ -427,7 +427,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                       value={promoInput}
                       onChange={(e) => { setPromoInput(e.target.value); setPromoError("") }}
                       placeholder={dict.cart_promo_ph}
-                      className="input text-sm flex-1"
+                      className="input text-base sm:text-sm flex-1"
                       onKeyDown={(e) => e.key === "Enter" && applyPromo()}
                     />
                     <button
@@ -514,7 +514,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                         value={address[key]}
                         onChange={(e) => setAddress((prev) => ({ ...prev, [key]: e.target.value }))}
                         placeholder={placeholder}
-                        className="input text-sm"
+                        className="input text-base sm:text-sm"
                       />
                     </div>
                   ))}

@@ -181,7 +181,7 @@ export default function CheckoutButton({ listingId, listingPrice }: CheckoutButt
           value={form.fullName}
           onChange={handleChange}
           placeholder="Jane Smith"
-          className="input text-sm"
+          className="input text-base sm:text-sm"
         />
       </div>
 
@@ -196,7 +196,7 @@ export default function CheckoutButton({ listingId, listingPrice }: CheckoutButt
           value={form.addressLine1}
           onChange={handleChange}
           placeholder="123 Main St, Building A"
-          className="input text-sm"
+          className="input text-base sm:text-sm"
         />
       </div>
 
@@ -212,7 +212,7 @@ export default function CheckoutButton({ listingId, listingPrice }: CheckoutButt
           value={form.addressLine2}
           onChange={handleChange}
           placeholder="Apt 4B"
-          className="input text-sm"
+          className="input text-base sm:text-sm"
         />
       </div>
 
@@ -228,7 +228,7 @@ export default function CheckoutButton({ listingId, listingPrice }: CheckoutButt
             value={form.city}
             onChange={handleChange}
             placeholder="New York"
-            className="input text-sm"
+            className="input text-base sm:text-sm"
           />
         </div>
         <div>
@@ -241,7 +241,7 @@ export default function CheckoutButton({ listingId, listingPrice }: CheckoutButt
             value={form.state}
             onChange={handleChange}
             placeholder="NY"
-            className="input text-sm"
+            className="input text-base sm:text-sm"
           />
         </div>
       </div>
@@ -257,7 +257,7 @@ export default function CheckoutButton({ listingId, listingPrice }: CheckoutButt
           value={form.zip}
           onChange={handleChange}
           placeholder="10001"
-          className="input text-sm"
+          className="input text-base sm:text-sm"
         />
       </div>
 
@@ -277,7 +277,7 @@ export default function CheckoutButton({ listingId, listingPrice }: CheckoutButt
           onFocus={() => setShowCountryDrop(true)}
           placeholder="Search country…"
           autoComplete="off"
-          className="input text-sm"
+          className="input text-base sm:text-sm"
         />
         {showCountryDrop && filteredCountries.length > 0 && (
           <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg border border-white/[0.08] bg-[#0f0f1a] shadow-xl">
@@ -306,7 +306,7 @@ export default function CheckoutButton({ listingId, listingPrice }: CheckoutButt
           value={form.phone}
           onChange={handleChange}
           placeholder="+1 555 000 0000"
-          className="input text-sm"
+          className="input text-base sm:text-sm"
         />
       </div>
 

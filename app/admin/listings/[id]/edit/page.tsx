@@ -190,7 +190,7 @@ export default function EditListingPage() {
             value={formData.description}
             onChange={handleChange}
             rows={4}
-            className="input resize-none text-sm"
+            className="input resize-none text-base sm:text-sm"
           />
         </div>
 

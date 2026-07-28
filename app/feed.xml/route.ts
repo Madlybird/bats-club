@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase"
+import { SHIPPING_COUNTRIES } from "@/lib/listing-jsonld"
 
 export const revalidate = 3600
 
@@ -88,22 +89,10 @@ export async function GET() {
     <g:brand>${xmlEscape(figure.manufacturer || "Unknown")}</g:brand>
     <g:mpn>${xmlEscape(figure.id)}</g:mpn>
     <g:product_type>Anime Figures</g:product_type>
-    <g:shipping>
-      <g:country>US</g:country>
-      <g:price>12 USD</g:price>
-    </g:shipping>
-    <g:shipping>
-      <g:country>JP</g:country>
-      <g:price>17 USD</g:price>
-    </g:shipping>
-    <g:shipping>
-      <g:country>GB</g:country>
-      <g:price>12 USD</g:price>
-    </g:shipping>
-    <g:shipping>
-      <g:country>RU</g:country>
-      <g:price>9 USD</g:price>
-    </g:shipping>
+${SHIPPING_COUNTRIES.map(({ country, price }) => `    <g:shipping>
+      <g:country>${country}</g:country>
+      <g:price>${price} USD</g:price>
+    </g:shipping>`).join("\n")}
   </item>`
     })
     .filter(Boolean)
