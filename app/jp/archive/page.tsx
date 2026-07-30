@@ -28,6 +28,9 @@ export const metadata: Metadata = {
 
 // Figure count must always be accurate, not up to an hour stale.
 export const dynamic = "force-dynamic"
+// See app/shop/page.tsx — force-dynamic alone doesn't stop a
+// fixed-shape query from sticking in the Data Cache.
+export const fetchCache = "force-no-store"
 
 export default async function ArchivePageJp() {
   // searchParams handled client-side in ArchiveClient (keeps page static).

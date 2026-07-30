@@ -14,6 +14,13 @@ export const metadata: Metadata = {
 // Listing counts must always be accurate (no ISR window) — this route
 // already reads searchParams so it renders dynamically anyway.
 export const dynamic = "force-dynamic"
+// dynamic="force-dynamic" alone only stops the *page* from being cached.
+// The unfiltered listings query (no .gte/.lte chained on) has a fixed
+// request shape and was getting served from a stale Next Data Cache
+// entry — active new listings didn't show up until a price filter was
+// applied, which produces a different request shape and always missed
+// the cache. This forces every fetch in the route to bypass it.
+export const fetchCache = "force-no-store"
 
 function ShopSkeleton() {
   return (

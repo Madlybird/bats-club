@@ -14,6 +14,9 @@ export const metadata: Metadata = {
 // Listing counts must always be accurate (no ISR window) — this route
 // already reads searchParams so it renders dynamically anyway.
 export const dynamic = "force-dynamic"
+// See app/shop/page.tsx — force-dynamic alone doesn't stop a
+// fixed-shape query from sticking in the Data Cache.
+export const fetchCache = "force-no-store"
 
 function ShopSkeleton() {
   return (
