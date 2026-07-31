@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import ListingCard from "@/components/ListingCard"
 import ShopFilters from "@/components/ShopFilters"
@@ -86,6 +87,19 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
     alreadyInCart: dict.shop_already_in_cart,
   }
 
+  const [search, setSearch] = useState("")
+
+  const filteredListings = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return listings
+    return listings.filter(
+      (l) =>
+        l.figure.name.toLowerCase().includes(q) ||
+        l.figure.character.toLowerCase().includes(q) ||
+        l.figure.series.toLowerCase().includes(q)
+    )
+  }, [listings, search])
+
   return (
     <div className="relative min-h-screen">
       <BatsOverlay />
@@ -121,13 +135,55 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <ScrollReveal>
             <SeriesBar topSeries={topSeries} currentSeries={series} dict={dict} />
+
+            {/* Search */}
+            <div className="relative mb-5">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder={dict.shop_search_ph}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="input pl-10 text-base sm:text-sm"
+              />
+            </div>
+
             <ShopFilters currentPriceRange={priceRange} currentSort={sort} currentSeries={series} dict={dict} />
+
+            {search && (
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-slate-500">
+                  <span className="font-semibold" style={{ color: "#ff2d78" }}>
+                    {filteredListings.length}
+                  </span>{" "}
+                  {dict.shop_results}
+                </p>
+                <button
+                  onClick={() => setSearch("")}
+                  className="text-xs text-slate-500 hover:text-[#ff2d78] transition-colors"
+                >
+                  {dict.shop_clear_search}
+                </button>
+              </div>
+            )}
           </ScrollReveal>
 
-          {listings.length > 0 ? (
+          {filteredListings.length > 0 ? (
             <ScrollReveal>
               <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-stretch">
-                {listings.map((listing, index) => (
+                {filteredListings.map((listing, index) => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}
@@ -144,6 +200,11 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
                 <span className="text-5xl mb-4 opacity-30">🦇</span>
                 <p className="text-white/40 text-lg font-medium">{dict.shop_empty_title}</p>
                 <p className="text-white/20 text-sm mt-1">{dict.shop_empty_sub}</p>
+                {search && (
+                  <button onClick={() => setSearch("")} className="btn-ghost mt-4 text-sm">
+                    {dict.shop_clear_search}
+                  </button>
+                )}
               </div>
             </ScrollReveal>
           )}

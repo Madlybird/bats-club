@@ -66,6 +66,9 @@ export interface Dict {
   shop_empty_title: string
   shop_empty_sub: string
   shop_popular_series: string
+  shop_search_ph: string
+  shop_results: string
+  shop_clear_search: string
   shop_price_range_label: string
   shop_price_range_under_25: string
   shop_price_range_25_55: string
@@ -335,6 +338,9 @@ export const en: Dict = {
   shop_empty_title: "No listings found",
   shop_empty_sub: "Try changing your filters",
   shop_popular_series: "Popular series",
+  shop_search_ph: "Search figures, characters, series…",
+  shop_results: "listings found",
+  shop_clear_search: "Clear search ×",
   shop_price_range_label: "Price",
   shop_price_range_under_25: "Under $25",
   shop_price_range_25_55: "$25–55",
@@ -595,6 +601,9 @@ export const ru: Dict = {
   shop_empty_title: "Объявления не найдены",
   shop_empty_sub: "Попробуйте изменить фильтры",
   shop_popular_series: "Популярные серии",
+  shop_search_ph: "Поиск фигурок, персонажей, серий…",
+  shop_results: "найдено",
+  shop_clear_search: "Сбросить поиск ×",
   shop_price_range_label: "Цена",
   shop_price_range_under_25: "До $25",
   shop_price_range_25_55: "$25–55",
@@ -855,6 +864,9 @@ export const jp: Dict = {
   shop_empty_title: "出品が見つかりません",
   shop_empty_sub: "フィルターを変えてみてください",
   shop_popular_series: "人気シリーズ",
+  shop_search_ph: "フィギュア、キャラクター、シリーズを検索…",
+  shop_results: "件見つかりました",
+  shop_clear_search: "検索をリセット ×",
   shop_price_range_label: "価格",
   shop_price_range_under_25: "$25以下",
   shop_price_range_25_55: "$25〜55",
