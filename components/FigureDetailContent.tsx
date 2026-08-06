@@ -7,7 +7,7 @@ import ScrollReveal from "@/components/ScrollReveal"
 import ShareButtons from "@/components/ShareButtons"
 import PhotoCarousel from "@/components/PhotoCarousel"
 import FigureViewTracker from "@/components/FigureViewTracker"
-import { AgeGateReveal, AgeGateLink, AgeGateTextLink } from "@/components/AgeGate"
+import { AgeGateReveal, MatureBlur } from "@/components/AgeGate"
 import type { Dict } from "@/lib/dict"
 
 function parseImages(raw: unknown): string[] {
@@ -149,6 +149,7 @@ export default function FigureDetailContent({
                       confirm: dict.age_gate_confirm,
                       deny: dict.age_gate_deny,
                     }}
+                    backHref={archiveHref}
                     className="relative aspect-square rounded-2xl overflow-hidden border border-white/[0.06]"
                   >
                     <div className="w-full h-full" style={{ background: "rgba(15,15,26,0.8)" }}>
@@ -254,33 +255,29 @@ export default function FigureDetailContent({
                       const relImgs = parseImages(rel.images)
                       const thumb = relImgs[0] || rel.imageUrl || null
                       const relHref = `${archiveHref.replace("/archive", "/figures")}/${rel.slug || rel.id}`
-                      const relAgeGateLabels = {
-                        badge: dict.age_gate_badge,
-                        title: dict.age_gate_title,
-                        body: dict.age_gate_body,
-                        confirm: dict.age_gate_confirm,
-                        deny: dict.age_gate_deny,
-                      }
                       return (
-                        <div key={rel.id} className="group">
-                          <AgeGateLink
-                            isMature={!!rel.isMature}
-                            href={relHref}
-                            labels={relAgeGateLabels}
-                            className="block relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] mb-2"
-                            style={{ background: "rgba(15,15,26,0.8)" }}
-                          >
-                            {thumb ? (
-                              <Image src={thumb} alt={rel.name} fill unoptimized className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
-                            ) : (
-                              <div className="absolute inset-0 flex items-center justify-center text-4xl">🦇</div>
-                            )}
-                          </AgeGateLink>
-                          <AgeGateTextLink isMature={!!rel.isMature} href={relHref} labels={relAgeGateLabels} className="block">
-                            <p className="text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">{rel.name}</p>
-                            <p className="text-xs text-white/30 mt-0.5">{rel.series}</p>
-                          </AgeGateTextLink>
-                        </div>
+                        <Link key={rel.id} href={relHref} className="group block">
+                          <div className="relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] mb-2" style={{ background: "rgba(15,15,26,0.8)" }}>
+                            <MatureBlur
+                              isMature={!!rel.isMature}
+                              labels={{
+                                badge: dict.age_gate_badge,
+                                title: dict.age_gate_title,
+                                body: dict.age_gate_body,
+                                confirm: dict.age_gate_confirm,
+                                deny: dict.age_gate_deny,
+                              }}
+                            >
+                              {thumb ? (
+                                <Image src={thumb} alt={rel.name} fill unoptimized className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-4xl">🦇</div>
+                              )}
+                            </MatureBlur>
+                          </div>
+                          <p className="text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">{rel.name}</p>
+                          <p className="text-xs text-white/30 mt-0.5">{rel.series}</p>
+                        </Link>
                       )
                     })}
                   </div>

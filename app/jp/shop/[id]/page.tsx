@@ -112,6 +112,7 @@ export default async function ListingDetailPageJp({ params }: Props) {
                     confirm: dict.age_gate_confirm,
                     deny: dict.age_gate_deny,
                   }}
+                  backHref="/jp/shop"
                   className="relative aspect-square rounded-2xl overflow-hidden border border-white/[0.06]"
                 >
                   <div className="w-full h-full" style={{ background: "#0a0a0a" }}>

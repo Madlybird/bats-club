@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 const STORAGE_KEY = "bats_age_verified"
@@ -38,15 +37,8 @@ function useAgeVerified() {
 
 function AgeGateModal({ labels, onConfirm, onDeny }: { labels: AgeGateLabels; onConfirm: () => void; onDeny: () => void }) {
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
-      onClick={onDeny}
-    >
-      <div
-        className="max-w-sm w-full rounded-2xl border border-white/10 p-6 text-center"
-        style={{ background: "#0a0a12" }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+      <div className="max-w-sm w-full rounded-2xl border border-white/10 p-6 text-center" style={{ background: "#0a0a12" }}>
         <p className="text-2xl mb-2">🔞</p>
         <h3 className="text-lg font-bold text-white mb-2">{labels.title}</h3>
         <p className="text-sm text-white/50 mb-6">{labels.body}</p>
@@ -70,144 +62,71 @@ function AgeGateModal({ labels, onConfirm, onDeny }: { labels: AgeGateLabels; on
   )
 }
 
-/** Card-grid thumbnail (archive/shop listings): wraps a Link, blurs the
- *  image, and only navigates once the visitor confirms their age.
- *  Needs a sized, positioned container (e.g. `relative aspect-square`). */
-export function AgeGateLink({
+/** Card-grid thumbnail (archive/shop listings): purely visual — blurs
+ *  the image + shows a "18+" badge. No click interception, the actual
+ *  age check happens on the detail page after navigating there. */
+export function MatureBlur({
   isMature,
-  href,
   labels,
-  className,
-  style,
-  overlay,
   children,
 }: {
   isMature: boolean
-  href: string
   labels: AgeGateLabels
-  className?: string
-  style?: React.CSSProperties
-  /** Extra elements rendered on top, never blurred (e.g. a price badge). */
-  overlay?: React.ReactNode
   children: React.ReactNode
 }) {
-  const router = useRouter()
-  const { verified, confirm } = useAgeVerified()
-  const [showModal, setShowModal] = useState(false)
+  const { verified } = useAgeVerified()
 
-  if (!isMature || verified) {
-    return (
-      <Link href={href} className={className} style={style}>
-        {children}
-        {overlay}
-      </Link>
-    )
-  }
-
-  const onConfirm = () => {
-    confirm()
-    setShowModal(false)
-    router.push(href)
-  }
+  if (!isMature || verified) return <>{children}</>
 
   return (
     <>
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setShowModal(true)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") setShowModal(true)
-        }}
-        className={`${className ?? ""} cursor-pointer`}
-        style={style}
-      >
-        <div className="absolute inset-0 overflow-hidden [filter:blur(18px)] scale-110 pointer-events-none select-none">
-          {children}
-        </div>
-        <span className="absolute top-2 left-2 z-10 badge bg-black/80 text-white text-[10px] font-bold px-2 py-1 rounded-full border border-white/20">
-          {labels.badge}
-        </span>
-        {overlay}
+      <div className="absolute inset-0 overflow-hidden [filter:blur(18px)] scale-110 pointer-events-none select-none">
+        {children}
       </div>
-      {showModal && <AgeGateModal labels={labels} onConfirm={onConfirm} onDeny={() => setShowModal(false)} />}
+      <span className="absolute top-2 left-2 z-10 badge bg-black/80 text-white text-[10px] font-bold px-2 py-1 rounded-full border border-white/20">
+        {labels.badge}
+      </span>
     </>
   )
 }
 
-/** Plain-text link variant (e.g. a card's title below the thumbnail) —
- *  no blur box, just withholds navigation until age is confirmed. */
-export function AgeGateTextLink({
-  isMature,
-  href,
-  labels,
-  className,
-  children,
-}: {
-  isMature: boolean
-  href: string
-  labels: AgeGateLabels
-  className?: string
-  children: React.ReactNode
-}) {
-  const router = useRouter()
-  const { verified, confirm } = useAgeVerified()
-  const [showModal, setShowModal] = useState(false)
-
-  if (!isMature || verified) {
-    return (
-      <Link href={href} className={className}>
-        {children}
-      </Link>
-    )
-  }
-
-  const onConfirm = () => {
-    confirm()
-    setShowModal(false)
-    router.push(href)
-  }
-
-  return (
-    <>
-      <div role="button" tabIndex={0} onClick={() => setShowModal(true)} className={`${className ?? ""} cursor-pointer`}>
-        {children}
-      </div>
-      {showModal && <AgeGateModal labels={labels} onConfirm={onConfirm} onDeny={() => setShowModal(false)} />}
-    </>
-  )
-}
-
-/** Detail-page usage (figure/listing gallery): blurs the content in
- *  place and reveals it after confirmation, no navigation involved.
- *  Covers deep links that skip the card grid entirely. */
+/** Detail-page usage (figure/listing gallery): blurs the content and
+ *  immediately pops the confirmation modal on landing. "Yes" reveals
+ *  in place; "No" (or dismissing the modal) navigates back to `backHref`. */
 export function AgeGateReveal({
   isMature,
   labels,
   className,
+  backHref,
   children,
 }: {
   isMature: boolean
   labels: AgeGateLabels
   className?: string
+  backHref: string
   children: React.ReactNode
 }) {
+  const router = useRouter()
   const { verified, confirm } = useAgeVerified()
   const [showModal, setShowModal] = useState(false)
+
+  useEffect(() => {
+    if (isMature && !verified) setShowModal(true)
+  }, [isMature, verified])
 
   if (!isMature || verified) {
     return <div className={className}>{children}</div>
   }
 
+  const deny = () => {
+    setShowModal(false)
+    router.push(backHref)
+  }
+
   return (
     <div className={`relative ${className ?? ""}`}>
       <div className="overflow-hidden [filter:blur(24px)] scale-110 pointer-events-none select-none">{children}</div>
-      <button onClick={() => setShowModal(true)} className="absolute inset-0 z-20 flex items-center justify-center">
-        <span className="badge bg-black/80 text-white text-sm font-bold px-4 py-2 rounded-full border border-white/20">
-          {labels.badge}
-        </span>
-      </button>
-      {showModal && <AgeGateModal labels={labels} onConfirm={confirm} onDeny={() => setShowModal(false)} />}
+      {showModal && <AgeGateModal labels={labels} onConfirm={confirm} onDeny={deny} />}
     </div>
   )
 }

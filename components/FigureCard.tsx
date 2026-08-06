@@ -1,8 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import Image from "next/image"
 import StatusButton from "./StatusButton"
-import { AgeGateLink, AgeGateTextLink, type AgeGateLabels } from "@/components/AgeGate"
+import { MatureBlur, type AgeGateLabels } from "@/components/AgeGate"
 
 interface FigureCardLabels {
   figurePath: string
@@ -47,54 +48,49 @@ export default function FigureCard({ figure, labels, ageGateLabels, priority = f
   return (
     <div className="card-cv card-hover group flex flex-col overflow-hidden h-full">
       {/* Image */}
-      <AgeGateLink
-        isMature={isMature}
-        href={figureHref}
-        labels={ageGateLabels}
-        className="block relative aspect-square overflow-hidden flex-shrink-0"
-        style={{ background: "#0a0a0a" }}
-        overlay={
-          figure._count && figure._count.listings > 0 ? (
-            <div className="absolute bottom-2 left-2">
-              <span className="badge badge-green text-[10px] backdrop-blur-sm">
-                {figure._count.listings} {labels.forSale}
-              </span>
+      <Link href={figureHref} className="block relative aspect-square overflow-hidden flex-shrink-0" style={{ background: "#0a0a0a" }}>
+        <MatureBlur isMature={isMature} labels={ageGateLabels}>
+          {figure.imageUrl ? (
+            <Image
+              src={figure.imageUrl}
+              alt={figure.name}
+              fill
+              // Bypass Vercel's image optimizer and fetch the JPG
+              // straight from Supabase Storage. The optimizer was
+              // intermittently returning blank/broken images on some
+              // mobile clients (Option A from the debug session).
+              unoptimized
+              className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 768px) 50vw, 25vw"
+              {...(priority ? { priority: true } : { loading: "lazy" })}
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-900/40 to-pink-900/40 flex items-center justify-center mb-3">
+                <span className="text-3xl">🦇</span>
+              </div>
+              <p className="text-xs text-slate-600 text-center px-4">{labels.noImage}</p>
             </div>
-          ) : undefined
-        }
-      >
-        {figure.imageUrl ? (
-          <Image
-            src={figure.imageUrl}
-            alt={figure.name}
-            fill
-            // Bypass Vercel's image optimizer and fetch the JPG
-            // straight from Supabase Storage. The optimizer was
-            // intermittently returning blank/broken images on some
-            // mobile clients (Option A from the debug session).
-            unoptimized
-            className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 768px) 50vw, 25vw"
-            {...(priority ? { priority: true } : { loading: "lazy" })}
-          />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-900/40 to-pink-900/40 flex items-center justify-center mb-3">
-              <span className="text-3xl">🦇</span>
-            </div>
-            <p className="text-xs text-slate-600 text-center px-4">{labels.noImage}</p>
+          )}
+        </MatureBlur>
+        {/* Listing indicator */}
+        {figure._count && figure._count.listings > 0 && (
+          <div className="absolute bottom-2 left-2">
+            <span className="badge badge-green text-[10px] backdrop-blur-sm">
+              {figure._count.listings} {labels.forSale}
+            </span>
           </div>
         )}
-      </AgeGateLink>
+      </Link>
 
       {/* Content */}
       <div className="p-3 flex flex-col gap-2 flex-1">
-        <AgeGateTextLink isMature={isMature} href={figureHref} labels={ageGateLabels} className="block">
+        <Link href={figureHref} className="block">
           <h3 className="font-semibold text-slate-100 text-sm leading-tight group-hover:text-violet-400 transition-colors line-clamp-2">
             {figure.name}
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">{figure.series}</p>
-        </AgeGateTextLink>
+        </Link>
 
         <div className="flex items-center justify-end text-xs text-slate-500">
           <span>{figure.year}</span>
