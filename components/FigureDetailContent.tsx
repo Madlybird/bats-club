@@ -7,6 +7,7 @@ import ScrollReveal from "@/components/ScrollReveal"
 import ShareButtons from "@/components/ShareButtons"
 import PhotoCarousel from "@/components/PhotoCarousel"
 import FigureViewTracker from "@/components/FigureViewTracker"
+import { AgeGateReveal, AgeGateLink, AgeGateTextLink } from "@/components/AgeGate"
 import type { Dict } from "@/lib/dict"
 
 function parseImages(raw: unknown): string[] {
@@ -42,11 +43,12 @@ interface Props {
     material?: string | null
     imageUrl?: string | null
     images?: string[] | null
+    isMature?: boolean | null
     description?: string | null
     descriptionLocale?: string | null
   }
   publishedArticles: Article[]
-  relatedFigures?: { id: string; slug?: string | null; name: string; series: string; imageUrl?: string | null; images?: unknown }[]
+  relatedFigures?: { id: string; slug?: string | null; name: string; series: string; imageUrl?: string | null; images?: unknown; isMature?: boolean | null }[]
   userStatus: string | null
   wishlistCount: number
   haveCount: number
@@ -138,17 +140,29 @@ export default function FigureDetailContent({
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Left: Image */}
                 <div className="space-y-4">
-                  <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/[0.06]" style={{ background: "rgba(15,15,26,0.8)" }}>
-                    <PhotoCarousel
-                      images={(() => {
-                        const imgs = parseImages((figure as any).images)
-                        if (imgs.length > 0) return imgs
-                        return figure.imageUrl ? [figure.imageUrl] : []
-                      })()}
-                      alt={figure.name}
-                      priority
-                    />
-                  </div>
+                  <AgeGateReveal
+                    isMature={!!figure.isMature}
+                    labels={{
+                      badge: dict.age_gate_badge,
+                      title: dict.age_gate_title,
+                      body: dict.age_gate_body,
+                      confirm: dict.age_gate_confirm,
+                      deny: dict.age_gate_deny,
+                    }}
+                    className="relative aspect-square rounded-2xl overflow-hidden border border-white/[0.06]"
+                  >
+                    <div className="w-full h-full" style={{ background: "rgba(15,15,26,0.8)" }}>
+                      <PhotoCarousel
+                        images={(() => {
+                          const imgs = parseImages((figure as any).images)
+                          if (imgs.length > 0) return imgs
+                          return figure.imageUrl ? [figure.imageUrl] : []
+                        })()}
+                        alt={figure.name}
+                        priority
+                      />
+                    </div>
+                  </AgeGateReveal>
 
                   {/* Community stats */}
                   <div className="grid grid-cols-2 gap-3">
@@ -239,18 +253,34 @@ export default function FigureDetailContent({
                     {relatedFigures.map((rel) => {
                       const relImgs = parseImages(rel.images)
                       const thumb = relImgs[0] || rel.imageUrl || null
+                      const relHref = `${archiveHref.replace("/archive", "/figures")}/${rel.slug || rel.id}`
+                      const relAgeGateLabels = {
+                        badge: dict.age_gate_badge,
+                        title: dict.age_gate_title,
+                        body: dict.age_gate_body,
+                        confirm: dict.age_gate_confirm,
+                        deny: dict.age_gate_deny,
+                      }
                       return (
-                        <Link key={rel.id} href={`${archiveHref.replace("/archive", "/figures")}/${rel.slug || rel.id}`} className="group block">
-                          <div className="relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] mb-2" style={{ background: "rgba(15,15,26,0.8)" }}>
+                        <div key={rel.id} className="group">
+                          <AgeGateLink
+                            isMature={!!rel.isMature}
+                            href={relHref}
+                            labels={relAgeGateLabels}
+                            className="block relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] mb-2"
+                            style={{ background: "rgba(15,15,26,0.8)" }}
+                          >
                             {thumb ? (
                               <Image src={thumb} alt={rel.name} fill unoptimized className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center text-4xl">🦇</div>
                             )}
-                          </div>
-                          <p className="text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">{rel.name}</p>
-                          <p className="text-xs text-white/30 mt-0.5">{rel.series}</p>
-                        </Link>
+                          </AgeGateLink>
+                          <AgeGateTextLink isMature={!!rel.isMature} href={relHref} labels={relAgeGateLabels} className="block">
+                            <p className="text-sm font-bold text-white group-hover:text-[#ff2d78] transition-colors lowercase leading-tight line-clamp-1">{rel.name}</p>
+                            <p className="text-xs text-white/30 mt-0.5">{rel.series}</p>
+                          </AgeGateTextLink>
+                        </div>
                       )
                     })}
                   </div>

@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS public.figures (
   description     TEXT,
   description_ru  TEXT,
   description_jp  TEXT,
+  is_mature       BOOLEAN  NOT NULL DEFAULT FALSE,
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 

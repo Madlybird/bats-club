@@ -10,6 +10,7 @@ export interface FigureListRow {
   scale: string
   year: number
   imageUrl: string | null
+  isMature: boolean
   wishlistCount: number
   _count: { listings: number }
   cheapestListing: { id: string; price: number; condition: string } | null
@@ -26,7 +27,7 @@ export async function getFiguresForList(): Promise<FigureListRow[]> {
   const { data, error } = await supabaseAdmin
     .from("figures")
     .select(
-      "id, name, series, character, manufacturer, scale, year, imageUrl:image_url, " +
+      "id, name, series, character, manufacturer, scale, year, imageUrl:image_url, isMature:is_mature, " +
         "wishlist_agg:user_figures(status), " +
         "listings(id, active, price, condition)",
     )
@@ -51,6 +52,7 @@ export async function getFiguresForList(): Promise<FigureListRow[]> {
       scale: f.scale,
       year: f.year,
       imageUrl: f.imageUrl,
+      isMature: !!f.isMature,
       wishlistCount: (f.wishlist_agg || []).filter(
         (uf: any) => uf.status === "WISHLIST",
       ).length,

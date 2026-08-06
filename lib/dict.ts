@@ -96,6 +96,13 @@ export interface Dict {
   shop_shipping_note: string
   shop_out_of_stock_btn: string
 
+  // ── Age gate (18+) ──
+  age_gate_badge: string
+  age_gate_title: string
+  age_gate_body: string
+  age_gate_confirm: string
+  age_gate_deny: string
+
   // ── Articles page ──
   articles_heading: string
   articles_sub: string
@@ -368,6 +375,12 @@ export const en: Dict = {
   shop_shipping_note: "+ shipping (calculated at checkout)",
   shop_out_of_stock_btn: "Out of Stock",
 
+  age_gate_badge: "18+",
+  age_gate_title: "Adult Content",
+  age_gate_body: "This figure contains adult (18+) content. Please confirm your age to view.",
+  age_gate_confirm: "I am 18 or older",
+  age_gate_deny: "Cancel",
+
   articles_heading: "Articles",
   articles_sub: "Collector spotlights, reviews, and community content",
   articles_empty_title: "No articles published yet",
@@ -631,6 +644,12 @@ export const ru: Dict = {
   shop_shipping_note: "+ доставка (рассчитывается при оформлении заказа)",
   shop_out_of_stock_btn: "Нет в наличии",
 
+  age_gate_badge: "18+",
+  age_gate_title: "Контент для взрослых",
+  age_gate_body: "Эта фигурка содержит контент 18+. Подтвердите возраст, чтобы посмотреть.",
+  age_gate_confirm: "Мне есть 18 лет",
+  age_gate_deny: "Отмена",
+
   articles_heading: "Статьи",
   articles_sub: "Обзоры коллекционеров, рецензии и материалы сообщества",
   articles_empty_title: "Статьи ещё не опубликованы",
@@ -893,6 +912,12 @@ export const jp: Dict = {
   shop_view_cart: "カートを見る →",
   shop_shipping_note: "+ 送料（注文時に計算）",
   shop_out_of_stock_btn: "在庫切れ",
+
+  age_gate_badge: "18+",
+  age_gate_title: "アダルトコンテンツ",
+  age_gate_body: "このフィギュアにはアダルト（18+）コンテンツが含まれています。閲覧するには年齢確認が必要です。",
+  age_gate_confirm: "18歳以上です",
+  age_gate_deny: "キャンセル",
 
   articles_heading: "記事",
   articles_sub: "コレクター紹介、レビュー、コミュニティコンテンツ",

@@ -65,8 +65,8 @@ export default async function ShopPageRu({ searchParams }: Props) {
   const { price, sort, series } = searchParams
 
   const figureEmbed = series
-    ? "figure:figures!inner(id, name, series, character, scale, imageUrl:image_url)"
-    : "figure:figures(id, name, series, character, scale, imageUrl:image_url)"
+    ? "figure:figures!inner(id, name, series, character, scale, imageUrl:image_url, isMature:is_mature)"
+    : "figure:figures(id, name, series, character, scale, imageUrl:image_url, isMature:is_mature)"
 
   let query = supabaseAdmin
     .from("listings")

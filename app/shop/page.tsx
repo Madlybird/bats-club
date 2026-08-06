@@ -74,8 +74,8 @@ export default async function ShopPage({ searchParams }: Props) {
   // series filter actually narrows the result set in Postgres instead
   // of in JS afterwards.
   const figureEmbed = series
-    ? "figure:figures!inner(id, name, series, character, scale, imageUrl:image_url)"
-    : "figure:figures(id, name, series, character, scale, imageUrl:image_url)"
+    ? "figure:figures!inner(id, name, series, character, scale, imageUrl:image_url, isMature:is_mature)"
+    : "figure:figures(id, name, series, character, scale, imageUrl:image_url, isMature:is_mature)"
 
   let query = supabaseAdmin
     .from("listings")

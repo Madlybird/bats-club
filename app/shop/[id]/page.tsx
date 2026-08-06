@@ -6,6 +6,7 @@ import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import ShareButtons from "@/components/ShareButtons"
 import PhotoCarousel from "@/components/PhotoCarousel"
+import { AgeGateReveal } from "@/components/AgeGate"
 import { en } from "@/lib/dict"
 import { buildListingJsonLd } from "@/lib/listing-jsonld"
 import { Metadata } from "next"
@@ -73,7 +74,7 @@ export default async function ListingDetailPage({ params }: Props) {
     .from("listings")
     .select(`
       id, price, condition, stock, photos, description, active,
-      figure:figures(id, name, series, character, scale, manufacturer, imageUrl:image_url, images)
+      figure:figures(id, name, series, character, scale, manufacturer, imageUrl:image_url, images, isMature:is_mature)
     `)
     .eq("id", params.id)
     .single()
@@ -120,9 +121,21 @@ export default async function ListingDetailPage({ params }: Props) {
           <ScrollReveal>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div className="space-y-3">
-                <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/[0.06]" style={{ background: "#0a0a0a" }}>
-                  <PhotoCarousel images={displayImages} alt={figure?.name ?? "Figure"} priority />
-                </div>
+                <AgeGateReveal
+                  isMature={!!figure?.isMature}
+                  labels={{
+                    badge: dict.age_gate_badge,
+                    title: dict.age_gate_title,
+                    body: dict.age_gate_body,
+                    confirm: dict.age_gate_confirm,
+                    deny: dict.age_gate_deny,
+                  }}
+                  className="relative aspect-square rounded-2xl overflow-hidden border border-white/[0.06]"
+                >
+                  <div className="w-full h-full" style={{ background: "#0a0a0a" }}>
+                    <PhotoCarousel images={displayImages} alt={figure?.name ?? "Figure"} priority />
+                  </div>
+                </AgeGateReveal>
               </div>
               <div className="space-y-6">
                 <div>

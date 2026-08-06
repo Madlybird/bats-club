@@ -110,6 +110,11 @@ export default async function ArchivePageJp() {
                   statusBuy: dict.fig_status_buy,
                   toastAddedWishlist: dict.fig_added_wishlist,
                   toastAddedWishlistCart: dict.fig_added_wishlist_cart,
+                  ageGateBadge: dict.age_gate_badge,
+                  ageGateTitle: dict.age_gate_title,
+                  ageGateBody: dict.age_gate_body,
+                  ageGateConfirm: dict.age_gate_confirm,
+                  ageGateDeny: dict.age_gate_deny,
                 }}
               />
             </Suspense>

@@ -19,6 +19,7 @@ interface FigureData {
   scale: string
   year: number
   imageUrl?: string | null
+  isMature?: boolean | null
   wishlistCount: number
   userStatus?: string | null
   _count: { listings: number }
@@ -45,6 +46,11 @@ interface Labels {
   statusBuy?: string
   toastAddedWishlist?: string
   toastAddedWishlistCart?: string
+  ageGateBadge?: string
+  ageGateTitle?: string
+  ageGateBody?: string
+  ageGateConfirm?: string
+  ageGateDeny?: string
 }
 
 interface ArchiveClientProps {
@@ -209,6 +215,13 @@ export default function ArchiveClient({
                 statusBuy: labels.statusBuy ?? "",
                 toastAddedWishlist: labels.toastAddedWishlist ?? "",
                 toastAddedWishlistCart: labels.toastAddedWishlistCart ?? "",
+              }}
+              ageGateLabels={{
+                badge: labels.ageGateBadge ?? "18+",
+                title: labels.ageGateTitle ?? "",
+                body: labels.ageGateBody ?? "",
+                confirm: labels.ageGateConfirm ?? "",
+                deny: labels.ageGateDeny ?? "",
               }}
             />
           ))}

@@ -1,6 +1,6 @@
-import Link from "next/link"
 import Image from "next/image"
 import AddToCartButton from "@/components/AddToCartButton"
+import { AgeGateLink, AgeGateTextLink, type AgeGateLabels } from "@/components/AgeGate"
 
 interface ListingCardLabels {
   addToCart?: string
@@ -21,16 +21,18 @@ interface ListingCardProps {
       character: string
       imageUrl?: string | null
       scale: string
+      isMature?: boolean | null
     }
   }
   labels?: ListingCardLabels
+  ageGateLabels: AgeGateLabels
   basePath?: string
   /** Pass true for above-the-fold cards (e.g. first 4) so the browser
    *  preloads them; everything else lazy-loads. */
   priority?: boolean
 }
 
-export default function ListingCard({ listing, labels, basePath = "/shop", priority = false }: ListingCardProps) {
+export default function ListingCard({ listing, labels, ageGateLabels, basePath = "/shop", priority = false }: ListingCardProps) {
   const addToCartLabel = labels?.addToCart ?? "Add to Cart"
   const alreadyInCartLabel = labels?.alreadyInCart ?? "Already in cart"
   const listingHref = `${basePath}/${listing.id}`
@@ -49,11 +51,25 @@ export default function ListingCard({ listing, labels, basePath = "/shop", prior
   })()
 
   const displayImage = photos[0] || listing.figure.imageUrl
+  const isMature = !!listing.figure.isMature
 
   return (
     <div className="card-hover group flex flex-col overflow-hidden h-full">
       {/* Image */}
-      <Link href={listingHref} className="block relative aspect-square overflow-hidden flex-shrink-0" style={{ background: "#0a0a0a" }}>
+      <AgeGateLink
+        isMature={isMature}
+        href={listingHref}
+        labels={ageGateLabels}
+        className="block relative aspect-square overflow-hidden flex-shrink-0"
+        style={{ background: "#0a0a0a" }}
+        overlay={
+          <div className="absolute bottom-2 right-2">
+            <span className="badge bg-[#080810]/80 text-violet-300 border border-violet-700/40 backdrop-blur-sm text-[11px] font-bold">
+              ${(listing.price / 100).toFixed(2)}
+            </span>
+          </div>
+        }
+      >
         {displayImage ? (
           <Image
             src={displayImage}
@@ -71,23 +87,17 @@ export default function ListingCard({ listing, labels, basePath = "/shop", prior
             <span className="text-3xl opacity-20">🦇</span>
           </div>
         )}
-        {/* Price badge */}
-        <div className="absolute bottom-2 right-2">
-          <span className="badge bg-[#080810]/80 text-violet-300 border border-violet-700/40 backdrop-blur-sm text-[11px] font-bold">
-            ${(listing.price / 100).toFixed(2)}
-          </span>
-        </div>
-      </Link>
+      </AgeGateLink>
 
       {/* Content */}
       <div className="p-3 flex flex-col flex-1">
         <div className="h-[52px] overflow-hidden">
-          <Link href={listingHref} className="block">
+          <AgeGateTextLink isMature={isMature} href={listingHref} labels={ageGateLabels} className="block">
             <h3 className="font-semibold text-white/90 text-sm leading-tight group-hover:text-[#ff2d78] transition-colors line-clamp-2">
               {listing.figure.name}
             </h3>
             <p className="text-xs text-white/30 mt-0.5 truncate">{listing.figure.series}</p>
-          </Link>
+          </AgeGateTextLink>
         </div>
 
         <div className="mt-2">

@@ -1,8 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
 import StatusButton from "./StatusButton"
+import { AgeGateLink, AgeGateTextLink, type AgeGateLabels } from "@/components/AgeGate"
 
 interface FigureCardLabels {
   figurePath: string
@@ -26,6 +26,7 @@ interface FigureCardProps {
     scale: string
     year: number
     imageUrl?: string | null
+    isMature?: boolean | null
     wishlistCount: number
     userStatus?: string | null
     _count?: {
@@ -34,17 +35,34 @@ interface FigureCardProps {
     cheapestListing?: { id: string; price: number; condition: string } | null
   }
   labels: FigureCardLabels
+  ageGateLabels: AgeGateLabels
   /** Pass true for above-the-fold cards (e.g. first 4) so the browser
    *  preloads them; everything else lazy-loads. */
   priority?: boolean
 }
 
-export default function FigureCard({ figure, labels, priority = false }: FigureCardProps) {
+export default function FigureCard({ figure, labels, ageGateLabels, priority = false }: FigureCardProps) {
   const figureHref = `${labels.figurePath}/${figure.id}`
+  const isMature = !!figure.isMature
   return (
     <div className="card-cv card-hover group flex flex-col overflow-hidden h-full">
       {/* Image */}
-      <Link href={figureHref} className="block relative aspect-square overflow-hidden flex-shrink-0" style={{ background: "#0a0a0a" }}>
+      <AgeGateLink
+        isMature={isMature}
+        href={figureHref}
+        labels={ageGateLabels}
+        className="block relative aspect-square overflow-hidden flex-shrink-0"
+        style={{ background: "#0a0a0a" }}
+        overlay={
+          figure._count && figure._count.listings > 0 ? (
+            <div className="absolute bottom-2 left-2">
+              <span className="badge badge-green text-[10px] backdrop-blur-sm">
+                {figure._count.listings} {labels.forSale}
+              </span>
+            </div>
+          ) : undefined
+        }
+      >
         {figure.imageUrl ? (
           <Image
             src={figure.imageUrl}
@@ -67,24 +85,16 @@ export default function FigureCard({ figure, labels, priority = false }: FigureC
             <p className="text-xs text-slate-600 text-center px-4">{labels.noImage}</p>
           </div>
         )}
-        {/* Listing indicator */}
-        {figure._count && figure._count.listings > 0 && (
-          <div className="absolute bottom-2 left-2">
-            <span className="badge badge-green text-[10px] backdrop-blur-sm">
-              {figure._count.listings} {labels.forSale}
-            </span>
-          </div>
-        )}
-      </Link>
+      </AgeGateLink>
 
       {/* Content */}
       <div className="p-3 flex flex-col gap-2 flex-1">
-        <Link href={figureHref} className="block">
+        <AgeGateTextLink isMature={isMature} href={figureHref} labels={ageGateLabels} className="block">
           <h3 className="font-semibold text-slate-100 text-sm leading-tight group-hover:text-violet-400 transition-colors line-clamp-2">
             {figure.name}
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">{figure.series}</p>
-        </Link>
+        </AgeGateTextLink>
 
         <div className="flex items-center justify-end text-xs text-slate-500">
           <span>{figure.year}</span>

@@ -20,6 +20,7 @@ interface Listing {
     series: string
     character: string
     imageUrl?: string | null
+    isMature?: boolean | null
     scale: string
   }
 }
@@ -85,6 +86,14 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
   const listingLabels = {
     addToCart: dict.shop_add_to_cart,
     alreadyInCart: dict.shop_already_in_cart,
+  }
+
+  const ageGateLabels = {
+    badge: dict.age_gate_badge,
+    title: dict.age_gate_title,
+    body: dict.age_gate_body,
+    confirm: dict.age_gate_confirm,
+    deny: dict.age_gate_deny,
   }
 
   const [search, setSearch] = useState("")
@@ -188,6 +197,7 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
                     key={listing.id}
                     listing={listing}
                     labels={listingLabels}
+                    ageGateLabels={ageGateLabels}
                     basePath={shopBasePath}
                     priority={index < 4}
                   />

@@ -45,7 +45,7 @@ const getFigureCore = cache(async (figureId: string) => {
   const { data, error } = await supabaseAdmin
     .from("figures")
     .select(
-      "id, slug, name, series, character, manufacturer, scale, year, sculptor, material, imageUrl:image_url, images, description, createdAt:created_at"
+      "id, slug, name, series, character, manufacturer, scale, year, sculptor, material, imageUrl:image_url, images, isMature:is_mature, description, createdAt:created_at"
     )
     .eq("id", figureId)
     .maybeSingle()
@@ -144,13 +144,13 @@ export default async function FigureDetailPage({ params }: Props) {
     const [seriesRes, mfgRes] = await Promise.all([
       supabaseAdmin
         .from("figures")
-        .select("id, slug, name, series, imageUrl:image_url, images")
+        .select("id, slug, name, series, imageUrl:image_url, images, isMature:is_mature")
         .eq("series", figure.series)
         .neq("id", figureId)
         .limit(4),
       supabaseAdmin
         .from("figures")
-        .select("id, slug, name, series, imageUrl:image_url, images")
+        .select("id, slug, name, series, imageUrl:image_url, images, isMature:is_mature")
         .eq("manufacturer", figure.manufacturer)
         .neq("series", figure.series)
         .neq("id", figureId)
