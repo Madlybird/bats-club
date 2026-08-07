@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase"
 import ShopPageContent from "@/components/ShopPageContent"
 import { ru } from "@/lib/dict"
 import { parsePriceRange } from "@/lib/price-range"
+import { getShopCollections, getCollectionFigureIds } from "@/lib/collections"
 
 export const metadata: Metadata = {
   title: "Купить редкие аниме-фигурки | Bats Club",
@@ -34,7 +35,7 @@ function ShopSkeleton() {
   )
 }
 
-interface Props { searchParams: { price?: string; sort?: string; series?: string } }
+interface Props { searchParams: { price?: string; sort?: string; series?: string; collection?: string } }
 
 async function getTopSeries() {
   // Badge must show how many listings are actually for sale in that
@@ -62,7 +63,7 @@ async function getTopSeries() {
 }
 
 export default async function ShopPageRu({ searchParams }: Props) {
-  const { price, sort, series } = searchParams
+  const { price, sort, series, collection } = searchParams
 
   const figureEmbed = series
     ? "figure:figures!inner(id, name, series, character, scale, imageUrl:image_url, isMature:is_mature)"
@@ -84,11 +85,19 @@ export default async function ShopPageRu({ searchParams }: Props) {
     if (priceRange.max !== undefined) query = query.lte("price", priceRange.max)
   }
   if (series) query = query.eq("figures.series", series)
+  if (collection) {
+    const figureIds = await getCollectionFigureIds(collection)
+    query = query.in("figure_id", figureIds ?? [])
+  }
   if (sort === "price_asc") query = query.order("price", { ascending: true })
   else if (sort === "price_desc") query = query.order("price", { ascending: false })
   else query = query.order("created_at", { ascending: false })
 
-  const [{ data: listings }, topSeries] = await Promise.all([query, getTopSeries()])
+  const [{ data: listings }, topSeries, topCollections] = await Promise.all([
+    query,
+    getTopSeries(),
+    getShopCollections("ru"),
+  ])
 
   const filtered = (listings || []) as any[]
 
@@ -100,6 +109,8 @@ export default async function ShopPageRu({ searchParams }: Props) {
         sort={sort}
         series={series}
         topSeries={topSeries}
+        collection={collection}
+        topCollections={topCollections}
         dict={ru}
         shopBasePath="/ru/shop"
       />

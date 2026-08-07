@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase"
 import ShopPageContent from "@/components/ShopPageContent"
 import { en } from "@/lib/dict"
 import { parsePriceRange } from "@/lib/price-range"
+import { getShopCollections, getCollectionFigureIds } from "@/lib/collections"
 
 export const metadata: Metadata = {
   title: "Buy Rare Anime Figures | Bats Club",
@@ -38,7 +39,7 @@ function ShopSkeleton() {
   )
 }
 
-interface Props { searchParams: { price?: string; sort?: string; series?: string } }
+interface Props { searchParams: { price?: string; sort?: string; series?: string; collection?: string } }
 
 async function getTopSeries() {
   // Badge must show how many listings are actually for sale in that
@@ -67,7 +68,7 @@ async function getTopSeries() {
 }
 
 export default async function ShopPage({ searchParams }: Props) {
-  const { price, sort, series } = searchParams
+  const { price, sort, series, collection } = searchParams
 
   // !inner promotes the figure embed from "left join" (nulls out
   // non-matching rows) to "inner join" (drops them entirely), so the
@@ -93,11 +94,22 @@ export default async function ShopPage({ searchParams }: Props) {
     if (priceRange.max !== undefined) query = query.lte("price", priceRange.max)
   }
   if (series) query = query.eq("figures.series", series)
+  if (collection) {
+    const figureIds = await getCollectionFigureIds(collection)
+    // Empty (not null) figureIds means the collection is real but has no
+    // members — force a no-results query rather than falling through to
+    // an unfiltered one.
+    query = query.in("figure_id", figureIds ?? [])
+  }
   if (sort === "price_asc") query = query.order("price", { ascending: true })
   else if (sort === "price_desc") query = query.order("price", { ascending: false })
   else query = query.order("created_at", { ascending: false })
 
-  const [{ data: listings }, topSeries] = await Promise.all([query, getTopSeries()])
+  const [{ data: listings }, topSeries, topCollections] = await Promise.all([
+    query,
+    getTopSeries(),
+    getShopCollections("en"),
+  ])
 
   const filtered = (listings || []) as any[]
 
@@ -109,6 +121,8 @@ export default async function ShopPage({ searchParams }: Props) {
         sort={sort}
         series={series}
         topSeries={topSeries}
+        collection={collection}
+        topCollections={topCollections}
         dict={en}
         shopBasePath="/shop"
       />

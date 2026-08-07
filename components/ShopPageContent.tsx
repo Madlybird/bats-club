@@ -30,31 +30,55 @@ interface TopSeries {
   count: number
 }
 
+interface TopCollection {
+  slug: string
+  name: string
+  count: number
+}
+
 interface Props {
   listings: Listing[]
   priceRange?: string
   sort?: string
   series?: string
   topSeries: TopSeries[]
+  collection?: string
+  topCollections?: TopCollection[]
   dict: Dict
   shopBasePath?: string
 }
 
-function SeriesBar({ topSeries, currentSeries, dict }: { topSeries: TopSeries[]; currentSeries?: string; dict: Dict }) {
+interface FilterState {
+  price?: string
+  sort?: string
+  series?: string
+  collection?: string
+}
+
+// Shared by SeriesBar and CollectionsBar so picking one filter dimension
+// (e.g. a collection pill) doesn't wipe out the others (price, sort, the
+// series pill) — mirrors the preserve-everything-but-this-key pattern in
+// ShopFilters.updateFilter.
+function buildFilterUrl(pathname: string, current: FilterState, key: keyof FilterState, value: string | null) {
+  const params = new URLSearchParams()
+  ;(Object.keys(current) as (keyof FilterState)[]).forEach((k) => {
+    if (k === key) return
+    const v = current[k]
+    if (v) params.set(k, v)
+  })
+  if (value) params.set(key, value)
+  const q = params.toString()
+  return q ? `${pathname}?${q}` : pathname
+}
+
+function SeriesBar({ topSeries, current, dict }: { topSeries: TopSeries[]; current: FilterState; dict: Dict }) {
   const router = useRouter()
   const pathname = usePathname()
 
   if (topSeries.length === 0) return null
 
   const select = (s: string) => {
-    const params = new URLSearchParams()
-    if (currentSeries === s) {
-      // deselect
-    } else {
-      params.set("series", s)
-    }
-    const q = params.toString()
-    router.push(q ? `${pathname}?${q}` : pathname)
+    router.push(buildFilterUrl(pathname, current, "series", current.series === s ? null : s))
   }
 
   return (
@@ -66,13 +90,13 @@ function SeriesBar({ topSeries, currentSeries, dict }: { topSeries: TopSeries[];
             key={s.series}
             onClick={() => select(s.series)}
             className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
-              currentSeries === s.series
+              current.series === s.series
                 ? "bg-[#ff2d78] border-[#ff2d78] text-white"
                 : "bg-[#0a0a12] border-[#1a1a3a] text-slate-400 hover:border-[#ff2d78]/40 hover:text-white"
             }`}
           >
             <span className="truncate max-w-[120px]">{s.series}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${currentSeries === s.series ? "bg-white/20" : "bg-white/5"}`}>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${current.series === s.series ? "bg-white/20" : "bg-white/5"}`}>
               {s.count}
             </span>
           </button>
@@ -82,7 +106,44 @@ function SeriesBar({ topSeries, currentSeries, dict }: { topSeries: TopSeries[];
   )
 }
 
-export default function ShopPageContent({ listings, priceRange, sort, series, topSeries, dict, shopBasePath = "/shop" }: Props) {
+function CollectionsBar({ topCollections, current, dict }: { topCollections: TopCollection[]; current: FilterState; dict: Dict }) {
+  const router = useRouter()
+  const pathname = usePathname()
+
+  if (!topCollections || topCollections.length === 0) return null
+
+  const select = (slug: string) => {
+    router.push(buildFilterUrl(pathname, current, "collection", current.collection === slug ? null : slug))
+  }
+
+  return (
+    <div className="mb-6">
+      <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">{dict.shop_categories}</p>
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {topCollections.map((c) => (
+          <button
+            key={c.slug}
+            onClick={() => select(c.slug)}
+            className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
+              current.collection === c.slug
+                ? "bg-violet-700 border-violet-600 text-white"
+                : "bg-[#0a0a12] border-[#1a1a3a] text-slate-400 hover:border-violet-700/50 hover:text-slate-200"
+            }`}
+          >
+            <span className="truncate max-w-[140px]">{c.name}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${current.collection === c.slug ? "bg-white/20" : "bg-white/5"}`}>
+              {c.count}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function ShopPageContent({ listings, priceRange, sort, series, topSeries, collection, topCollections, dict, shopBasePath = "/shop" }: Props) {
+  const currentFilters: FilterState = { price: priceRange, sort, series, collection }
+
   const listingLabels = {
     addToCart: dict.shop_add_to_cart,
     alreadyInCart: dict.shop_already_in_cart,
@@ -143,7 +204,8 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <ScrollReveal>
-            <SeriesBar topSeries={topSeries} currentSeries={series} dict={dict} />
+            <SeriesBar topSeries={topSeries} current={currentFilters} dict={dict} />
+            <CollectionsBar topCollections={topCollections || []} current={currentFilters} dict={dict} />
 
             {/* Search */}
             <div className="relative mb-5">
@@ -169,7 +231,7 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
               />
             </div>
 
-            <ShopFilters currentPriceRange={priceRange} currentSort={sort} currentSeries={series} dict={dict} />
+            <ShopFilters currentPriceRange={priceRange} currentSort={sort} currentSeries={series} currentCollection={collection} dict={dict} />
 
             {search && (
               <div className="flex items-center justify-between mt-4">

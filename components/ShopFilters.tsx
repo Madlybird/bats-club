@@ -7,10 +7,11 @@ interface ShopFiltersProps {
   currentPriceRange?: string
   currentSort?: string
   currentSeries?: string
+  currentCollection?: string
   dict: Dict
 }
 
-export default function ShopFilters({ currentPriceRange, currentSort, currentSeries, dict }: ShopFiltersProps) {
+export default function ShopFilters({ currentPriceRange, currentSort, currentSeries, currentCollection, dict }: ShopFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -36,6 +37,7 @@ export default function ShopFilters({ currentPriceRange, currentSort, currentSer
     if (key !== "price" && currentPriceRange) params.set("price", currentPriceRange)
     if (key !== "sort" && currentSort) params.set("sort", currentSort)
     if (key !== "series" && currentSeries) params.set("series", currentSeries)
+    if (key !== "collection" && currentCollection) params.set("collection", currentCollection)
     if (value) params.set(key, value)
     const query = params.toString()
     router.push(query ? `${pathname}?${query}` : pathname)
