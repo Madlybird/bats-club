@@ -66,7 +66,6 @@ export interface Dict {
   shop_empty_title: string
   shop_empty_sub: string
   shop_popular_series: string
-  shop_categories: string
   shop_search_ph: string
   shop_results: string
   shop_clear_search: string
@@ -346,7 +345,6 @@ export const en: Dict = {
   shop_empty_title: "No listings found",
   shop_empty_sub: "Try changing your filters",
   shop_popular_series: "Popular series",
-  shop_categories: "Categories",
   shop_search_ph: "Search figures, characters, series…",
   shop_results: "listings found",
   shop_clear_search: "Clear search ×",
@@ -616,7 +614,6 @@ export const ru: Dict = {
   shop_empty_title: "Объявления не найдены",
   shop_empty_sub: "Попробуйте изменить фильтры",
   shop_popular_series: "Популярные серии",
-  shop_categories: "Категории",
   shop_search_ph: "Поиск фигурок, персонажей, серий…",
   shop_results: "найдено",
   shop_clear_search: "Сбросить поиск ×",
@@ -886,7 +883,6 @@ export const jp: Dict = {
   shop_empty_title: "出品が見つかりません",
   shop_empty_sub: "フィルターを変えてみてください",
   shop_popular_series: "人気シリーズ",
-  shop_categories: "カテゴリー",
   shop_search_ph: "フィギュア、キャラクター、シリーズを検索…",
   shop_results: "件見つかりました",
   shop_clear_search: "検索をリセット ×",

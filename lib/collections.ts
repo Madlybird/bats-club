@@ -13,12 +13,18 @@ export interface ShopCollection {
   count: number
 }
 
-// Themed collections (e.g. "Maid & Cafe", "Vintage Gashapon") shown as a
-// filter row on /shop, alongside the existing series-based SeriesBar.
-// Reuses the same collections/collection_figures tables as the homepage
-// sliders — a collection only shows here if it has at least one figure
-// with an active listing (out of stock/inactive-only collections stay
-// homepage-only rather than dead-ending shop visitors).
+// Curated collections that exist to power the /shop filter row, not the
+// homepage sliders (e.g. cross-series themes like "Maid & Cafe" that don't
+// belong in the homepage's per-franchise collections list). Keep this in
+// sync with scripts/seed-shop-categories.mjs.
+const SHOP_ONLY_COLLECTION_SLUGS = new Set(["maid-cafe", "vintage-gashapon"])
+
+// Themed collections (e.g. "Maid & Cafe", "Vintage Gashapon") merged into
+// the /shop "Popular series" filter row alongside real series. Reuses the
+// same collections/collection_figures tables as the homepage sliders — a
+// collection only shows here if it has at least one figure with an active
+// listing (out of stock/inactive-only collections just don't appear,
+// rather than dead-ending shop visitors).
 export async function getShopCollections(
   locale: "en" | "ru" | "jp"
 ): Promise<ShopCollection[]> {
@@ -83,6 +89,7 @@ export async function getHomeCollections(
   if (error || !data) return []
 
   return data
+    .filter((c: any) => !SHOP_ONLY_COLLECTION_SLUGS.has(c.slug))
     .map((c: any) => ({
       id: c.id,
       slug: c.slug,

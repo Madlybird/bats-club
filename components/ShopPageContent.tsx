@@ -55,87 +55,79 @@ interface FilterState {
   collection?: string
 }
 
-// Shared by SeriesBar and CollectionsBar so picking one filter dimension
-// (e.g. a collection pill) doesn't wipe out the others (price, sort, the
-// series pill) — mirrors the preserve-everything-but-this-key pattern in
-// ShopFilters.updateFilter.
-function buildFilterUrl(pathname: string, current: FilterState, key: keyof FilterState, value: string | null) {
-  const params = new URLSearchParams()
-  ;(Object.keys(current) as (keyof FilterState)[]).forEach((k) => {
-    if (k === key) return
-    const v = current[k]
-    if (v) params.set(k, v)
-  })
-  if (value) params.set(key, value)
-  const q = params.toString()
-  return q ? `${pathname}?${q}` : pathname
-}
+type Pill =
+  | { kind: "series"; key: string; label: string; count: number }
+  | { kind: "collection"; key: string; label: string; count: number }
 
-function SeriesBar({ topSeries, current, dict }: { topSeries: TopSeries[]; current: FilterState; dict: Dict }) {
+// Single unified "Popular series" row: real series (To Heart 2, K.T
+// Figure…) and themed cross-series collections (Maid & Cafe, Vintage
+// Gashapon…) are just two sources for the same list of browsable tags,
+// sorted together by listing count. Picking one clears whichever of
+// series/collection was previously selected — it reads as one exclusive
+// choice, not two independent filters.
+function PopularBar({
+  topSeries,
+  topCollections,
+  current,
+  dict,
+}: {
+  topSeries: TopSeries[]
+  topCollections: TopCollection[]
+  current: FilterState
+  dict: Dict
+}) {
   const router = useRouter()
   const pathname = usePathname()
 
-  if (topSeries.length === 0) return null
+  const pills: Pill[] = [
+    ...topSeries.map((s): Pill => ({ kind: "series", key: s.series, label: s.series, count: s.count })),
+    ...topCollections.map((c): Pill => ({ kind: "collection", key: c.slug, label: c.name, count: c.count })),
+  ].sort((a, b) => b.count - a.count)
 
-  const select = (s: string) => {
-    router.push(buildFilterUrl(pathname, current, "series", current.series === s ? null : s))
+  if (pills.length === 0) return null
+
+  const isActive = (p: Pill) =>
+    p.kind === "series" ? current.series === p.key : current.collection === p.key
+
+  const select = (p: Pill) => {
+    const active = isActive(p)
+    const next: FilterState = { price: current.price, sort: current.sort }
+    if (!active) {
+      if (p.kind === "series") next.series = p.key
+      else next.collection = p.key
+    }
+    const params = new URLSearchParams()
+    ;(Object.keys(next) as (keyof FilterState)[]).forEach((k) => {
+      const v = next[k]
+      if (v) params.set(k, v)
+    })
+    const q = params.toString()
+    router.push(q ? `${pathname}?${q}` : pathname)
   }
 
   return (
     <div className="mb-6">
       <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">{dict.shop_popular_series}</p>
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {topSeries.map((s) => (
-          <button
-            key={s.series}
-            onClick={() => select(s.series)}
-            className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
-              current.series === s.series
-                ? "bg-[#ff2d78] border-[#ff2d78] text-white"
-                : "bg-[#0a0a12] border-[#1a1a3a] text-slate-400 hover:border-[#ff2d78]/40 hover:text-white"
-            }`}
-          >
-            <span className="truncate max-w-[120px]">{s.series}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${current.series === s.series ? "bg-white/20" : "bg-white/5"}`}>
-              {s.count}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function CollectionsBar({ topCollections, current, dict }: { topCollections: TopCollection[]; current: FilterState; dict: Dict }) {
-  const router = useRouter()
-  const pathname = usePathname()
-
-  if (!topCollections || topCollections.length === 0) return null
-
-  const select = (slug: string) => {
-    router.push(buildFilterUrl(pathname, current, "collection", current.collection === slug ? null : slug))
-  }
-
-  return (
-    <div className="mb-6">
-      <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">{dict.shop_categories}</p>
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {topCollections.map((c) => (
-          <button
-            key={c.slug}
-            onClick={() => select(c.slug)}
-            className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
-              current.collection === c.slug
-                ? "bg-violet-700 border-violet-600 text-white"
-                : "bg-[#0a0a12] border-[#1a1a3a] text-slate-400 hover:border-violet-700/50 hover:text-slate-200"
-            }`}
-          >
-            <span className="truncate max-w-[140px]">{c.name}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${current.collection === c.slug ? "bg-white/20" : "bg-white/5"}`}>
-              {c.count}
-            </span>
-          </button>
-        ))}
+        {pills.map((p) => {
+          const active = isActive(p)
+          return (
+            <button
+              key={`${p.kind}:${p.key}`}
+              onClick={() => select(p)}
+              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
+                active
+                  ? "bg-[#ff2d78] border-[#ff2d78] text-white"
+                  : "bg-[#0a0a12] border-[#1a1a3a] text-slate-400 hover:border-[#ff2d78]/40 hover:text-white"
+              }`}
+            >
+              <span className="truncate max-w-[140px]">{p.label}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${active ? "bg-white/20" : "bg-white/5"}`}>
+                {p.count}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -204,8 +196,7 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <ScrollReveal>
-            <SeriesBar topSeries={topSeries} current={currentFilters} dict={dict} />
-            <CollectionsBar topCollections={topCollections || []} current={currentFilters} dict={dict} />
+            <PopularBar topSeries={topSeries} topCollections={topCollections || []} current={currentFilters} dict={dict} />
 
             {/* Search */}
             <div className="relative mb-5">
