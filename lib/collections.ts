@@ -13,10 +13,16 @@ export interface ShopCollection {
   count: number
 }
 
-// Curated collections that exist to power the /shop filter row, not the
-// homepage sliders (e.g. cross-series themes like "Maid & Cafe" that don't
-// belong in the homepage's per-franchise collections list). Keep this in
-// sync with scripts/seed-shop-categories.mjs.
+// Collections meant to appear as pills on /shop. Deliberately NOT "all
+// active collections" — most of those (Range Murata, Di Gi Charat, ToHeart2,
+// Weekly Dearest My Brother) already duplicate an existing series pill
+// one-for-one and just showed the same franchise twice under two counts.
+// Only cross-series themes and franchises that don't already have a clean
+// series pill belong here. Keep in sync with scripts/seed-shop-categories.mjs.
+const SHOP_COLLECTION_SLUGS = ["ghost-in-the-shell", "wonder-festival", "maid-cafe", "vintage-gashapon"]
+
+// Collections that exist to power the /shop filter row and should NOT
+// appear in the homepage's per-franchise collections sliders.
 const SHOP_ONLY_COLLECTION_SLUGS = new Set(["maid-cafe", "vintage-gashapon"])
 
 // Themed collections (e.g. "Maid & Cafe", "Vintage Gashapon") merged into
@@ -37,6 +43,7 @@ export async function getShopCollections(
        )`
     )
     .eq("active", true)
+    .in("slug", SHOP_COLLECTION_SLUGS)
     .order("position", { ascending: true })
 
   if (error || !data) return []
