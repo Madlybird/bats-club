@@ -89,9 +89,6 @@ export async function POST(req: Request) {
       revalidatePath("/")
       revalidatePath("/jp")
       revalidatePath("/ru")
-      revalidatePath("/archive")
-      revalidatePath("/jp/archive")
-      revalidatePath("/ru/archive")
     }
 
     return NextResponse.json({

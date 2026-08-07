@@ -3,6 +3,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
+import { lookupSlugById } from "@/lib/slug"
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -85,17 +86,17 @@ export async function POST(req: Request) {
       // listings change the "for sale" badge and cheapest-price on
       // archive cards, so the shared figures cache needs busting too.
       revalidateTag("figures")
-      revalidatePath("/archive")
-      revalidatePath("/ru/archive")
-      revalidatePath("/jp/archive")
-      revalidatePath("/shop")
-      revalidatePath("/ru/shop")
-      revalidatePath("/jp/shop")
       revalidatePath("/feed.xml")
       if (figureId) {
-        revalidatePath("/figures/[slug]", "page")
-        revalidatePath("/ru/figures/[slug]", "page")
-        revalidatePath("/jp/figures/[slug]", "page")
+        const slugForPath = (await lookupSlugById(figureId)) || figureId
+        revalidatePath(`/figures/${slugForPath}`)
+        revalidatePath(`/ru/figures/${slugForPath}`)
+        revalidatePath(`/jp/figures/${slugForPath}`)
+        if (slugForPath !== figureId) {
+          revalidatePath(`/figures/${figureId}`)
+          revalidatePath(`/ru/figures/${figureId}`)
+          revalidatePath(`/jp/figures/${figureId}`)
+        }
       }
     } catch (e) {
       console.error("revalidatePath error:", e)

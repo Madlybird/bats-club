@@ -81,19 +81,18 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   revalidatePath("/")
   revalidatePath("/jp")
   revalidatePath("/ru")
-  revalidatePath("/archive")
-  revalidatePath("/jp/archive")
-  revalidatePath("/ru/archive")
   revalidatePath(`/figures/${slugForPath}`)
   revalidatePath(`/jp/figures/${slugForPath}`)
   revalidatePath(`/ru/figures/${slugForPath}`)
   // Slug and id resolve to different cache entries (generateStaticParams
-  // pre-renders at the UUID path, archive links can hit either). The
-  // concrete-path calls above miss whichever one isn't slugForPath, so
-  // also invalidate every path under the dynamic route.
-  revalidatePath("/figures/[slug]", "page")
-  revalidatePath("/jp/figures/[slug]", "page")
-  revalidatePath("/ru/figures/[slug]", "page")
+  // pre-renders at the UUID path, archive links can hit either). Cover
+  // both concrete paths instead of invalidating the whole dynamic route
+  // template, which would regenerate every other figure page too.
+  if (slugForPath !== params.id) {
+    revalidatePath(`/figures/${params.id}`)
+    revalidatePath(`/jp/figures/${params.id}`)
+    revalidatePath(`/ru/figures/${params.id}`)
+  }
 
   return NextResponse.json(figure)
 }
@@ -104,6 +103,15 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
+  // Slug is only readable before the row is gone — fetch it first so the
+  // post-delete revalidation can still target the slug-based cache entry.
+  const { data: slugRow } = await supabaseAdmin
+    .from("figures")
+    .select("slug")
+    .eq("id", params.id)
+    .maybeSingle()
+  const slugForPath = slugRow?.slug || params.id
+
   const { error } = await supabaseAdmin.from("figures").delete().eq("id", params.id)
 
   if (error) {
@@ -112,12 +120,14 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   }
 
   revalidateTag("figures")
-  revalidatePath("/figures/[slug]", "page")
-  revalidatePath("/jp/figures/[slug]", "page")
-  revalidatePath("/ru/figures/[slug]", "page")
-  revalidatePath("/archive")
-  revalidatePath("/jp/archive")
-  revalidatePath("/ru/archive")
+  revalidatePath(`/figures/${slugForPath}`)
+  revalidatePath(`/jp/figures/${slugForPath}`)
+  revalidatePath(`/ru/figures/${slugForPath}`)
+  if (slugForPath !== params.id) {
+    revalidatePath(`/figures/${params.id}`)
+    revalidatePath(`/jp/figures/${params.id}`)
+    revalidatePath(`/ru/figures/${params.id}`)
+  }
   revalidatePath("/")
   revalidatePath("/jp")
   revalidatePath("/ru")

@@ -3,6 +3,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
+import { lookupSlugById } from "@/lib/slug"
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const { data: listing, error } = await supabaseAdmin
@@ -72,20 +73,20 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   const figureId = (listing as any)?.figureId
   try {
     revalidateTag("figures")
-    revalidatePath("/archive")
-    revalidatePath("/ru/archive")
-    revalidatePath("/jp/archive")
-    revalidatePath("/shop")
-    revalidatePath("/ru/shop")
-    revalidatePath("/jp/shop")
     revalidatePath(`/shop/${params.id}`)
     revalidatePath(`/ru/shop/${params.id}`)
     revalidatePath(`/jp/shop/${params.id}`)
     revalidatePath("/feed.xml")
     if (figureId) {
-      revalidatePath("/figures/[slug]", "page")
-      revalidatePath("/ru/figures/[slug]", "page")
-      revalidatePath("/jp/figures/[slug]", "page")
+      const slugForPath = (await lookupSlugById(figureId)) || figureId
+      revalidatePath(`/figures/${slugForPath}`)
+      revalidatePath(`/ru/figures/${slugForPath}`)
+      revalidatePath(`/jp/figures/${slugForPath}`)
+      if (slugForPath !== figureId) {
+        revalidatePath(`/figures/${figureId}`)
+        revalidatePath(`/ru/figures/${figureId}`)
+        revalidatePath(`/jp/figures/${figureId}`)
+      }
     }
   } catch (e) {
     console.error("revalidatePath error:", e)
@@ -112,12 +113,9 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
 
   try {
     revalidateTag("figures")
-    revalidatePath("/archive")
-    revalidatePath("/ru/archive")
-    revalidatePath("/jp/archive")
-    revalidatePath("/shop")
-    revalidatePath("/ru/shop")
-    revalidatePath("/jp/shop")
+    revalidatePath(`/shop/${params.id}`)
+    revalidatePath(`/ru/shop/${params.id}`)
+    revalidatePath(`/jp/shop/${params.id}`)
     revalidatePath("/feed.xml")
   } catch (e) {
     console.error("revalidatePath error:", e)

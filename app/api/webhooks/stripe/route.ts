@@ -105,16 +105,6 @@ export async function POST(req: Request) {
             if (legacyBuyerId) await addFigureToCollection(legacyBuyerId, order.listing_id)
           }
           console.log(`[stripe webhook] legacy: session ${session.id} → marked ${orders.length} order(s) PAID`)
-          try {
-            revalidatePath("/shop")
-            revalidatePath("/ru/shop")
-            revalidatePath("/jp/shop")
-            revalidatePath("/archive")
-            revalidatePath("/ru/archive")
-            revalidatePath("/jp/archive")
-          } catch (e) {
-            console.error("[stripe webhook] legacy revalidate failed:", e)
-          }
         } else {
           console.error("No orders found and no metadata for session", session.id)
           return NextResponse.json({ error: "No order data found" }, { status: 404 })
@@ -206,21 +196,17 @@ export async function POST(req: Request) {
           `[stripe webhook] session ${session.id} → created ${listingIds.length} order(s) as PAID`
         )
 
-        // Force shop and archive to refetch immediately so the sold
-        // listing disappears from the public catalog.
+        // Force the sold listing's own detail page to refetch immediately
+        // so it stops showing as in-stock. /shop and /archive are already
+        // force-dynamic (no ISR cache), so revalidating them here is a
+        // no-op — they always read live on every request.
         try {
-          revalidatePath("/shop")
-          revalidatePath("/ru/shop")
-          revalidatePath("/jp/shop")
-          revalidatePath("/archive")
-          revalidatePath("/ru/archive")
-          revalidatePath("/jp/archive")
           for (const listingId of listingIds) {
             revalidatePath(`/shop/${listingId}`)
             revalidatePath(`/ru/shop/${listingId}`)
             revalidatePath(`/jp/shop/${listingId}`)
           }
-          console.log("[stripe webhook] revalidated shop + archive paths")
+          console.log("[stripe webhook] revalidated shop listing paths")
         } catch (e) {
           console.error("[stripe webhook] revalidate failed:", e)
         }

@@ -21,7 +21,13 @@ interface Props { params: { id: string } }
 // hundred). dynamicParams covers the long tail with normal on-demand
 // ISR instead of a full DB+auth round trip on every single request.
 export const dynamicParams = true
-export const revalidate = 300 // 5 min — short enough that stock/price/active changes show up quickly
+// Price/stock/active changes go through on-demand revalidation (with
+// retries) from the admin panel, the telegram bot, and the Stripe
+// webhook — all three call revalidatePath(`/shop/${id}`) directly on
+// mutation, and checkout re-checks price/stock live from the DB
+// regardless of what this cached page shows. This window is just a
+// fallback for the rare case on-demand revalidation doesn't fire.
+export const revalidate = 3600
 
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   try {

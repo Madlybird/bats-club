@@ -13,7 +13,9 @@ import { authOptions } from "@/lib/auth"
 // - figureId:  also invalidates /figures/[id] for every locale
 // - listingId: also invalidates /shop/[id] for every locale
 // - paths:     extra paths to invalidate verbatim
-// No body → refresh the figure-listing pages (/, /archive, /shop) across locales.
+// No body → refresh the figure-listing pages (/) across locales. /archive
+// and /shop aren't included — both are force-dynamic (no ISR cache), so
+// revalidating them is a no-op.
 export async function POST(req: Request) {
   // Two ways in: a logged-in admin session (site admin panel), or a shared
   // secret (the telegram bot, which writes to Supabase directly and has no
@@ -47,12 +49,6 @@ export async function POST(req: Request) {
   push("/")
   push("/jp")
   push("/ru")
-  push("/archive")
-  push("/jp/archive")
-  push("/ru/archive")
-  push("/shop")
-  push("/jp/shop")
-  push("/ru/shop")
   push("/feed.xml")
 
   if (body.figureId) {

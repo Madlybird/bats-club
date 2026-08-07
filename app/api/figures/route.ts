@@ -84,9 +84,6 @@ export async function POST(req: Request) {
     revalidatePath("/")
     revalidatePath("/jp")
     revalidatePath("/ru")
-    revalidatePath("/archive")
-    revalidatePath("/jp/archive")
-    revalidatePath("/ru/archive")
     if (slugForPath) {
       revalidatePath(`/figures/${slugForPath}`)
       revalidatePath(`/jp/figures/${slugForPath}`)
