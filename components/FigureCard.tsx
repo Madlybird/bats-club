@@ -20,6 +20,7 @@ interface FigureCardLabels {
 interface FigureCardProps {
   figure: {
     id: string
+    slug?: string | null
     name: string
     series: string
     character: string
@@ -43,7 +44,7 @@ interface FigureCardProps {
 }
 
 export default function FigureCard({ figure, labels, ageGateLabels, priority = false }: FigureCardProps) {
-  const figureHref = `${labels.figurePath}/${figure.id}`
+  const figureHref = `${labels.figurePath}/${figure.slug || figure.id}`
   const isMature = !!figure.isMature
   return (
     <div className="card-cv card-hover group flex flex-col overflow-hidden h-full">

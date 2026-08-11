@@ -4,6 +4,7 @@ import { isHiddenFigure } from "@/lib/hidden"
 
 export interface FigureListRow {
   id: string
+  slug: string | null
   name: string
   series: string
   character: string
@@ -31,7 +32,7 @@ export const getFiguresForList = cache(async (): Promise<FigureListRow[]> => {
   const { data, error } = await supabaseAdmin
     .from("figures")
     .select(
-      "id, name, series, character, manufacturer, scale, year, imageUrl:image_url, isMature:is_mature, " +
+      "id, slug, name, series, character, manufacturer, scale, year, imageUrl:image_url, isMature:is_mature, " +
         "wishlist_agg:user_figures(status), " +
         "listings(id, active, price, condition)",
     )
@@ -49,6 +50,7 @@ export const getFiguresForList = cache(async (): Promise<FigureListRow[]> => {
       : null
     return {
       id: f.id,
+      slug: f.slug ?? null,
       name: f.name,
       series: f.series,
       character: f.character,
