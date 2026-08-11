@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import AddToCartButton from "@/components/AddToCartButton"
+import TrackViewItemOnMount from "@/components/TrackViewItemOnMount"
 import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import ShareButtons from "@/components/ShareButtons"
@@ -83,6 +84,7 @@ export default async function ListingDetailPageRu({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
+      <TrackViewItemOnMount listingId={listing.id} figureName={figure?.name} price={listing.price} series={figure?.series} />
       <BatsOverlay />
       <div className="absolute top-1/4 right-1/3 w-[600px] h-[600px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
       <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />

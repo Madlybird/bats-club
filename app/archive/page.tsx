@@ -21,9 +21,12 @@ function ArchiveSkeleton() {
   )
 }
 
-export const metadata: Metadata = {
-  title: "Archive | Bats Club",
-  description: "Browse 100+ authentic rare Japanese anime figures from the 1990s-2000s. Di Gi Charat, Evangelion, Range Murata and more. Private collector archive.",
+export async function generateMetadata(): Promise<Metadata> {
+  const figures = await getFiguresForList()
+  return {
+    title: "Archive | Bats Club",
+    description: `Browse ${figures.length}+ authentic rare Japanese anime figures from the 1990s-2000s. Di Gi Charat, Evangelion, Range Murata and more. Private collector archive.`,
+  }
 }
 
 // Figure count must always be accurate, not up to an hour stale.

@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { supabaseAdmin } from "@/lib/supabase"
 import { isHiddenFigure } from "@/lib/hidden"
 
@@ -23,7 +24,10 @@ export interface FigureListRow {
 //
 // Note: per-user "userStatus" is intentionally NOT included here — it's
 // hydrated client-side via UserFiguresProvider after mount.
-export async function getFiguresForList(): Promise<FigureListRow[]> {
+// Wrapped in React's request-scoped cache() so generateMetadata (needs
+// the count for the meta description) and the page body can both call
+// this without doubling the DB query within the same request.
+export const getFiguresForList = cache(async (): Promise<FigureListRow[]> => {
   const { data, error } = await supabaseAdmin
     .from("figures")
     .select(
@@ -62,4 +66,4 @@ export async function getFiguresForList(): Promise<FigureListRow[]> {
         : null,
     }
   })
-}
+})

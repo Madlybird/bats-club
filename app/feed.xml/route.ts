@@ -102,7 +102,7 @@ export async function GET() {
     <g:availability>in stock</g:availability>
     <g:condition>used</g:condition>
     <g:brand>${xmlEscape(figure.manufacturer || "Unknown")}</g:brand>
-    <g:mpn>${xmlEscape(figure.id)}</g:mpn>
+    <g:identifier_exists>false</g:identifier_exists>
     <g:product_type>Anime Figures</g:product_type>
     <g:google_product_category>Toys &amp; Games &gt; Toys &gt; Action Figures</g:google_product_category>
 ${SHIPPING_COUNTRIES.map(({ country, price }) => `    <g:shipping>
