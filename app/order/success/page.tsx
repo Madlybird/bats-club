@@ -1,7 +1,9 @@
 import Link from "next/link"
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import BatsOverlay from "@/components/BatsOverlay"
 import ClearCartOnMount from "@/components/ClearCartOnMount"
+import TrackPurchaseOnMount from "@/components/TrackPurchaseOnMount"
 
 export const metadata: Metadata = {
   title: "Order Confirmed | Bats Club",
@@ -16,6 +18,9 @@ export default function OrderSuccessPage() {
     <div className="relative min-h-screen flex items-center justify-center px-4 py-16 overflow-hidden">
       <BatsOverlay />
       <ClearCartOnMount />
+      <Suspense fallback={null}>
+        <TrackPurchaseOnMount />
+      </Suspense>
 
       {/* ambient glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-[#ff2d78]/8 blur-[180px] pointer-events-none" />
