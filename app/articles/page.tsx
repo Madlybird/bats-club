@@ -7,6 +7,15 @@ export const metadata: Metadata = {
   title: "Collector Articles & Spotlights | Bats Club",
   description:
     "Anime figure collecting guides, reviews and collector spotlights from Bats Club.",
+  alternates: {
+    canonical: "https://batsclub.com/articles",
+    languages: {
+      en: "https://batsclub.com/articles",
+      ru: "https://batsclub.com/ru/articles",
+      ja: "https://batsclub.com/jp/articles",
+      "x-default": "https://batsclub.com/articles",
+    },
+  },
 }
 
 export const revalidate = 60

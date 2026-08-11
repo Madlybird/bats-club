@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "Условия использования | Bats Club",
   description:
     "Условия использования Bats Club. Сайт управляется SINBIOX Limited.",
+  alternates: {
+    canonical: "https://batsclub.com/ru/terms",
+    languages: {
+      en: "https://batsclub.com/terms",
+      ru: "https://batsclub.com/ru/terms",
+      ja: "https://batsclub.com/jp/terms",
+      "x-default": "https://batsclub.com/terms",
+    },
+  },
 }
 
 export default function TermsRuPage() {

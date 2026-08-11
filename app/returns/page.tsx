@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "Returns Policy | Bats Club",
   description:
     "Bats Club returns policy. Returns accepted for figures damaged in transit within 14 days. Operated by SINBIOX Limited.",
+  alternates: {
+    canonical: "https://batsclub.com/returns",
+    languages: {
+      en: "https://batsclub.com/returns",
+      ru: "https://batsclub.com/ru/returns",
+      ja: "https://batsclub.com/jp/returns",
+      "x-default": "https://batsclub.com/returns",
+    },
+  },
 }
 
 export default function ReturnsPage() {

@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "FAQ | Bats Club",
   description:
     "Frequently asked questions about Bats Club — shipping, orders, returns and contact information.",
+  alternates: {
+    canonical: "https://batsclub.com/faq",
+    languages: {
+      en: "https://batsclub.com/faq",
+      ru: "https://batsclub.com/ru/faq",
+      ja: "https://batsclub.com/jp/faq",
+      "x-default": "https://batsclub.com/faq",
+    },
+  },
 }
 
 const FAQ: { q: string; a: string }[] = [

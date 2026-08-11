@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   title: "コレクター記事・スポットライト | Bats Club",
   description:
     "Bats Clubによるアニメフィギュア収集ガイド、レビュー、コレクター紹介。",
+  alternates: {
+    canonical: "https://batsclub.com/jp/articles",
+    languages: {
+      en: "https://batsclub.com/articles",
+      ru: "https://batsclub.com/ru/articles",
+      ja: "https://batsclub.com/jp/articles",
+      "x-default": "https://batsclub.com/articles",
+    },
+  },
 }
 
 export const revalidate = 60

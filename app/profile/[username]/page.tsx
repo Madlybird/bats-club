@@ -17,7 +17,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .eq("username", decodedUsername)
     .maybeSingle()
   if (!user) return { title: "User Not Found" }
-  return { title: `${user.name} (@${user.username}) | Bats Club` }
+  return {
+    title: `${user.name} (@${user.username}) | Bats Club`,
+    alternates: { canonical: `https://batsclub.com/profile/${encodeURIComponent(user.username)}` },
+  }
 }
 
 export default async function ProfilePage({ params }: Props) {

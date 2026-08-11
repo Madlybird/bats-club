@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "利用規約 | Bats Club",
   description:
     "Bats Club 利用規約。運営：SINBIOX Limited。",
+  alternates: {
+    canonical: "https://batsclub.com/jp/terms",
+    languages: {
+      en: "https://batsclub.com/terms",
+      ru: "https://batsclub.com/ru/terms",
+      ja: "https://batsclub.com/jp/terms",
+      "x-default": "https://batsclub.com/terms",
+    },
+  },
 }
 
 export default function TermsJpPage() {

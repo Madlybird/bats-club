@@ -16,9 +16,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single()
   if (!article) return { title: "Article Not Found" }
   const a = localizeArticle(article as any, "jp")
+  const canonical = `https://batsclub.com/jp/articles/${params.id}`
   return {
     title: `${a.title} | Bats Club`,
     description: a.excerpt || undefined,
+    alternates: { canonical },
   }
 }
 

@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "Privacy Policy | Bats Club",
   description:
     "How Bats Club handles your personal data. Operated by SINBIOX Limited.",
+  alternates: {
+    canonical: "https://batsclub.com/privacy",
+    languages: {
+      en: "https://batsclub.com/privacy",
+      ru: "https://batsclub.com/ru/privacy",
+      ja: "https://batsclub.com/jp/privacy",
+      "x-default": "https://batsclub.com/privacy",
+    },
+  },
 }
 
 export default function PrivacyPage() {

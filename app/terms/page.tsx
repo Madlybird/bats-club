@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "Terms of Service | Bats Club",
   description:
     "Bats Club terms of service. Operated by SINBIOX Limited.",
+  alternates: {
+    canonical: "https://batsclub.com/terms",
+    languages: {
+      en: "https://batsclub.com/terms",
+      ru: "https://batsclub.com/ru/terms",
+      ja: "https://batsclub.com/jp/terms",
+      "x-default": "https://batsclub.com/terms",
+    },
+  },
 }
 
 export default function TermsPage() {

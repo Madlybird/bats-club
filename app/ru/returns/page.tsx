@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "Политика возврата | Bats Club",
   description:
     "Политика возврата Bats Club. Возвраты принимаются для фигурок, повреждённых при доставке, в течение 14 дней. Сайт управляется SINBIOX Limited.",
+  alternates: {
+    canonical: "https://batsclub.com/ru/returns",
+    languages: {
+      en: "https://batsclub.com/returns",
+      ru: "https://batsclub.com/ru/returns",
+      ja: "https://batsclub.com/jp/returns",
+      "x-default": "https://batsclub.com/returns",
+    },
+  },
 }
 
 export default function ReturnsRuPage() {

@@ -14,9 +14,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .eq("published", true)
     .single()
   if (!article) return { title: "Article Not Found" }
+  const canonical = `https://batsclub.com/articles/${params.id}`
   return {
     title: `${article.title} | Bats Club`,
     description: article.excerpt || undefined,
+    alternates: { canonical },
   }
 }
 

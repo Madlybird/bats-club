@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "Политика конфиденциальности | Bats Club",
   description:
     "Как Bats Club обрабатывает ваши персональные данные. Сайт управляется SINBIOX Limited.",
+  alternates: {
+    canonical: "https://batsclub.com/ru/privacy",
+    languages: {
+      en: "https://batsclub.com/privacy",
+      ru: "https://batsclub.com/ru/privacy",
+      ja: "https://batsclub.com/jp/privacy",
+      "x-default": "https://batsclub.com/privacy",
+    },
+  },
 }
 
 export default function PrivacyRuPage() {

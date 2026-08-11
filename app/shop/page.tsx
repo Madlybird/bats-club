@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   title: "Buy Rare Anime Figures | Bats Club",
   description:
     "Shop authentic vintage anime figures from a private Japanese collection. Worldwide shipping. All figures verified and described.",
+  alternates: {
+    canonical: "https://batsclub.com/shop",
+    languages: {
+      en: "https://batsclub.com/shop",
+      ru: "https://batsclub.com/ru/shop",
+      ja: "https://batsclub.com/jp/shop",
+      "x-default": "https://batsclub.com/shop",
+    },
+  },
 }
 
 // Listing counts must always be accurate (no ISR window) — this route

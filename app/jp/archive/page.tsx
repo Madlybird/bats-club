@@ -24,6 +24,15 @@ function ArchiveSkeleton() {
 export const metadata: Metadata = {
   title: "Archive | Bats Club",
   description: "Browse the full Bats Club anime figure archive.",
+  alternates: {
+    canonical: "https://batsclub.com/jp/archive",
+    languages: {
+      en: "https://batsclub.com/archive",
+      ru: "https://batsclub.com/ru/archive",
+      ja: "https://batsclub.com/jp/archive",
+      "x-default": "https://batsclub.com/archive",
+    },
+  },
 }
 
 // Figure count must always be accurate, not up to an hour stale.

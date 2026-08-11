@@ -25,9 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single()
   if (!listing) return { title: "Listing Not Found" }
   const figure = listing.figure as any
+  const canonical = `https://batsclub.com/ru/shop/${params.id}`
   return {
     title: `Купить ${figure?.name} | Bats Club`,
     description: `${figure?.name} · ${figure?.series}. Состояние: ${listing.condition}. Доставка по всему миру от Bats Club.`,
+    alternates: { canonical },
   }
 }
 

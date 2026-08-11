@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "返品ポリシー | Bats Club",
   description:
     "Bats Club 返品ポリシー。配送中に破損したフィギュアについては、受け取りから14日以内に返品を承ります。運営：SINBIOX Limited。",
+  alternates: {
+    canonical: "https://batsclub.com/jp/returns",
+    languages: {
+      en: "https://batsclub.com/returns",
+      ru: "https://batsclub.com/ru/returns",
+      ja: "https://batsclub.com/jp/returns",
+      "x-default": "https://batsclub.com/returns",
+    },
+  },
 }
 
 export default function ReturnsJpPage() {

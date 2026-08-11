@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   title: "Статьи и обзоры коллекционеров | Bats Club",
   description:
     "Гайды по коллекционированию аниме-фигурок, обзоры и интервью с коллекционерами от Bats Club.",
+  alternates: {
+    canonical: "https://batsclub.com/ru/articles",
+    languages: {
+      en: "https://batsclub.com/articles",
+      ru: "https://batsclub.com/ru/articles",
+      ja: "https://batsclub.com/jp/articles",
+      "x-default": "https://batsclub.com/articles",
+    },
+  },
 }
 
 export const revalidate = 60

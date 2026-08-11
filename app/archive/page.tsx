@@ -26,6 +26,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Archive | Bats Club",
     description: `Browse ${figures.length}+ authentic rare Japanese anime figures from the 1990s-2000s. Di Gi Charat, Evangelion, Range Murata and more. Private collector archive.`,
+    alternates: {
+      canonical: "https://batsclub.com/archive",
+      languages: {
+        en: "https://batsclub.com/archive",
+        ru: "https://batsclub.com/ru/archive",
+        ja: "https://batsclub.com/jp/archive",
+        "x-default": "https://batsclub.com/archive",
+      },
+    },
   }
 }
 
