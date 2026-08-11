@@ -5,18 +5,23 @@ import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import { isUuid } from "@/lib/sanitize"
 
-function revalidateArticle(slug?: string | null) {
+function revalidateArticle(id: string, slug?: string | null) {
   revalidatePath("/articles")
   revalidatePath("/ru/articles")
   revalidatePath("/jp/articles")
-  if (slug) {
-    revalidatePath(`/articles/${slug}`)
-    revalidatePath(`/ru/articles/${slug}`)
-    revalidatePath(`/jp/articles/${slug}`)
+  const identifier = slug || id
+  revalidatePath(`/articles/${identifier}`)
+  revalidatePath(`/ru/articles/${identifier}`)
+  revalidatePath(`/jp/articles/${identifier}`)
+  // Slug and id resolve to different cache entries (generateStaticParams-less
+  // dynamicParams route can be hit via either) — cover both concrete paths
+  // instead of invalidating the whole dynamic route template, which would
+  // regenerate every other article page too. Same fix as figures/[id].
+  if (slug && slug !== id) {
+    revalidatePath(`/articles/${id}`)
+    revalidatePath(`/ru/articles/${id}`)
+    revalidatePath(`/jp/articles/${id}`)
   }
-  revalidatePath("/articles/[id]", "page")
-  revalidatePath("/ru/articles/[id]", "page")
-  revalidatePath("/jp/articles/[id]", "page")
 }
 
 function errorResponse(stage: string, error: any, status = 500) {
@@ -124,7 +129,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       .single()
     if (fetchError) return errorResponse(stage, fetchError)
 
-    revalidateArticle((fullArticle as any)?.slug)
+    revalidateArticle(params.id, (fullArticle as any)?.slug)
 
     return NextResponse.json({
       ...fullArticle,
@@ -150,7 +155,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   const { error } = await supabaseAdmin.from("articles").delete().eq("id", params.id)
   if (error) return errorResponse("delete", error)
 
-  revalidateArticle(existing?.slug)
+  revalidateArticle(params.id, existing?.slug)
 
   return NextResponse.json({ success: true })
 }
@@ -172,7 +177,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   if (error) return errorResponse("patch", error)
 
-  revalidateArticle(article?.slug)
+  revalidateArticle(params.id, article?.slug)
 
   return NextResponse.json(article)
 }

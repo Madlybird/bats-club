@@ -18,7 +18,11 @@ export const metadata: Metadata = {
   },
 }
 
-export const revalidate = 60
+// Article create/publish/edit/delete all call revalidatePath("/articles",
+// ...) directly (see app/api/articles/route.ts and [id]/route.ts) — this
+// window is just a fallback for the rare case on-demand revalidation
+// doesn't fire, same reasoning as shop/[id].
+export const revalidate = 3600
 
 export default async function ArticlesPage() {
   const { data: articles } = await supabaseAdmin
