@@ -174,39 +174,43 @@ export default async function FigureDetailPageRu({ params }: Props) {
 
   const slugForUrl = figure.slug || figureId
 
-  const offer: any = {
-    "@type": "Offer",
-    url: `https://batsclub.com/ru/figures/${slugForUrl}`,
-    priceCurrency: "USD",
-    availability: cheapestListing ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-    itemCondition: "https://schema.org/UsedCondition",
-    seller: { "@type": "Organization", name: "Bats Club" },
-  }
-  if (cheapestListing) {
-    offer.price = Number((cheapestListing.price / 100).toFixed(2))
-    offer.hasMerchantReturnPolicy = {
-      "@type": "MerchantReturnPolicy",
-      applicableCountry: "US",
-      returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
-    }
-    offer.shippingDetails = {
-      "@type": "OfferShippingDetails",
-      shippingRate: { "@type": "MonetaryAmount", value: "17", currency: "USD" },
-      shippingDestination: { "@type": "DefinedRegion", addressCountry: "US" },
-      deliveryTime: {
-        "@type": "ShippingDeliveryTime",
-        businessDays: {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+  // Google requires price (and flags missing hasMerchantReturnPolicy /
+  // shippingDetails) on any 'offers' block — so only emit one when there's
+  // an actual listing to price it from. A Product with no offers is still
+  // valid, it's just not shopping-eligible while sold out.
+  const offer: any = cheapestListing
+    ? {
+        "@type": "Offer",
+        url: `https://batsclub.com/ru/figures/${slugForUrl}`,
+        priceCurrency: "USD",
+        price: Number((cheapestListing.price / 100).toFixed(2)),
+        availability: "https://schema.org/InStock",
+        itemCondition: "https://schema.org/UsedCondition",
+        seller: { "@type": "Organization", name: "Bats Club" },
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "US",
+          returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
         },
-        cutoffTime: "17:00:00",
-        handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
-        transitTime: { "@type": "QuantitativeValue", minValue: 14, maxValue: 21, unitCode: "DAY" },
-      },
-    }
-  }
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingRate: { "@type": "MonetaryAmount", value: "17", currency: "USD" },
+          shippingDestination: { "@type": "DefinedRegion", addressCountry: "US" },
+          deliveryTime: {
+            "@type": "ShippingDeliveryTime",
+            businessDays: {
+              "@type": "OpeningHoursSpecification",
+              dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            },
+            cutoffTime: "17:00:00",
+            handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
+            transitTime: { "@type": "QuantitativeValue", minValue: 14, maxValue: 21, unitCode: "DAY" },
+          },
+        },
+      }
+    : null
 
-  const jsonLd = {
+  const jsonLd: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: figure.name,
@@ -215,7 +219,7 @@ export default async function FigureDetailPageRu({ params }: Props) {
     description: (figure.description as string | null)?.trim() || `Character: ${figure.character}, Series: ${figure.series}`,
     image: figure.imageUrl,
     brand: { "@type": "Brand", name: figure.manufacturer },
-    offers: offer,
+    ...(offer ? { offers: offer } : {}),
     additionalProperty: [
       { "@type": "PropertyValue", name: "Year", value: figure.year },
       { "@type": "PropertyValue", name: "Scale", value: figure.scale },
