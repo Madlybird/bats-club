@@ -28,6 +28,40 @@ const nextConfig = {
       bodySizeLimit: "10mb",
     },
   },
+  async headers() {
+    return [
+      {
+        // Applies site-wide. No frame-ancestors/CSP restriction on the
+        // Stripe checkout redirect flow — checkout itself happens on
+        // Stripe's own domain, this site never embeds it in an iframe.
+        source: "/:path*",
+        headers: [
+          // Clickjacking: nothing on this site is meant to be framed.
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              // unsafe-inline for scripts: gtag.js + the small inline
+              // config snippet in app/layout.tsx. unsafe-eval is required
+              // by Next.js dev/HMR and some framework internals.
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://www.google-analytics.com https://api.stripe.com",
+              "frame-src 'self' https://js.stripe.com https://checkout.stripe.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
+          },
+        ],
+      },
+    ]
+  },
   async redirects() {
     const hiddenFigureIds = [
       "c36e619e-3a31-45ae-8683-0ff079a2c095",
