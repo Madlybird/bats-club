@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import BatsOverlay from "@/components/BatsOverlay"
+import { trackSignUp } from "@/lib/analytics"
 
 interface RegisterFormLabels {
   heading: string
@@ -48,6 +49,7 @@ export default function RegisterForm({ labels }: { labels: RegisterFormLabels })
         setError(data.error || "Registration failed")
         return
       }
+      trackSignUp("email")
       if (data.needsVerification) {
         // Stash password for auto-login after verification
         sessionStorage.setItem("_bats_pw", formData.password)

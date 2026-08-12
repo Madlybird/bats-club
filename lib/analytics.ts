@@ -52,3 +52,11 @@ export function trackPurchase(order: {
     items: order.items,
   })
 }
+
+export function trackSignUp(method: string = "email") {
+  trackEvent("sign_up", { method })
+}
+
+export function trackLogin(method: string = "email") {
+  trackEvent("login", { method })
+}

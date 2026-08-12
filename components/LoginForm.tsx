@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import BatsOverlay from "@/components/BatsOverlay"
+import { trackLogin } from "@/lib/analytics"
 
 interface LoginFormLabels {
   heading: string
@@ -35,6 +36,7 @@ export default function LoginForm({ labels }: { labels: LoginFormLabels }) {
       if (result?.error) {
         setError(result.error)
       } else {
+        trackLogin("email")
         const session = await getSession()
         const username = (session?.user as any)?.username
         router.push(username ? `/profile/${username}` : "/")
