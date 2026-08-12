@@ -241,7 +241,46 @@ async function saveFigure(figureData, imageUrls) {
   return data
 }
 
+// Reactivates a prior soft-deleted listing for this figure if one exists
+// (keeps its id/photos stable instead of piling up duplicate rows every
+// time a figure gets delisted and relisted), otherwise inserts fresh.
+//
+// Never reactivates a listing that has real orders attached — the Stripe
+// webhook only ever sets stock=0/active=false on a sold-out listing, it
+// never deletes the row, so "most recent listing for this figure" can be
+// a completed sale. Overwriting its price/condition/stock in place would
+// silently rewrite that listing id's identity out from under any order,
+// receipt, or indexed page still pointing at it. Same protection
+// deleteFigureAndListings already applies before deleting.
 async function createListing(figureId, priceCents, condition) {
+  const { data: existing, error: findErr } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("figure_id", figureId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (findErr) throw new Error(`Listing lookup failed: ${findErr.message}`)
+
+  if (existing) {
+    const { data: orders, error: ordersErr } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("listing_id", existing.id)
+      .limit(1)
+    if (ordersErr) throw new Error(`Order lookup failed: ${ordersErr.message}`)
+
+    if (!orders || orders.length === 0) {
+      const { error } = await supabase
+        .from("listings")
+        .update({ price: priceCents, condition, stock: 1, active: true })
+        .eq("id", existing.id)
+      if (error) throw new Error(`Listing reactivate failed: ${error.message}`)
+      return
+    }
+    // existing listing has order history — fall through to insert a fresh row.
+  }
+
   const { error } = await supabase.from("listings").insert({
     figure_id: figureId,
     seller_id: ADMIN_SELLER_ID,
@@ -284,29 +323,45 @@ async function deleteFigureAndListings(figureId) {
   const { error: delFigureErr } = await supabase.from("figures").delete().eq("id", figureId)
   if (delFigureErr) throw new Error(`Failed to delete figure: ${delFigureErr.message}`)
 
-  await revalidateSite({ figureId })
+  return revalidateSite({ figureId })
 }
 
-// Bypasses the site's 24h ISR cache on /figures/[slug] (and the archive/shop
+// Bypasses the site's ISR cache on /figures/[slug] (and the archive/shop
 // listing pages) right after a direct-Supabase write, since the bot has no
-// admin session to trigger Next.js's normal revalidatePath() call. Best-effort:
-// logs on failure but never blocks the delete itself, which already succeeded.
-async function revalidateSite(body) {
-  if (!process.env.REVALIDATE_SECRET || !process.env.SITE_URL) return
-  try {
-    const res = await fetch(`${process.env.SITE_URL}/api/admin/revalidate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-revalidate-secret": process.env.REVALIDATE_SECRET,
-      },
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) console.error("Revalidate call failed:", res.status, await res.text())
-  } catch (err) {
-    console.error("Revalidate call error:", err)
+// admin session to trigger Next.js's normal revalidatePath() call.
+//
+// Retries on failure (this machine has seen transient DNS/network blips —
+// see old ENOTFOUND entries in bot.log) since a swallowed failure here used
+// to mean the live site silently sat on stale data for up to 24h with no
+// indication anything was wrong. Returns true/false so callers can warn the
+// admin in the chat reply instead of failing silently.
+async function revalidateSite(body, attempts = 3) {
+  if (!process.env.REVALIDATE_SECRET || !process.env.SITE_URL) {
+    console.error("Revalidate skipped: REVALIDATE_SECRET or SITE_URL not set")
+    return false
   }
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(`${process.env.SITE_URL}/api/admin/revalidate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-revalidate-secret": process.env.REVALIDATE_SECRET,
+        },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) return true
+      console.error("Revalidate call failed:", res.status, await res.text())
+    } catch (err) {
+      console.error("Revalidate call error:", err)
+    }
+    if (i < attempts - 1) await new Promise((r) => setTimeout(r, 1000 * (i + 1)))
+  }
+  return false
 }
+
+const REVALIDATE_WARNING =
+  "\n\n⚠️ Live site cache refresh failed after 3 tries — the page may show stale data for a while. Try again shortly, or ping me to retry."
 
 function formatFigureData(d) {
   return (
@@ -452,10 +507,20 @@ bot.on("message", async (msg) => {
       if (!figErr && figure) {
         figureId = figure.id
         figureName = figure.name
+        // active-only: a figure can have an old soft-deleted listing
+        // (admin panel DELETE just flips active:false, never removes the
+        // row — see app/api/listings/[id]/route.ts). Surfacing that row
+        // here used to make the bot treat a re-list as "editing an
+        // existing listing" — skipping the condition prompt and updating
+        // price on a row that stayed invisible on the site. Ignoring
+        // inactive rows sends it through the PRICE → condition →
+        // createListing path below instead, which is what "list this
+        // archive figure for sale" actually needs.
         const { data: listings } = await supabase
           .from("listings")
           .select("id, price, photos")
           .eq("figure_id", figureId)
+          .eq("active", true)
           .order("created_at", { ascending: false })
           .limit(1)
         listing = (listings && listings[0]) || null
@@ -544,13 +609,14 @@ bot.on("message", async (msg) => {
           .update({ price: Math.round(price * 100) })
           .eq("id", state.listingId)
         if (error) throw new Error(`DB update failed: ${error.message}`)
-        await revalidateSite({ listingId: state.listingId, figureId: state.figureId })
+        const revalidated = await revalidateSite({ listingId: state.listingId, figureId: state.figureId })
 
         resetState(userId)
         return bot.sendMessage(
           chatId,
           `✅ *Price updated!*\n\n🏷️ ${state.figureName}\n💰 $${price.toFixed(2)}\n\n` +
-            `📎 batsclub.com/shop/${state.listingId}`,
+            `📎 batsclub.com/shop/${state.listingId}` +
+            (revalidated ? "" : REVALIDATE_WARNING),
           { parse_mode: "Markdown" }
         )
       } catch (err) {
@@ -575,13 +641,29 @@ bot.on("message", async (msg) => {
           .update({ photos: imageUrls })
           .eq("id", state.listingId)
         if (error) throw new Error(`DB update failed: ${error.message}`)
-        await revalidateSite({ listingId: state.listingId, figureId: state.figureId })
+
+        // The figure archive page and /archive both read figures.images
+        // (a separate column from listings.photos, which only backs the
+        // shop listing detail page). Keep them in sync here — otherwise a
+        // "photo update" only ever shows up on /shop/<id>, never on the
+        // figure's own page or the archive, which is what admins actually
+        // expect "update this figure's photos" to mean.
+        if (state.figureId) {
+          const { error: figErr } = await supabase
+            .from("figures")
+            .update({ images: imageUrls, image_url: imageUrls[0] })
+            .eq("id", state.figureId)
+          if (figErr) console.error("Figure images sync error:", figErr)
+        }
+
+        const revalidated = await revalidateSite({ listingId: state.listingId, figureId: state.figureId })
 
         resetState(userId)
         return bot.sendMessage(
           chatId,
           `✅ *Photos updated!*\n\n🏷️ ${state.figureName}\n📸 ${imageUrls.length} photo${imageUrls.length === 1 ? "" : "s"}\n\n` +
-            `📎 batsclub.com/shop/${state.listingId}`,
+            `📎 batsclub.com/shop/${state.listingId}` +
+            (revalidated ? "" : REVALIDATE_WARNING),
           { parse_mode: "Markdown" }
         )
       } catch (err) {
@@ -601,11 +683,12 @@ bot.on("message", async (msg) => {
   if (state.step === "confirming_delete") {
     if (text.toUpperCase() === "DELETE CONFIRM") {
       try {
-        await deleteFigureAndListings(state.figureId)
+        const revalidated = await deleteFigureAndListings(state.figureId)
         resetState(userId)
         return bot.sendMessage(
           chatId,
-          `🗑️ *Deleted!*\n\n"${state.figureName}" has been permanently removed from the archive and shop.`,
+          `🗑️ *Deleted!*\n\n"${state.figureName}" has been permanently removed from the archive and shop.` +
+            (revalidated ? "" : REVALIDATE_WARNING),
           { parse_mode: "Markdown" }
         )
       } catch (err) {
@@ -627,13 +710,14 @@ bot.on("message", async (msg) => {
 
     try {
       await createListing(state.figureId, state.price, condition)
-      await revalidateSite({ figureId: state.figureId })
+      const revalidated = await revalidateSite({ figureId: state.figureId })
       resetState(userId)
 
       const priceDisplay = `$${(state.price / 100).toFixed(2)}`
       return bot.sendMessage(
         chatId,
-        `✅ *Listed for sale!*\n\n🏷️ ${state.figureName}\n💰 ${priceDisplay} · ${condition}`,
+        `✅ *Listed for sale!*\n\n🏷️ ${state.figureName}\n💰 ${priceDisplay} · ${condition}` +
+          (revalidated ? "" : REVALIDATE_WARNING),
         { parse_mode: "Markdown" }
       )
     } catch (err) {
