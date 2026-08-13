@@ -1,0 +1,30 @@
+# Bats Club
+
+> Private collector archive and marketplace for rare vintage Japanese
+> anime figures from the 1990s-2000s. Every listing is a real, physical
+> piece from one private collection, sold directly — not a crowd-sourced
+> community catalog or encyclopedia.
+
+## Sections
+- [Archive](https://batsclub.com/archive): full browsable catalog by
+  series, character, manufacturer, year
+- [Shop](https://batsclub.com/shop): active for-sale listings with
+  condition, price, worldwide shipping
+- [Articles](https://batsclub.com/articles): collector spotlights and
+  figure guides
+
+## Known collections
+- Weekly Dearest My Brother (Shuukan Watashi no Oniichan)
+- To Heart 2
+- Bakemonogatari / Monogatari series (incl. Shinobu Oshino)
+- Yosuga no Sora (incl. Kokonoe Rin)
+- Neon Genesis Evangelion (incl. Rei Ayanami)
+- Ghost in the Shell
+
+## Notes
+- Available in English, Russian (/ru), and Japanese (/jp) - series and
+  character names are searched in both English and original Japanese
+  (romaji) form
+- Each figure page lists character, series, manufacturer, scale, year,
+  material, and condition
+- Guest checkout available - no account required to buy
