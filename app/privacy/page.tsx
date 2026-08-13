@@ -100,7 +100,7 @@ export default function PrivacyPage() {
       <section>
         <h2 className="text-white font-bold text-base mb-2">9. Advertising &amp; Google Analytics</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          For visitors in the EEA and UK, we only enable Google Analytics&apos; advertising features (Google Signals) and related cookies after you accept them in the cookie banner shown on your first visit — this associates the usage data we already collect with Google&apos;s own account-level signals, for aggregated demographics/interests reporting and remarketing. You can decline in that banner, or opt out at any time via Google&apos;s Ad Settings (adssettings.google.com) or the Google Analytics opt-out browser add-on. Visitors outside the EEA/UK have analytics running by default, without ad personalisation.
+          For visitors in the EEA and UK, we only enable Google Analytics&apos; advertising features (Google Signals) and related cookies after you accept them in the cookie banner shown on your first visit — this links the usage data we already collect to your Google account, if you&apos;re signed in and have ads personalisation on, for aggregated demographics/interests reporting and remarketing. You can decline in that banner, or opt out at any time via Google&apos;s Ad Settings (adssettings.google.com) or the Google Analytics opt-out browser add-on. Visitors outside the EEA/UK have analytics running by default, without ad personalisation.
         </p>
       </section>
 
