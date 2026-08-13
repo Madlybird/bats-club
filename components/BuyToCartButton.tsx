@@ -12,7 +12,7 @@ interface Props {
   figureImageUrl: string | null
   /** Cheapest active listing for this figure, if any. */
   cheapestListing: { id: string; price: number; condition: string } | null
-  /** Visible button text — pass a localized "Want to Buy" / "Хочу купить" / "買いたい". */
+  /** Visible button text — pass a localized "Add to Cart" / "В корзину" / "カートに追加". */
   label: string
   toastAdded: string
   toastAddedWithCart: string
@@ -27,7 +27,7 @@ function showToast(message: string) {
 }
 
 /**
- * One-button "Want to Buy" CTA. Same side effects as StatusButton's
+ * One-button "Add to Cart" CTA. Same side effects as StatusButton's
  * BUY click — marks the figure as BUY in user_figures, drops the
  * cheapest active listing into the local cart (if any), and shows a
  * localized toast. Used in places that don't want the full 3-button

@@ -39,7 +39,7 @@ interface StatusButtonProps {
 const DEFAULT_LABELS: StatusLabels = {
   have: "Have It",
   wishlist: "Wishlist",
-  buy: "Want to Buy",
+  buy: "Add to Cart",
 }
 
 function showToast(message: string) {
@@ -66,9 +66,9 @@ export default function StatusButton({ figureId, initialStatus, labels = DEFAULT
   }
 
   const statuses = [
-    { value: "HAVE",     label: labels.have,     icon: "✓",  activeClass: "bg-emerald-700 border-emerald-600 text-white" },
-    { value: "WISHLIST", label: labels.wishlist,  icon: "❤️", activeClass: "bg-pink-700 border-pink-600 text-white" },
     { value: "BUY",      label: labels.buy,       icon: "🛒", activeClass: "bg-violet-700 border-violet-600 text-white" },
+    { value: "WISHLIST", label: labels.wishlist,  icon: "❤️", activeClass: "bg-pink-700 border-pink-600 text-white" },
+    { value: "HAVE",     label: labels.have,     icon: "✓",  activeClass: "bg-emerald-700 border-emerald-600 text-white" },
   ]
 
   const handleStatus = async (status: string) => {

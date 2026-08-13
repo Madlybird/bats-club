@@ -55,7 +55,7 @@ interface Props {
   lowestPrice: number | null
   convertedLowestPrice?: string | null
   /** Cheapest active listing for this figure, if any. Powers the
-   *  "Want to Buy" → cart side effect on StatusButton. */
+   *  "Add to Cart" → cart side effect on StatusButton. */
   cheapestListing?: { id: string; price: number; condition: string } | null
   jsonLd: object
   dict: Dict

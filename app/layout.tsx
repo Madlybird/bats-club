@@ -49,7 +49,9 @@ export default function RootLayout({
           gtag('js', new Date());
           gtag('config', 'G-V3EEKGR3QM');
         ` }} />
-        <script type="text/javascript" src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js" async />
+        {/* Trustpilot bootstrap script removed 2026-08-13 alongside the
+            footer widget — nothing on the page uses it anymore, no
+            reason to load it. Re-add when the widget comes back. */}
       </head>
       <body
         className="min-h-screen text-slate-200 antialiased font-inter overflow-x-clip"
