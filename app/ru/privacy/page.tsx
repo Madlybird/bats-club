@@ -98,7 +98,14 @@ export default function PrivacyRuPage() {
       </section>
 
       <section>
-        <h2 className="text-white font-bold text-base mb-2">9. Контакты</h2>
+        <h2 className="text-white font-bold text-base mb-2">9. Реклама и Google Analytics</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          Для посетителей из ЕЭЗ и Великобритании мы включаем рекламные функции Google Analytics (Google Signals) и связанные с ними куки только после того, как вы примете их в баннере согласия, который показывается при первом визите — это связывает уже собираемые данные об использовании сайта с данными вашего аккаунта Google для агрегированной статистики по демографии/интересам и ремаркетинга. Вы можете отказаться в этом баннере или в любой момент отключить это через настройки рекламы Google (adssettings.google.com) или расширение Google Analytics Opt-out. Для посетителей вне ЕЭЗ/Великобритании аналитика работает по умолчанию, без персонализации рекламы.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="text-white font-bold text-base mb-2">10. Контакты</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           Напишите на{" "}
           <a href="mailto:support@batsclub.com" className="text-[#ff2d78] hover:opacity-80 transition-opacity">

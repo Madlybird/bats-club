@@ -98,7 +98,14 @@ export default function PrivacyJpPage() {
       </section>
 
       <section>
-        <h2 className="text-white font-bold text-base mb-2">9. お問い合わせ</h2>
+        <h2 className="text-white font-bold text-base mb-2">9. 広告とGoogleアナリティクス</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          EEA(欧州経済領域)およびイギリスからの訪問者については、初回訪問時に表示される同意バナーで同意いただいた場合にのみ、Googleアナリティクスの広告機能(Google Signals)および関連するクッキーを有効にします — これにより、既に収集している利用データが、集計された人口統計・興味関心のレポートおよびリマーケティングのために、Googleアカウントの情報と関連付けられます。バナーで拒否することも、Googleの広告設定(adssettings.google.com)やGoogleアナリティクスのオプトアウトアドオンからいつでも無効にすることもできます。EEA・イギリス以外の訪問者については、広告のパーソナライズなしで、アナリティクスがデフォルトで動作します。
+        </p>
+      </section>
+
+      <section>
+        <h2 className="text-white font-bold text-base mb-2">10. お問い合わせ</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           {" "}
           <a href="mailto:support@batsclub.com" className="text-[#ff2d78] hover:opacity-80 transition-opacity">

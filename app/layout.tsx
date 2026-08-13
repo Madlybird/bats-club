@@ -6,6 +6,7 @@ import Providers from "@/components/Providers"
 import Toaster from "@/components/Toaster"
 import Footer from "@/components/Footer"
 import RegisterPrompt from "@/components/RegisterPrompt"
+import CookieConsentBanner from "@/components/CookieConsentBanner"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -76,6 +77,25 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: `
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
+          // Consent Mode v2: granted everywhere by default, denied by
+          // default only for EEA/UK visitors (region codes below) until
+          // they answer the banner in CookieConsentBanner.tsx, which is
+          // itself only shown to that same region set. Google's tag
+          // does its own geo lookup against the 'region' list here — no
+          // server-side geo needed for this half of the gating.
+          gtag('consent', 'default', {
+            'ad_storage': 'granted',
+            'ad_user_data': 'granted',
+            'ad_personalization': 'granted',
+            'analytics_storage': 'granted'
+          });
+          gtag('consent', 'default', {
+            'ad_storage': 'denied',
+            'ad_user_data': 'denied',
+            'ad_personalization': 'denied',
+            'analytics_storage': 'denied',
+            'region': ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB']
+          });
           gtag('js', new Date());
           gtag('config', 'G-V3EEKGR3QM');
         ` }} />
@@ -100,6 +120,7 @@ export default function RootLayout({
           <main className="overflow-x-clip">{children}</main>
           <Footer />
           <RegisterPrompt />
+          <CookieConsentBanner />
         </Providers>
       </body>
     </html>
