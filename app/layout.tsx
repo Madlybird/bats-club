@@ -34,6 +34,36 @@ export const metadata: Metadata = {
   },
 }
 
+// Site-wide entity schema: nothing declared batsclub.com as a single
+// Organization before — only a bare `seller: Organization` nested
+// inside each product's Offer. This is the one place that ties the
+// brand identity (logo, description, social profiles) to the domain
+// itself, independent of any single product page. Added 2026-08-13
+// alongside FAQPage schema as part of the AEO pass.
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Bats Club",
+  url: "https://batsclub.com",
+  logo: "https://batsclub.com/logo.png",
+  description:
+    "Private anime figure archive and marketplace. Rare vintage Japanese anime figures from the 1990s-2000s, sold directly from a single private collection.",
+  email: "support@batsclub.com",
+  sameAs: [
+    "https://www.youtube.com/@bats4club",
+    "https://www.pinterest.com/bats_club/",
+    "https://www.tiktok.com/@batsclub",
+    "https://www.trustpilot.com/review/batsclub.com",
+  ],
+}
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Bats Club",
+  url: "https://batsclub.com",
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -49,6 +79,14 @@ export default function RootLayout({
           gtag('js', new Date());
           gtag('config', 'G-V3EEKGR3QM');
         ` }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c") }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd).replace(/</g, "\\u003c") }}
+        />
         {/* Trustpilot bootstrap script removed 2026-08-13 alongside the
             footer widget — nothing on the page uses it anymore, no
             reason to load it. Re-add when the widget comes back. */}

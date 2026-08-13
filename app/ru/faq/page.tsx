@@ -47,12 +47,26 @@ const FAQ: { q: string; a: string }[] = [
   },
 ]
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map(({ q, a }) => ({
+    "@type": "Question",
+    name: q,
+    acceptedAnswer: { "@type": "Answer", text: a },
+  })),
+}
+
 export default function FaqRuPage() {
   return (
     <InfoPageShell
       title="FAQ"
       subtitle="Часто задаваемые вопросы о Bats Club."
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c") }}
+      />
       <div className="space-y-8">
         {FAQ.map(({ q, a }) => (
           <div key={q}>
