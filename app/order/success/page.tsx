@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import BatsOverlay from "@/components/BatsOverlay"
 import ClearCartOnMount from "@/components/ClearCartOnMount"
 import TrackPurchaseOnMount from "@/components/TrackPurchaseOnMount"
+import GoogleCustomerReviewsOptIn from "@/components/GoogleCustomerReviewsOptIn"
 
 export const metadata: Metadata = {
   title: "Order Confirmed | Bats Club",
@@ -20,6 +21,9 @@ export default function OrderSuccessPage() {
       <ClearCartOnMount />
       <Suspense fallback={null}>
         <TrackPurchaseOnMount />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GoogleCustomerReviewsOptIn />
       </Suspense>
 
       {/* ambient glow */}

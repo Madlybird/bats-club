@@ -47,12 +47,17 @@ const nextConfig = {
               // unsafe-inline for scripts: gtag.js + the small inline
               // config snippet in app/layout.tsx. unsafe-eval is required
               // by Next.js dev/HMR and some framework internals.
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
+              // apis.google.com + gstatic: Google Customer Reviews opt-in
+              // widget on /order/success (GoogleCustomerReviewsOptIn.tsx) —
+              // platform.js loads from apis.google.com and pulls further
+              // resources from gstatic.com; the survey modal itself renders
+              // in an iframe from google.com.
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://www.google-analytics.com https://api.stripe.com",
-              "frame-src 'self' https://js.stripe.com https://checkout.stripe.com",
+              "connect-src 'self' https://www.google-analytics.com https://api.stripe.com https://apis.google.com",
+              "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://www.google.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

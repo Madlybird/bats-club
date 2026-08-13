@@ -7,8 +7,13 @@ import { supabaseAdmin } from "@/lib/supabase"
  * report the purchase. The session id itself is the credential: it's
  * a long, Stripe-generated random token, not enumerable, same trust
  * level as the listing UUIDs already exposed on public shop pages.
- * Response is intentionally minimal (no buyer/email/shipping) since
- * this route has no auth check.
+ *
+ * email/delivery_country/estimated_delivery_date were added for the
+ * Google Customer Reviews opt-in (rendered client-side on /order/success,
+ * see GoogleCustomerReviewsOptIn.tsx) — this is the buyer's own data
+ * being returned to the same browser that just completed their own
+ * checkout with this session id, not a new exposure beyond what the
+ * session id already gates.
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -20,7 +25,8 @@ export async function GET(req: Request) {
   const { data: orders, error } = await supabaseAdmin
     .from("orders")
     .select(`
-      listing_id, unit_price, shipping_price, quantity,
+      listing_id, unit_price, shipping_price, quantity, created_at,
+      shipping_address, buyer:users(email),
       listing:listings(figure:figures(name))
     `)
     .eq("stripe_session_id", sessionId)
@@ -46,5 +52,25 @@ export async function GET(req: Request) {
     0
   ) / 100
 
-  return NextResponse.json({ currency: "USD", value, items })
+  const first = orders[0] as any
+  const email: string | null = first.buyer?.email ?? null
+  const deliveryCountry: string | null = first.shipping_address?.country ?? null
+  // Not a real shipping promise, just a timer for when Google sends the
+  // review survey: order created_at + the transit-time estimate already
+  // published in the figure page's ShippingDeliveryTime JSON-LD
+  // (handling 1-3d + transit 14-21d, ~24 business days at the high end).
+  const estimatedDeliveryDate = first.created_at
+    ? new Date(new Date(first.created_at).getTime() + 24 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10)
+    : null
+
+  return NextResponse.json({
+    currency: "USD",
+    value,
+    items,
+    email,
+    deliveryCountry,
+    estimatedDeliveryDate,
+  })
 }

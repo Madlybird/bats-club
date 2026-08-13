@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import BatsOverlay from "@/components/BatsOverlay"
 import ClearCartOnMount from "@/components/ClearCartOnMount"
 import TrackPurchaseOnMount from "@/components/TrackPurchaseOnMount"
+import GoogleCustomerReviewsOptIn from "@/components/GoogleCustomerReviewsOptIn"
 
 export const metadata: Metadata = {
   title: "Заказ подтверждён | Bats Club",
@@ -19,6 +20,9 @@ export default function OrderSuccessPageRu() {
       <ClearCartOnMount />
       <Suspense fallback={null}>
         <TrackPurchaseOnMount />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GoogleCustomerReviewsOptIn />
       </Suspense>
 
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-[#ff2d78]/8 blur-[180px] pointer-events-none" />
