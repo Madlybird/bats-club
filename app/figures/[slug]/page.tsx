@@ -6,6 +6,7 @@ import { en } from "@/lib/dict"
 import { Metadata } from "next"
 import { isUuid, lookupIdBySlug } from "@/lib/slug"
 import { isHiddenFigure } from "@/lib/hidden"
+import { SHIPPING_COUNTRIES } from "@/lib/listing-jsonld"
 
 export const dynamicParams = true
 export const revalidate = 86400
@@ -185,10 +186,19 @@ export default async function FigureDetailPage({ params }: Props) {
         availability: "https://schema.org/InStock",
         itemCondition: "https://schema.org/UsedCondition",
         seller: { "@type": "Organization", name: "Bats Club" },
+        // Mirrors app/returns/page.tsx: 14-day window, transit-damage only,
+        // Bats Club covers return shipping on approved returns. Kept in
+        // sync with lib/listing-jsonld.ts's buildListingJsonLd (used on
+        // /shop/[id]) — this page builds its own Offer inline instead of
+        // sharing that helper, so the two return-policy blocks must be
+        // updated together.
         hasMerchantReturnPolicy: {
           "@type": "MerchantReturnPolicy",
-          applicableCountry: "US",
-          returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+          returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 14,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/FreeReturn",
+          applicableCountry: SHIPPING_COUNTRIES.map((c) => c.country),
         },
         shippingDetails: {
           "@type": "OfferShippingDetails",
