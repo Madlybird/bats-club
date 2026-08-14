@@ -17,6 +17,7 @@ function withLocale(locale: "en" | "ru" | "jp", bare: string): string {
 const footerDict = {
   en: {
     tagline: "Private anime figure archive & marketplace.",
+    about: "About",
     archive: "Archive",
     shop: "Shop",
     articles: "Articles",
@@ -28,6 +29,7 @@ const footerDict = {
   },
   ru: {
     tagline: "Частный архив и маркетплейс аниме фигурок.",
+    about: "О нас",
     archive: "Архив",
     shop: "Магазин",
     articles: "Статьи",
@@ -39,6 +41,7 @@ const footerDict = {
   },
   jp: {
     tagline: "プライベートアニメフィギュアアーカイブ＆マーケットプレイス",
+    about: "私たちについて",
     archive: "アーカイブ",
     shop: "ショップ",
     articles: "記事",
@@ -76,6 +79,7 @@ export default function Footer() {
 
           {/* Nav */}
           <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm" style={{ color: "#1a1a1a" }}>
+            <a href={withLocale(locale, "/about")} className="hover:text-[#ff2d78] transition-colors">{t.about}</a>
             <a href={withLocale(locale, "/archive")} className="hover:text-[#ff2d78] transition-colors">{t.archive}</a>
             <a href={withLocale(locale, "/shop")} className="hover:text-[#ff2d78] transition-colors">{t.shop}</a>
             <a href={withLocale(locale, "/articles")} className="hover:text-[#ff2d78] transition-colors">{t.articles}</a>
