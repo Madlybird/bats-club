@@ -67,7 +67,18 @@ export default function Footer() {
             "56278e9abfbbba0bdcd568bc", data-businessunit-id
             "69dd0967416bf71f23372640", data-token
             "cbb4a6e0-11f1-43a0-9aaa-e9b4a5185c7b". */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
+        {/* Nav — full-width row so all links fit on one line on desktop
+            instead of being squeezed into a 1/3-width grid column. */}
+        <nav className="flex flex-wrap md:flex-nowrap md:justify-center gap-x-8 gap-y-2 text-sm mb-10" style={{ color: "#1a1a1a" }}>
+          <a href={withLocale(locale, "/about")} className="hover:text-[#ff2d78] transition-colors whitespace-nowrap">{t.about}</a>
+          <a href={withLocale(locale, "/archive")} className="hover:text-[#ff2d78] transition-colors whitespace-nowrap">{t.archive}</a>
+          <a href={withLocale(locale, "/shop")} className="hover:text-[#ff2d78] transition-colors whitespace-nowrap">{t.shop}</a>
+          <a href={withLocale(locale, "/articles")} className="hover:text-[#ff2d78] transition-colors whitespace-nowrap">{t.articles}</a>
+          <a href={withLocale(locale, "/faq")} className="hover:text-[#ff2d78] transition-colors whitespace-nowrap">{t.faq}</a>
+          <a href={withLocale(locale, "/returns")} className="hover:text-[#ff2d78] transition-colors whitespace-nowrap">{t.returns}</a>
+        </nav>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
 
           {/* Brand */}
           <div>
@@ -75,16 +86,6 @@ export default function Footer() {
             <p className="text-xs leading-relaxed max-w-[200px]" style={{ color: "#1a1a1a" }}>
               {t.tagline}
             </p>
-          </div>
-
-          {/* Nav */}
-          <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm" style={{ color: "#1a1a1a" }}>
-            <a href={withLocale(locale, "/about")} className="hover:text-[#ff2d78] transition-colors">{t.about}</a>
-            <a href={withLocale(locale, "/archive")} className="hover:text-[#ff2d78] transition-colors">{t.archive}</a>
-            <a href={withLocale(locale, "/shop")} className="hover:text-[#ff2d78] transition-colors">{t.shop}</a>
-            <a href={withLocale(locale, "/articles")} className="hover:text-[#ff2d78] transition-colors">{t.articles}</a>
-            <a href={withLocale(locale, "/faq")} className="hover:text-[#ff2d78] transition-colors">{t.faq}</a>
-            <a href={withLocale(locale, "/returns")} className="hover:text-[#ff2d78] transition-colors">{t.returns}</a>
           </div>
 
           {/* Social + copyright */}
