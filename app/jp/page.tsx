@@ -4,7 +4,7 @@ import { getHomeCollections } from "@/lib/collections"
 import { jp } from "@/lib/dict"
 
 export const metadata: Metadata = {
-  title: "Bats Club — レアアニメフィギュアのアーカイブ＆マーケットプレイス",
+  title: "Bats Club — レアアニメフィギュアのアーカイブ＆ショップ",
   description:
     "プライベートコレクターによる本物のレアアニメフィギュア。1990〜2000年代の日本オリジナル品。デジ・キャラット、エヴァンゲリオンなど。世界中に発送。",
 }
