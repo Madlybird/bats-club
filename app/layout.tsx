@@ -48,7 +48,7 @@ const organizationJsonLd = {
   url: "https://batsclub.com",
   logo: "https://batsclub.com/logo.png",
   description:
-    "Private anime figure archive and marketplace. Rare vintage Japanese anime figures from the 1990s-2000s, sold directly from a single private collection.",
+    "Private anime figure archive and shop. Rare vintage Japanese anime figures from the 1990s-2000s, sold directly from a single private collection.",
   email: "support@batsclub.com",
   sameAs: [
     "https://www.youtube.com/@bats4club",
