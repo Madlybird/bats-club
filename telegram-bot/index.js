@@ -1,8 +1,8 @@
-require("dotenv").config()
-const TelegramBot = require("node-telegram-bot-api")
-const { createClient } = require("@supabase/supabase-js")
-const https = require("https")
-const { Buffer } = require("buffer")
+import "dotenv/config"
+import TelegramBot from "node-telegram-bot-api"
+import { createClient } from "@supabase/supabase-js"
+import https from "https"
+import { Buffer } from "buffer"
 
 // ── Clients ──────────────────────────────────────────────────────────────────
 

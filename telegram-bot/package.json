@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "Telegram admin bot for Bats Club figure uploads",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "node-telegram-bot-api": "^0.66.0",
+    "node-telegram-bot-api": "^1.0.0",
     "@supabase/supabase-js": "^2.49.4",
     "dotenv": "^16.4.7"
   }
