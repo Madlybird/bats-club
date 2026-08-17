@@ -14,6 +14,8 @@ export default function LoginPage() {
         noAccount: en.login_no_account,
         joinLink: en.login_join_link,
         registerHref: "/register",
+        forgotLabel: en.login_forgot_link,
+        forgotHref: "/forgot-password",
       }}
     />
   )

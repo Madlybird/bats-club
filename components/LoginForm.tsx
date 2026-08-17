@@ -18,6 +18,8 @@ interface LoginFormLabels {
   noAccount: string
   joinLink: string
   registerHref: string
+  forgotLabel: string
+  forgotHref: string
 }
 
 export default function LoginForm({ labels }: { labels: LoginFormLabels }) {
@@ -87,8 +89,8 @@ export default function LoginForm({ labels }: { labels: LoginFormLabels }) {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm text-white/40 font-medium">{labels.password}</label>
-                <Link href="/forgot-password" className="text-xs transition-colors hover:text-white/60" style={{ color: "#ff2d78" }}>
-                  Forgot password?
+                <Link href={labels.forgotHref} className="text-xs transition-colors hover:text-white/60" style={{ color: "#ff2d78" }}>
+                  {labels.forgotLabel}
                 </Link>
               </div>
               <input

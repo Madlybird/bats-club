@@ -14,6 +14,8 @@ export default function LoginJpPage() {
         noAccount: jp.login_no_account,
         joinLink: jp.login_join_link,
         registerHref: "/jp/register",
+        forgotLabel: jp.login_forgot_link,
+        forgotHref: "/jp/forgot-password",
       }}
     />
   )

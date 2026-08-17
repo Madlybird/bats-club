@@ -14,6 +14,8 @@ export default function LoginRuPage() {
         noAccount: ru.login_no_account,
         joinLink: ru.login_join_link,
         registerHref: "/ru/register",
+        forgotLabel: ru.login_forgot_link,
+        forgotHref: "/ru/forgot-password",
       }}
     />
   )

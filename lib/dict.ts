@@ -157,6 +157,34 @@ export interface Dict {
   login_loading: string
   login_no_account: string
   login_join_link: string
+  login_forgot_link: string
+
+  // ── Forgot password page ──
+  forgot_subtitle: string
+  forgot_heading: string
+  forgot_desc: string
+  forgot_email: string
+  forgot_submit: string
+  forgot_sending: string
+  forgot_sent_heading: string
+  forgot_sent_desc: string
+  forgot_back_to_signin: string
+  forgot_error_generic: string
+
+  // ── Reset password page ──
+  reset_subtitle: string
+  reset_heading: string
+  reset_new_password: string
+  reset_confirm_password: string
+  reset_submit: string
+  reset_updating: string
+  reset_done_heading: string
+  reset_done_desc: string
+  reset_signin_now: string
+  reset_error_mismatch: string
+  reset_error_length: string
+  reset_error_invalid_token: string
+  reset_error_generic: string
 
   // ── Profile page ──
   profile_collection: string
@@ -431,6 +459,32 @@ export const en: Dict = {
   login_loading: "Signing in...",
   login_no_account: "Don't have an account?",
   login_join_link: "Join the Club",
+  login_forgot_link: "Forgot password?",
+
+  forgot_subtitle: "Password Recovery",
+  forgot_heading: "Forgot your password?",
+  forgot_desc: "Enter your email and we'll send you a reset link.",
+  forgot_email: "Email",
+  forgot_submit: "Send Reset Link",
+  forgot_sending: "Sending...",
+  forgot_sent_heading: "Check your email",
+  forgot_sent_desc: "If an account exists for {email}, we sent a reset link. Check your inbox (and spam folder).",
+  forgot_back_to_signin: "Back to Sign In",
+  forgot_error_generic: "Something went wrong. Please try again.",
+
+  reset_subtitle: "Set New Password",
+  reset_heading: "Set a new password",
+  reset_new_password: "New Password",
+  reset_confirm_password: "Confirm Password",
+  reset_submit: "Update Password",
+  reset_updating: "Updating...",
+  reset_done_heading: "Password updated!",
+  reset_done_desc: "Redirecting to sign in...",
+  reset_signin_now: "Sign In now",
+  reset_error_mismatch: "Passwords do not match",
+  reset_error_length: "Password must be at least 8 characters",
+  reset_error_invalid_token: "Invalid or missing reset token.",
+  reset_error_generic: "Something went wrong. Please try again.",
 
   profile_collection: "Collection",
   profile_hunting: "Hunting",
@@ -700,6 +754,32 @@ export const ru: Dict = {
   login_loading: "Вход...",
   login_no_account: "Нет аккаунта?",
   login_join_link: "Вступить в клуб",
+  login_forgot_link: "Забыли пароль?",
+
+  forgot_subtitle: "Восстановление пароля",
+  forgot_heading: "Забыли пароль?",
+  forgot_desc: "Введите email, и мы отправим ссылку для сброса пароля.",
+  forgot_email: "Эл. почта",
+  forgot_submit: "Отправить ссылку",
+  forgot_sending: "Отправка...",
+  forgot_sent_heading: "Проверьте почту",
+  forgot_sent_desc: "Если аккаунт с адресом {email} существует, мы отправили ссылку для сброса пароля. Проверьте входящие (и папку спам).",
+  forgot_back_to_signin: "Назад ко входу",
+  forgot_error_generic: "Что-то пошло не так. Попробуйте ещё раз.",
+
+  reset_subtitle: "Новый пароль",
+  reset_heading: "Установите новый пароль",
+  reset_new_password: "Новый пароль",
+  reset_confirm_password: "Подтвердите пароль",
+  reset_submit: "Обновить пароль",
+  reset_updating: "Обновление...",
+  reset_done_heading: "Пароль обновлён!",
+  reset_done_desc: "Перенаправляем на вход...",
+  reset_signin_now: "Войти сейчас",
+  reset_error_mismatch: "Пароли не совпадают",
+  reset_error_length: "Пароль должен быть не менее 8 символов",
+  reset_error_invalid_token: "Неверная или отсутствующая ссылка для сброса.",
+  reset_error_generic: "Что-то пошло не так. Попробуйте ещё раз.",
 
   profile_collection: "Коллекция",
   profile_hunting: "Охота",
@@ -969,6 +1049,32 @@ export const jp: Dict = {
   login_loading: "ログイン中...",
   login_no_account: "アカウントをお持ちでない方は",
   login_join_link: "クラブに参加",
+  login_forgot_link: "パスワードをお忘れですか？",
+
+  forgot_subtitle: "パスワード再設定",
+  forgot_heading: "パスワードをお忘れですか？",
+  forgot_desc: "メールアドレスを入力すると、再設定用のリンクをお送りします。",
+  forgot_email: "メールアドレス",
+  forgot_submit: "リセットリンクを送信",
+  forgot_sending: "送信中...",
+  forgot_sent_heading: "メールをご確認ください",
+  forgot_sent_desc: "{email} のアカウントが存在する場合、再設定リンクを送信しました。受信箱（および迷惑メールフォルダ）をご確認ください。",
+  forgot_back_to_signin: "ログインに戻る",
+  forgot_error_generic: "問題が発生しました。もう一度お試しください。",
+
+  reset_subtitle: "新しいパスワードを設定",
+  reset_heading: "新しいパスワードを設定",
+  reset_new_password: "新しいパスワード",
+  reset_confirm_password: "パスワードの確認",
+  reset_submit: "パスワードを更新",
+  reset_updating: "更新中...",
+  reset_done_heading: "パスワードを更新しました！",
+  reset_done_desc: "ログイン画面に移動しています...",
+  reset_signin_now: "今すぐログイン",
+  reset_error_mismatch: "パスワードが一致しません",
+  reset_error_length: "パスワードは8文字以上で入力してください",
+  reset_error_invalid_token: "リセットトークンが無効か見つかりません。",
+  reset_error_generic: "問題が発生しました。もう一度お試しください。",
 
   profile_collection: "コレクション",
   profile_hunting: "ハンティング",
