@@ -120,15 +120,6 @@ function isAdmin(userId) {
   return ADMIN_IDS.length > 0 && ADMIN_IDS.includes(userId)
 }
 
-function slugify(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim()
-}
-
 async function downloadFile(fileId) {
   const fileInfo = await bot.getFile(fileId)
   const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileInfo.file_path}`
