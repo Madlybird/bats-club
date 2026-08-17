@@ -44,7 +44,7 @@ function ShopSkeleton() {
   )
 }
 
-interface Props { searchParams: { price?: string; sort?: string; series?: string; collection?: string } }
+interface Props { searchParams: Promise<{ price?: string; sort?: string; series?: string; collection?: string }> }
 
 async function getTopSeries() {
   // Badge must show how many listings are actually for sale in that
@@ -71,7 +71,8 @@ async function getTopSeries() {
     .slice(0, 5)
 }
 
-export default async function ShopPageJp({ searchParams }: Props) {
+export default async function ShopPageJp(props: Props) {
+  const searchParams = await props.searchParams;
   const { price, sort, series, collection } = searchParams
 
   const figureEmbed = series

@@ -36,7 +36,8 @@ function errorResponse(stage: string, error: any, status = 500) {
   return NextResponse.json({ error: "Request failed", stage }, { status })
 }
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   // Look up by id OR slug, but via the safe `.eq()` builder (not raw
   // `.or()` string interpolation, which is injectable). UUIDs go to id,
   // everything else to slug.
@@ -74,7 +75,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   })
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions)
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
@@ -140,7 +142,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions)
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
@@ -160,7 +163,8 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   return NextResponse.json({ success: true })
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions)
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })

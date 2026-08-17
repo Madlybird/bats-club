@@ -29,7 +29,7 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
   }
 }
 
-interface Props { params: { slug: string } }
+interface Props { params: Promise<{ slug: string }> }
 
 // React cache() dedupes these calls across generateMetadata + the page
 // render within a single request. Without it, both ran their own DB
@@ -54,7 +54,8 @@ const getFigureCore = cache(async (figureId: string) => {
   return data as (Record<string, any> & { slug: string | null }) | null
 })
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   try {
     const figureId = await resolveFigureId(params.slug)
     if (!figureId) return { title: "Figure Not Found" }
@@ -85,7 +86,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function FigureDetailPage({ params }: Props) {
+export default async function FigureDetailPage(props: Props) {
+  const params = await props.params;
   const figureId = await resolveFigureId(params.slug)
   if (!figureId) notFound()
 

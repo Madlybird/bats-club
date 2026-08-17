@@ -1,11 +1,12 @@
 import Link from "next/link"
 import CollectionForm from "@/components/CollectionForm"
 
-export default function EditCollectionPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function EditCollectionPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   return (
     <div className="p-8">
       <div className="flex items-center gap-4 mb-8">

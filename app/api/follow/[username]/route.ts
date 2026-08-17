@@ -17,10 +17,8 @@ interface PublicUser {
   avatar: string | null
 }
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { username: string } },
-) {
+export async function GET(_req: Request, props: { params: Promise<{ username: string }> }) {
+  const params = await props.params;
   const { data: user } = await supabaseAdmin
     .from("users")
     .select("id")

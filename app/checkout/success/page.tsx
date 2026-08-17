@@ -3,9 +3,10 @@ import Link from "next/link"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 
-interface Props { searchParams: { session_id?: string } }
+interface Props { searchParams: Promise<{ session_id?: string }> }
 
-export default async function CheckoutSuccessPage({ searchParams }: Props) {
+export default async function CheckoutSuccessPage(props: Props) {
+  const searchParams = await props.searchParams;
   const session = await getServerSession(authOptions)
   const { session_id } = searchParams
 

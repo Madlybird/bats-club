@@ -5,9 +5,10 @@ import { jp } from "@/lib/dict"
 import { localizeArticle } from "@/lib/articleI18n"
 import { Metadata } from "next"
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const { data: article } = await supabaseAdmin
     .from("articles")
     .select("title, excerpt, slug")
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function ArticleDetailPageJp({ params }: Props) {
+export default async function ArticleDetailPageJp(props: Props) {
+  const params = await props.params;
   const { data: article } = await supabaseAdmin
     .from("articles")
     .select(`

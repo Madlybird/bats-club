@@ -15,9 +15,10 @@ import { getRates, convertPrice } from "@/lib/currency"
 import { buildListingJsonLd } from "@/lib/listing-jsonld"
 import { Metadata } from "next"
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const { data: listing } = await supabaseAdmin
     .from("listings")
     .select("condition, figure:figures(name, series)")
@@ -48,7 +49,8 @@ function parseImages(raw: unknown): string[] {
   return []
 }
 
-export default async function ListingDetailPageJp({ params }: Props) {
+export default async function ListingDetailPageJp(props: Props) {
+  const params = await props.params;
   const session = await getServerSession(authOptions)
   const dict = jp
 
@@ -178,5 +180,5 @@ export default async function ListingDetailPageJp({ params }: Props) {
         </div>
       </div>
     </div>
-  )
+  );
 }

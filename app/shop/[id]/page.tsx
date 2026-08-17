@@ -12,7 +12,7 @@ import { en } from "@/lib/dict"
 import { buildListingJsonLd } from "@/lib/listing-jsonld"
 import { Metadata } from "next"
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
 // Listing ids are server-generated UUIDs (gen_random_uuid()), not
 // guessable/enumerable, so bounding generateStaticParams to recent
@@ -45,7 +45,8 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
   }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const { data: listing } = await supabaseAdmin
     .from("listings")
     .select("condition, figure:figures(name, series)")
@@ -76,7 +77,8 @@ function parseImages(raw: unknown): string[] {
   return []
 }
 
-export default async function ListingDetailPage({ params }: Props) {
+export default async function ListingDetailPage(props: Props) {
+  const params = await props.params;
   const dict = en
 
   const { data: listing } = await supabaseAdmin
@@ -197,5 +199,5 @@ export default async function ListingDetailPage({ params }: Props) {
         </div>
       </div>
     </div>
-  )
+  );
 }

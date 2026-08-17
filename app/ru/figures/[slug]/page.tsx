@@ -27,7 +27,7 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
   }
 }
 
-interface Props { params: { slug: string } }
+interface Props { params: Promise<{ slug: string }> }
 
 const resolveFigureId = cache(async (param: string): Promise<string | null> => {
   const id = isUuid(param) ? param : await lookupIdBySlug(param)
@@ -58,7 +58,8 @@ const getFigureCore = cache(async (figureId: string) => {
   return data as (Record<string, any> & { slug: string | null; description_ru?: string | null }) | null
 })
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   try {
     const figureId = await resolveFigureId(params.slug)
     if (!figureId) return { title: "Figure Not Found" }
@@ -89,7 +90,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function FigureDetailPageRu({ params }: Props) {
+export default async function FigureDetailPageRu(props: Props) {
+  const params = await props.params;
   const figureId = await resolveFigureId(params.slug)
   if (!figureId) notFound()
 

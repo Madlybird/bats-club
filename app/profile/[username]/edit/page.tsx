@@ -4,9 +4,10 @@ import { authOptions } from "@/lib/auth"
 import { notFound, redirect } from "next/navigation"
 import ProfileEditForm from "@/components/ProfileEditForm"
 
-interface Props { params: { username: string } }
+interface Props { params: Promise<{ username: string }> }
 
-export default async function ProfileEditPage({ params }: Props) {
+export default async function ProfileEditPage(props: Props) {
+  const params = await props.params;
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect("/login")
 

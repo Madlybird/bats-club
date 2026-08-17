@@ -7,9 +7,10 @@ import { en } from "@/lib/dict"
 import { getUserPurchaseCount } from "@/lib/profile"
 import { Metadata } from "next"
 
-interface Props { params: { username: string } }
+interface Props { params: Promise<{ username: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const decodedUsername = decodeURIComponent(params.username)
   const { data: user } = await supabaseAdmin
     .from("users")
@@ -23,7 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage(props: Props) {
+  const params = await props.params;
   const decodedUsername = decodeURIComponent(params.username)
   const [session, { data: user, error: userError }] = await Promise.all([
     getServerSession(authOptions),
