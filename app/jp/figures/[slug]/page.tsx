@@ -8,7 +8,6 @@ import { Metadata } from "next"
 import { isUuid, lookupIdBySlug } from "@/lib/slug"
 import { isHiddenFigure } from "@/lib/hidden"
 import { localizeArticle } from "@/lib/articleI18n"
-import { SHIPPING_COUNTRIES } from "@/lib/listing-jsonld"
 
 export const dynamicParams = true
 export const revalidate = 86400
@@ -176,51 +175,15 @@ export default async function FigureDetailPageJp(props: Props) {
 
   const slugForUrl = figure.slug || figureId
 
-  // Google requires price (and flags missing hasMerchantReturnPolicy /
-  // shippingDetails) on any 'offers' block — so only emit one when there's
-  // an actual listing to price it from. A Product with no offers is still
-  // valid, it's just not shopping-eligible while sold out.
-  const offer: any = cheapestListing
-    ? {
-        "@type": "Offer",
-        url: `https://batsclub.com/jp/figures/${slugForUrl}`,
-        priceCurrency: "USD",
-        price: Number((cheapestListing.price / 100).toFixed(2)),
-        availability: "https://schema.org/InStock",
-        itemCondition: "https://schema.org/UsedCondition",
-        seller: { "@type": "Organization", name: "Bats Club" },
-        // Mirrors app/returns/page.tsx: 14-day window, transit-damage only,
-        // Bats Club covers return shipping on approved returns. Kept in
-        // sync with lib/listing-jsonld.ts's buildListingJsonLd (used on
-        // /shop/[id]) — this page builds its own Offer inline instead of
-        // sharing that helper, so the two return-policy blocks must be
-        // updated together.
-        hasMerchantReturnPolicy: {
-          "@type": "MerchantReturnPolicy",
-          returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-          merchantReturnDays: 14,
-          returnMethod: "https://schema.org/ReturnByMail",
-          returnFees: "https://schema.org/FreeReturn",
-          applicableCountry: SHIPPING_COUNTRIES.map((c) => c.country),
-        },
-        shippingDetails: {
-          "@type": "OfferShippingDetails",
-          shippingRate: { "@type": "MonetaryAmount", value: "17", currency: "USD" },
-          shippingDestination: { "@type": "DefinedRegion", addressCountry: "US" },
-          deliveryTime: {
-            "@type": "ShippingDeliveryTime",
-            businessDays: {
-              "@type": "OpeningHoursSpecification",
-              dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            },
-            cutoffTime: "17:00:00",
-            handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
-            transitTime: { "@type": "QuantitativeValue", minValue: 14, maxValue: 21, unitCode: "DAY" },
-          },
-        },
-      }
-    : null
-
+  // Intentionally no 'offers' block here. /shop/[id] is the one
+  // shoppable, checkout-linked URL per listing and is what's submitted
+  // to Google Merchant via feed.xml — it's the single source of truth
+  // for price/availability. Adding a priced Offer here too made Google's
+  // structured-data auto-discovery treat this archive page as a second,
+  // competing product for the same figure (different URL, and a price
+  // that can drift from the specific listing if a figure has multiple
+  // sellers), which doubled the Merchant product count. This page still
+  // emits a bare Product for rich-result/SEO purposes.
   const jsonLd: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -230,7 +193,6 @@ export default async function FigureDetailPageJp(props: Props) {
     description: (figure.description as string | null)?.trim() || `Character: ${figure.character}, Series: ${figure.series}`,
     image: figure.imageUrl,
     brand: { "@type": "Brand", name: figure.manufacturer },
-    ...(offer ? { offers: offer } : {}),
     additionalProperty: [
       { "@type": "PropertyValue", name: "Year", value: figure.year },
       { "@type": "PropertyValue", name: "Scale", value: figure.scale },
