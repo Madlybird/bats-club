@@ -32,6 +32,9 @@ export async function POST(req: Request) {
     if (password.length < 8) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 })
     }
+    if (password.length > 128) {
+      return NextResponse.json({ error: "Password must be at most 128 characters" }, { status: 400 })
+    }
 
     // Format validation — reject malformed email and unsafe usernames
     // (username appears in /profile/[username] URLs, so restrict it to a

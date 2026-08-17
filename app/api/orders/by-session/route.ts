@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
+import { checkRateLimit } from "@/lib/rate-limit"
 
 /**
  * Looks up an order's total by Stripe Checkout session id — no site
@@ -16,6 +17,12 @@ import { supabaseAdmin } from "@/lib/supabase"
  * session id already gates.
  */
 export async function GET(req: Request) {
+  // Not brute-forceable (Stripe session ids carry huge entropy) but this
+  // had no throttling at all, unlike every other lookup-by-token endpoint
+  // in the app — cap it for defense-in-depth against scraping.
+  const limited = checkRateLimit(req, "orders-by-session", 20, 5 * 60 * 1000)
+  if (limited) return limited
+
   const { searchParams } = new URL(req.url)
   const sessionId = searchParams.get("session_id")
   if (!sessionId) {

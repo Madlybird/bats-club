@@ -140,7 +140,7 @@ export async function POST(req: Request) {
             )
             return NextResponse.json({ error: "Could not resolve buyer" }, { status: 500 })
           }
-          console.log(`[stripe webhook] guest checkout resolved to buyer ${resolvedBuyerId} (email=${guestEmail})`)
+          console.log(`[stripe webhook] guest checkout resolved to buyer ${resolvedBuyerId}`)
         }
 
         // New flow: create orders NOW (after payment confirmed)
