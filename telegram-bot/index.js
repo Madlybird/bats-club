@@ -116,7 +116,6 @@ function resetState(userId) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function isAdmin(userId) {
-  console.log("User ID:", userId, "Admin IDs:", ADMIN_IDS)
   return ADMIN_IDS.length > 0 && ADMIN_IDS.includes(userId)
 }
 
