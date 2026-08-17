@@ -1,13 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    // SSRF hardening: the image optimizer fetches these URLs server-side,
-    // so an open `http://**` pattern lets it be used to probe internal
-    // services and cloud metadata endpoints (e.g. 169.254.169.254, which
-    // is plain http). We drop http entirely and never inline SVG.
-    // NOTE: `https: **` still allows any HTTPS host so admin-entered figure
-    // images keep working. For a full lockdown, replace it with an explicit
-    // host allowlist (supabase + i.postimg.cc are the only ones in use).
+    // SSRF/DoS hardening: the image optimizer fetches these URLs
+    // server-side, so an open pattern lets it be used to probe internal
+    // services and cloud metadata endpoints, or to hammer arbitrary
+    // remote hosts through your own server (part of the Next.js Image
+    // Optimizer DoS advisories). Locked to the two hosts actually in use,
+    // confirmed against live DB data 2026-08-17 (486 figures + 397
+    // listings all on Supabase storage; i.postimg.cc is only the
+    // hardcoded welcome-article cover in scripts/seed-welcome.js /
+    // app/api/admin/seed-welcome/route.ts, not currently live in any
+    // article row but kept in case that seed endpoint runs again).
     remotePatterns: [
       {
         protocol: "https",
@@ -16,7 +19,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "i.postimg.cc",
       },
     ],
     dangerouslyAllowSVG: false,
