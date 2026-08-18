@@ -21,7 +21,7 @@ export async function GET(_req: Request, props: { params: Promise<{ id: string }
         seller:users(id, name, username)
       ),
       article_figures(
-        article:articles(id, title, slug, excerpt, published)
+        article:articles(id, title, slug, excerpt, published, coverImage:cover_image, createdAt:created_at)
       )
     `)
     .eq("id", params.id)

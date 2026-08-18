@@ -116,7 +116,7 @@ export default async function FigureDetailPageJp(props: Props) {
       .eq("figure_id", figureId),
     supabaseAdmin
       .from("article_figures")
-      .select(`article:articles(id, title, slug, excerpt, published, author:users(id, name, username, avatar))`)
+      .select(`article:articles(id, title, slug, excerpt, published, coverImage:cover_image, createdAt:created_at, author:users(id, name, username, avatar))`)
       .eq("figure_id", figureId),
     getRates().catch((e) => {
       console.error("[jp/figures/[slug]] rates failed:", e)
