@@ -67,7 +67,7 @@ This one only makes sense once you know the game it's from. In 1998, Gainax spun
 
 Gainax rarely developed its own Evangelion games in-house; most were outsourced to other studios under license. This was one of the exceptions, and one of the strangest: the studio took its most withdrawn, least emotionally available character and rebuilt her as the protagonist of a raising-sim, years before "healing"-style games about caring for a quiet character became a recognized genre outside Japan. The original Sega Saturn release was 1998, but it got a second life in 2001 with a Windows PC port, the same year this figure showed up. That's not a coincidence collectors usually connect: Sega's prize catcher division tends to run tie-in figures around whatever version of a license is currently back on shelves, and 2001 was the cat ear costume's second wind, not its first.
 
-It's a souvenir of a video game most collectors outside Japan never played. That's why it tends to confuse people who find it with no context, and why the context is worth knowing.
+> It's a souvenir of a video game most collectors outside Japan never played. That's why it tends to confuse people who find it with no context, and why the context is worth knowing.
 
 ***
 
@@ -107,7 +107,7 @@ The figure itself is unglamorous by garage-kit standards, and nothing about the 
 
 And then there's the one nobody expects. Sega ran a rotating cast of themed prize figures through 2006 under its EX Figure line, a different costume roughly every couple of months. January's was a "Red Eyez" variant, summer brought a mermaid and a festival-night version, August brought a "Motor Riders" figure. This one was catalogued as the Halloween Mini Display Figure, the season-specific entry in that same rotation, which is the actual reason a Neon Genesis Evangelion prize figure is wrapped in glow-in-the-dark bandages: it wasn't a one-off joke, it was October's slot in a release calendar Sega ran like clockwork that year.
 
-Rei was never bandaged on screen outside of hospital scenes that have nothing to do with mummies. The costume exists because the calendar needed a Halloween figure, not because the story did.
+> Rei was never bandaged on screen outside of hospital scenes that have nothing to do with mummies. The costume exists because the calendar needed a Halloween figure, not because the story did.
 
 It's stuck around in collections for the same reason most seasonal prize figures do once the rest of the rotation gets forgotten: it's the entry from that year's lineup people still remember by name, long after "Motor Riders" and "Red Eyez" have blurred into every other themed variant Sega put out that decade.
 
@@ -158,19 +158,21 @@ async function main() {
     FIGURE_SLUGS.map((s) => figures.find((f) => f.slug === s).name)
   )
 
+  const { data: existing } = await supabase.from("articles").select("id, cover_image").eq("slug", SLUG).maybeSingle()
+
   const payload = {
     title: "Five Rei Ayanami Figures Worth the Hunt",
     slug: SLUG,
     body: BODY,
     excerpt: EXCERPT,
     meta_description: EXCERPT,
-    cover_image: null,
+    // Never clobber a cover image set later through the admin editor —
+    // only set one here on first insert (when there's nothing yet).
+    cover_image: existing ? existing.cover_image : null,
     author_id: user.id,
     published: true,
     pinned: false,
   }
-
-  const { data: existing } = await supabase.from("articles").select("id").eq("slug", SLUG).maybeSingle()
 
   let article, error
   if (existing) {
