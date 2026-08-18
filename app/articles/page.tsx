@@ -28,12 +28,13 @@ export default async function ArticlesPage() {
   const { data: articles } = await supabaseAdmin
     .from("articles")
     .select(`
-      id, title, slug, excerpt, published,
+      id, title, slug, excerpt, published, pinned,
       coverImage:cover_image, createdAt:created_at,
       author:users(id, name, username, avatar),
       article_figures(figure_id)
     `)
     .eq("published", true)
+    .order("pinned", { ascending: false })
     .order("created_at", { ascending: false })
 
   const result = (articles || []).map((a) => ({
