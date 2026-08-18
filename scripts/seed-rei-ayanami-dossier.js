@@ -53,7 +53,9 @@ This repaint variant carries the metallic chrome treatment across the plugsuit t
 
 It's fully articulated for its era, ships with a swap head sculpt and interchangeable arms, and it's still factory-sealed on its original English-release blister card, which is the part that actually matters for value. Finding a twenty-eight-year-old figure still unopened is rare on its own.
 
-If you've been reading about the new '90s-style reissue, this is the era it's reaching back toward: the same rough silhouette, the same plugsuit-only Rei, before any of the alternate outfits and event exclusives that came later. The reissue is new plastic built to look like this one, the original.
+If you've been reading about the new '90s-style reissue, this is the era it's reaching back toward: the same rough silhouette, the same plugsuit-only Rei, before any of the alternate outfits and event exclusives that came later.
+
+> The reissue is new plastic built to look like this one, the original.
 
 ***
 
@@ -81,7 +83,9 @@ Wonder Festival is Kaiyodo's own event, held twice a year in Makuhari since the 
 
 This Rei is a WonFes 2006 piece with full Kaiyodo backing rather than an independent circle, but it's still built on the convention-exclusive model, which is why so little paperwork survives around exact production numbers. That particular show, Wonder Festival 2006 Summer, built its Evangelion presence around the series' tenth anniversary that year. Kaiyodo's Eva lineup for the event was framed as an anniversary showcase rather than a standard seasonal wave, which is a large part of why pieces from this specific festival get hunted separately from Kaiyodo's ordinary yearly Eva output.
 
-The pose is more dynamic than any retail-line Rei from the same years, the paintwork is a level above a prize figure, and it never had a second release. If you weren't at the show, or didn't know someone who was, this was never coming to you through a normal store.
+The pose is more dynamic than any retail-line Rei from the same years, the paintwork is a level above a prize figure, and it never had a second release.
+
+> If you weren't at the show, or didn't know someone who was, this was never coming to you through a normal store.
 
 ***
 
@@ -95,7 +99,9 @@ This is the strangest distribution model on the list, and also one of the most J
 
 That distribution model is why so few of these survive in good shape outside Japan: it never had an export SKU, never sat on a shelf at a toy shop, and it only ever reached readers who stuck with a subscription through to the end. Anyone who owns one either did that in 2010, or bought it years later from someone who did.
 
-The figure itself is unglamorous by garage-kit standards, and nothing about the sculpt shouts exclusive. The story is entirely in how you got it.
+The figure itself is unglamorous by garage-kit standards, and nothing about the sculpt shouts exclusive.
+
+> The story is entirely in how you got it.
 
 ***
 
