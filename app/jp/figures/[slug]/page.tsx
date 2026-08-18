@@ -175,31 +175,17 @@ export default async function FigureDetailPageJp(props: Props) {
 
   const slugForUrl = figure.slug || figureId
 
-  // Intentionally no 'offers' block here. /shop/[id] is the one
-  // shoppable, checkout-linked URL per listing and is what's submitted
-  // to Google Merchant via feed.xml — it's the single source of truth
-  // for price/availability. Adding a priced Offer here too made Google's
-  // structured-data auto-discovery treat this archive page as a second,
-  // competing product for the same figure (different URL, and a price
-  // that can drift from the specific listing if a figure has multiple
-  // sellers), which doubled the Merchant product count. This page still
-  // emits a bare Product for rich-result/SEO purposes.
-  const jsonLd: Record<string, any> = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: figure.name,
-    sku: figure.id,
-    productID: figure.id,
-    description: (figure.description as string | null)?.trim() || `Character: ${figure.character}, Series: ${figure.series}`,
-    image: figure.imageUrl,
-    brand: { "@type": "Brand", name: figure.manufacturer },
-    additionalProperty: [
-      { "@type": "PropertyValue", name: "Year", value: figure.year },
-      { "@type": "PropertyValue", name: "Scale", value: figure.scale },
-      { "@type": "PropertyValue", name: "Condition", value: cheapestListing?.condition },
-      { "@type": "PropertyValue", name: "Series", value: figure.series },
-    ].filter((p) => p.value),
-  }
+  // Intentionally no Product JSON-LD on this page at all. /shop/[id] is
+  // the one shoppable, checkout-linked URL per listing and is what's
+  // submitted to Google Merchant via feed.xml — it's the single source
+  // of truth for price/availability. This page used to emit a bare
+  // Product (no offers) for SEO purposes, but a bare Product without
+  // offers/review/aggregateRating can never earn a rich result and just
+  // showed up as a permanent "invalid item" in Search Console's Product
+  // snippets report — so we drop the type here entirely rather than
+  // add fabricated offers/ratings that would either re-duplicate the
+  // Merchant listing or violate Google's structured-data policies.
+  const jsonLd = null
 
   return (
     <FigureDetailContent

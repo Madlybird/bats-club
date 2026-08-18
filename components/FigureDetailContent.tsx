@@ -57,7 +57,7 @@ interface Props {
   /** Cheapest active listing for this figure, if any. Powers the
    *  "Add to Cart" → cart side effect on StatusButton. */
   cheapestListing?: { id: string; price: number; condition: string } | null
-  jsonLd: object
+  jsonLd: object | null
   dict: Dict
   archiveHref: string
   articlesHref?: string
@@ -97,12 +97,14 @@ export default function FigureDetailContent({
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        // Escape `<` so a figure field containing `</script>` can't break
-        // out of this tag and inject markup (stored XSS hardening).
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
-      />
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          // Escape `<` so a figure field containing `</script>` can't break
+          // out of this tag and inject markup (stored XSS hardening).
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        />
+      )}
 
       <FigureViewTracker series={figure.series} />
       <div className="relative min-h-screen">
