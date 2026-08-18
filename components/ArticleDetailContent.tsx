@@ -63,7 +63,7 @@ export default function ArticleDetailContent({ article, dict, articlesHref }: Pr
         {/* Title */}
         <ScrollReveal>
           <header className="mb-8">
-            <h1 className="text-4xl font-black text-white leading-tight">
+            <h1 className="text-4xl font-black leading-tight" style={{ color: "#ff2d78" }}>
               {article.title}
             </h1>
           </header>
@@ -71,7 +71,7 @@ export default function ArticleDetailContent({ article, dict, articlesHref }: Pr
 
         {/* Body */}
         <ScrollReveal>
-          <MarkdownRenderer source={article.body} />
+          <MarkdownRenderer source={article.body} ctaLabel={dict.article_view_piece} />
         </ScrollReveal>
 
         {/* Linked Figures */}

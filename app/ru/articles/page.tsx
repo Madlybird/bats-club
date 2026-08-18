@@ -26,16 +26,34 @@ export const metadata: Metadata = {
 export const revalidate = 3600
 
 export default async function ArticlesPageRu() {
-  const { data: articles } = await supabaseAdmin
+  let articles
+  const withPinned = await supabaseAdmin
     .from("articles")
     .select(`
-      id, title, slug, excerpt, published,
+      id, title, slug, excerpt, published, pinned,
       coverImage:cover_image, createdAt:created_at,
       author:users(id, name, username, avatar),
       article_figures(figure_id)
     `)
     .eq("published", true)
+    .order("pinned", { ascending: false })
     .order("created_at", { ascending: false })
+
+  if (withPinned.error) {
+    const fallback = await supabaseAdmin
+      .from("articles")
+      .select(`
+        id, title, slug, excerpt, published,
+        coverImage:cover_image, createdAt:created_at,
+        author:users(id, name, username, avatar),
+        article_figures(figure_id)
+      `)
+      .eq("published", true)
+      .order("created_at", { ascending: false })
+    articles = fallback.data
+  } else {
+    articles = withPinned.data
+  }
 
   const result = (articles || []).map((a) => ({
     ...(localizeArticle(a as any, "ru") as any),

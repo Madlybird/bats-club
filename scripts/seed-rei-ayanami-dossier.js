@@ -31,7 +31,7 @@ const FIGURE_SLUGS = [
   "rei-ayanami-mummy-version-figure-b4ea4f8b",
 ]
 
-const BODY = `A '90s-style garage kit of her is being reissued this year, which means it's a good time to ask what happened to the originals, and to the stranger, harder-to-place versions that came after them.
+const BODY = `::A '90s-style garage kit of her is being reissued this year, which means it's a good time to ask what happened to the originals, and to the stranger, harder-to-place versions that came after them.::
 
 Somewhere between the original TV run and the flood of merchandise that followed *End of Evangelion*, Rei Ayanami became the figure every serious collector eventually goes looking for. Kaiyodo, Sega, Bandai and half a dozen smaller studios kept releasing her for well over a decade, so scarcity isn't really the issue. What makes her hard to collect is that so much of that run was prize-only, convention-only, or magazine-only, and never got a wide release outside Japan.
 

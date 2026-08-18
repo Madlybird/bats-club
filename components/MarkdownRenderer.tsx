@@ -8,6 +8,7 @@ type Block =
   | { type: "img"; alt: string; src: string; href?: string; caption?: string }
   | { type: "tags"; items: string[] }
   | { type: "divider" }
+  | { type: "dek"; text: string }
 
 export function parseMarkdown(md: string): Block[] {
   const lines = md.replace(/\r\n/g, "\n").split("\n")
@@ -25,8 +26,13 @@ export function parseMarkdown(md: string): Block[] {
     const tagRow = line.match(/^\{(.+)\}$/)
     // Section divider
     const isDivider = line === "***"
+    // Dek / standfirst: ::text::
+    const dekMatch = line.match(/^::(.+)::$/)
 
-    if (linkedImg) {
+    if (dekMatch) {
+      blocks.push({ type: "dek", text: dekMatch[1].trim() })
+      i++
+    } else if (linkedImg) {
       blocks.push({ type: "img", alt: linkedImg[1], src: linkedImg[2], caption: linkedImg[3], href: linkedImg[4] })
       i++
     } else if (plainImg) {
@@ -86,13 +92,25 @@ function renderInline(text: string): React.ReactNode[] {
 interface Props {
   source: string
   className?: string
+  ctaLabel?: string
 }
 
-export default function MarkdownRenderer({ source, className }: Props) {
+export default function MarkdownRenderer({ source, className, ctaLabel = "View this piece →" }: Props) {
   const blocks = parseMarkdown(source || "")
   return (
     <div className={className} style={{ fontSize: 18, lineHeight: 1.8 }}>
       {blocks.map((block, i) => {
+        if (block.type === "dek") {
+          return (
+            <p
+              key={i}
+              className="italic"
+              style={{ color: "rgba(255,255,255,0.55)", fontSize: "1.2rem", lineHeight: 1.6, margin: "0 0 1.75rem" }}
+            >
+              {renderInline(block.text)}
+            </p>
+          )
+        }
         if (block.type === "h2") {
           const numbered = block.text.match(/^(\d{2})\.\s+(.+)$/)
           return (
@@ -166,7 +184,7 @@ export default function MarkdownRenderer({ source, className }: Props) {
               <span className="text-xs text-white/30 uppercase tracking-wider">{block.caption}</span>
               {block.href && (
                 <span className="text-xs font-medium whitespace-nowrap" style={{ color: "#ff2d78" }}>
-                  View this piece →
+                  {ctaLabel}
                 </span>
               )}
             </div>

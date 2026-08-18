@@ -227,6 +227,7 @@ export interface Dict {
   article_by: string
   article_figures_mentioned: string
   article_back: string
+  article_view_piece: string
 
   // ── Cart page ──
   cart_heading: string
@@ -524,6 +525,7 @@ export const en: Dict = {
   article_by: "by",
   article_figures_mentioned: "Figures Mentioned",
   article_back: "Back to Articles",
+  article_view_piece: "View this piece →",
 
   cart_heading: "Cart",
   cart_items_suffix: "items",
@@ -819,6 +821,7 @@ export const ru: Dict = {
   article_by: "автор",
   article_figures_mentioned: "Упомянутые фигурки",
   article_back: "Назад к статьям",
+  article_view_piece: "Смотреть в архиве →",
 
   cart_heading: "Корзина",
   cart_items_suffix: "товара",
@@ -1114,6 +1117,7 @@ export const jp: Dict = {
   article_by: "著者",
   article_figures_mentioned: "登場フィギュア",
   article_back: "記事一覧に戻る",
+  article_view_piece: "アーカイブで見る →",
 
   cart_heading: "カート",
   cart_items_suffix: "点",
