@@ -106,12 +106,22 @@ CREATE TABLE IF NOT EXISTS public.articles (
   author_id        TEXT NOT NULL REFERENCES public.users(id),
   published        BOOLEAN DEFAULT FALSE,
   pinned           BOOLEAN NOT NULL DEFAULT FALSE,
+  views            BIGINT NOT NULL DEFAULT 0,
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS articles_pinned_created_at_idx
   ON public.articles (pinned DESC, created_at DESC);
+
+-- Atomic increment (called from /api/article-views) — same pattern as
+-- increment_series_views below.
+CREATE OR REPLACE FUNCTION increment_article_views(p_article_id TEXT)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.articles SET views = views + 1 WHERE id = p_article_id;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER articles_updated_at
   BEFORE UPDATE ON public.articles
