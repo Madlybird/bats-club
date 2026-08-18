@@ -3,6 +3,7 @@ import Link from "next/link"
 import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import MarkdownRenderer from "@/components/MarkdownRenderer"
+import ArticleViewTracker from "@/components/ArticleViewTracker"
 import type { Dict } from "@/lib/dict"
 
 interface ArticleFigure {
@@ -16,6 +17,7 @@ interface ArticleFigure {
 }
 
 interface Article {
+  id: string
   title: string
   coverImage: string | null
   body: string
@@ -41,6 +43,7 @@ export default function ArticleDetailContent({ article, dict, articlesHref, json
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
       )}
+      <ArticleViewTracker articleId={article.id} />
       <BatsOverlay />
       <div className="absolute top-1/4 right-1/3 w-[600px] h-[600px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
       <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
