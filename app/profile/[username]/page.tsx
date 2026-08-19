@@ -19,7 +19,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     .maybeSingle()
   if (!user) return { title: "User Not Found" }
   return {
-    title: `${user.name} (@${user.username}) | Bats Club`,
+    title: `${user.name} (@${user.username})`,
     alternates: { canonical: `https://batsclub.com/profile/${encodeURIComponent(user.username)}` },
   }
 }

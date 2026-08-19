@@ -4,6 +4,7 @@ import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import MarkdownRenderer from "@/components/MarkdownRenderer"
 import ArticleViewTracker from "@/components/ArticleViewTracker"
+import { buildBreadcrumbJsonLd } from "@/lib/breadcrumb-jsonld"
 import type { Dict } from "@/lib/dict"
 
 interface ArticleFigure {
@@ -18,6 +19,7 @@ interface ArticleFigure {
 
 interface Article {
   id: string
+  slug?: string | null
   title: string
   coverImage: string | null
   body: string
@@ -32,6 +34,13 @@ interface Props {
 }
 
 export default function ArticleDetailContent({ article, dict, articlesHref, jsonLd }: Props) {
+  const localePrefix = articlesHref.replace(/\/articles$/, "")
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Bats Club", url: `https://batsclub.com${localePrefix || "/"}` },
+    { name: dict.articles_heading || "Articles", url: `https://batsclub.com${articlesHref}` },
+    { name: article.title, url: `https://batsclub.com${localePrefix}/articles/${article.slug || article.id}` },
+  ])
+
   return (
     <div className="relative min-h-screen">
       {jsonLd && (
@@ -43,6 +52,10 @@ export default function ArticleDetailContent({ article, dict, articlesHref, json
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+      />
       <ArticleViewTracker articleId={article.id} />
       <BatsOverlay />
       <div className="absolute top-1/4 right-1/3 w-[600px] h-[600px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />

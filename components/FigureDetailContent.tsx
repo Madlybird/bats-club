@@ -8,6 +8,7 @@ import ShareButtons from "@/components/ShareButtons"
 import PhotoCarousel from "@/components/PhotoCarousel"
 import FigureViewTracker from "@/components/FigureViewTracker"
 import { AgeGateReveal, MatureBlur } from "@/components/AgeGate"
+import { buildBreadcrumbJsonLd } from "@/lib/breadcrumb-jsonld"
 import type { Dict } from "@/lib/dict"
 
 function parseImages(raw: unknown): string[] {
@@ -33,6 +34,7 @@ interface Article {
 interface Props {
   figure: {
     id: string
+    slug?: string | null
     name: string
     character: string
     series: string
@@ -84,6 +86,16 @@ export default function FigureDetailContent({
     : figure.scale
   const descriptionDisplay = figure.descriptionLocale || figure.description
 
+  // archiveHref is locale-prefixed ("/archive", "/ru/archive", "/jp/archive") —
+  // strip the "/archive" suffix to recover the locale prefix for building
+  // absolute URLs that mirror this same locale.
+  const localePrefix = archiveHref.replace(/\/archive$/, "")
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Bats Club", url: `https://batsclub.com${localePrefix || "/"}` },
+    { name: dict.fig_breadcrumb, url: `https://batsclub.com${archiveHref}` },
+    { name: figure.name, url: `https://batsclub.com${localePrefix}/figures/${figure.slug || figure.id}` },
+  ])
+
   const specs = [
     { label: dict.fig_spec_character, value: figure.character },
     { label: dict.fig_spec_series, value: figure.series },
@@ -105,6 +117,10 @@ export default function FigureDetailContent({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+      />
 
       <FigureViewTracker series={figure.series} />
       <div className="relative min-h-screen">
@@ -161,7 +177,7 @@ export default function FigureDetailContent({
                           if (imgs.length > 0) return imgs
                           return figure.imageUrl ? [figure.imageUrl] : []
                         })()}
-                        alt={figure.name}
+                        alt={`${figure.name} — ${figure.character} figure, ${figure.series}`}
                         priority
                       />
                     </div>
@@ -271,7 +287,7 @@ export default function FigureDetailContent({
                               }}
                             >
                               {thumb ? (
-                                <Image src={thumb} alt={rel.name} fill unoptimized className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
+                                <Image src={thumb} alt={`${rel.name} — ${rel.series}`} fill unoptimized className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center text-4xl">🦇</div>
                               )}

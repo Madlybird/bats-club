@@ -3,11 +3,12 @@ import type { Metadata } from "next"
 import { supabaseAdmin } from "@/lib/supabase"
 import ShopPageContent from "@/components/ShopPageContent"
 import { ru } from "@/lib/dict"
+import { buildCollectionPageJsonLd } from "@/lib/collection-jsonld"
 import { parsePriceRange } from "@/lib/price-range"
 import { getShopCollections, getCollectionFigureIds } from "@/lib/collections"
 
 export const metadata: Metadata = {
-  title: "Купить редкие аниме-фигурки | Bats Club",
+  title: "Купить редкие аниме-фигурки",
   description:
     "Магазин подлинных винтажных аниме-фигурок из частной японской коллекции. Доставка по миру. Все фигурки проверены и описаны.",
   alternates: {
@@ -110,20 +111,32 @@ export default async function ShopPageRu(props: Props) {
   ])
 
   const filtered = (listings || []) as any[]
+  const collectionJsonLd = buildCollectionPageJsonLd({
+    name: "Bats Club Shop",
+    description: "Shop authentic vintage anime figures from a private Japanese collection.",
+    url: "https://batsclub.com/ru/shop",
+    numberOfItems: filtered.length,
+  })
 
   return (
-    <Suspense fallback={<ShopSkeleton />}>
-      <ShopPageContent
-        listings={filtered as any}
-        priceRange={price}
-        sort={sort}
-        series={series}
-        topSeries={topSeries}
-        collection={collection}
-        topCollections={topCollections}
-        dict={ru}
-        shopBasePath="/ru/shop"
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd).replace(/</g, "\\u003c") }}
       />
-    </Suspense>
+      <Suspense fallback={<ShopSkeleton />}>
+        <ShopPageContent
+          listings={filtered as any}
+          priceRange={price}
+          sort={sort}
+          series={series}
+          topSeries={topSeries}
+          collection={collection}
+          topCollections={topCollections}
+          dict={ru}
+          shopBasePath="/ru/shop"
+        />
+      </Suspense>
+    </>
   )
 }

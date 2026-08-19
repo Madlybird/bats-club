@@ -5,6 +5,7 @@ import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import BatNudge from "@/components/BatNudge"
 import { jp } from "@/lib/dict"
+import { buildCollectionPageJsonLd } from "@/lib/collection-jsonld"
 import { Metadata } from "next"
 
 function ArchiveSkeleton() {
@@ -22,7 +23,7 @@ function ArchiveSkeleton() {
 }
 
 export const metadata: Metadata = {
-  title: "Archive | Bats Club",
+  title: "Archive",
   description: "Browse the full Bats Club anime figure archive.",
   alternates: {
     canonical: "https://batsclub.com/jp/archive",
@@ -57,9 +58,19 @@ export default async function ArchivePageJp() {
     .sort((a, b) => b.count - a.count)
 
   const dict = jp
+  const collectionJsonLd = buildCollectionPageJsonLd({
+    name: "Bats Club Archive",
+    description: `Browse ${figures.length}+ authentic rare Japanese anime figures from the 1990s-2000s.`,
+    url: "https://batsclub.com/jp/archive",
+    numberOfItems: figures.length,
+  })
 
   return (
     <div className="relative min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd).replace(/</g, "\\u003c") }}
+      />
       <BatsOverlay />
       <BatNudge
         title={dict.nudge_collection_title}

@@ -54,7 +54,7 @@ export default function FigureCard({ figure, labels, ageGateLabels, priority = f
           {figure.imageUrl ? (
             <Image
               src={figure.imageUrl}
-              alt={figure.name}
+              alt={`${figure.name} — ${figure.character} figure, ${figure.series}`}
               fill
               // Bypass Vercel's image optimizer and fetch the JPG
               // straight from Supabase Storage. The optimizer was

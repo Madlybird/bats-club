@@ -4,7 +4,7 @@ import { en } from "@/lib/dict"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Collector Articles & Spotlights | Bats Club",
+  title: "Collector Articles & Spotlights",
   description:
     "Anime figure collecting guides, reviews and collector spotlights from Bats Club.",
   alternates: {

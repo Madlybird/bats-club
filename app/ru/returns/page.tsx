@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import InfoPageShell from "@/components/InfoPageShell"
 
 export const metadata: Metadata = {
-  title: "Политика возврата | Bats Club",
+  title: "Политика возврата",
   description:
     "Политика возврата Bats Club. Возвраты принимаются для фигурок, повреждённых при доставке, в течение 14 дней. Сайт управляется SINBIOX Limited.",
   alternates: {

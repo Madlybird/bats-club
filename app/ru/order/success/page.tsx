@@ -7,7 +7,7 @@ import TrackPurchaseOnMount from "@/components/TrackPurchaseOnMount"
 import GoogleCustomerReviewsOptIn from "@/components/GoogleCustomerReviewsOptIn"
 
 export const metadata: Metadata = {
-  title: "Заказ подтверждён | Bats Club",
+  title: "Заказ подтверждён",
   description: "Спасибо за покупку в Bats Club.",
 }
 

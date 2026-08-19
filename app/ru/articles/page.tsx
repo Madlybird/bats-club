@@ -5,7 +5,7 @@ import { localizeArticle } from "@/lib/articleI18n"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Статьи и обзоры коллекционеров | Bats Club",
+  title: "Статьи и обзоры коллекционеров",
   description:
     "Гайды по коллекционированию аниме-фигурок, обзоры и интервью с коллекционерами от Bats Club.",
   alternates: {

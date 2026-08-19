@@ -70,7 +70,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     const slugForUrl = figure.slug || figureId
     const canonical = `https://batsclub.com/ru/figures/${slugForUrl}`
     return {
-      title: `${figure.name} — ${figure.series} | Bats Club`,
+      title: `${figure.name} — ${figure.series}`,
       description: (figure.description as string | null)?.trim() || fallback,
       alternates: {
         canonical,

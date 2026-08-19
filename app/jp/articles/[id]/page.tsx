@@ -21,7 +21,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const canonical = `https://batsclub.com/jp/articles/${params.id}`
   const slug = article.slug || params.id
   return {
-    title: `${a.title} | Bats Club`,
+    title: `${a.title}`,
     description: a.excerpt || undefined,
     alternates: {
       canonical,

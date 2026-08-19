@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import InfoPageShell from "@/components/InfoPageShell"
 
 export const metadata: Metadata = {
-  title: "返品ポリシー | Bats Club",
+  title: "返品ポリシー",
   description:
     "Bats Club 返品ポリシー。配送中に破損したフィギュアについては、受け取りから14日以内に返品を承ります。運営：SINBIOX Limited。",
   alternates: {

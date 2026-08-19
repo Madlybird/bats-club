@@ -23,15 +23,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Figure pages — prefer slug when available, fall back to id if the
   // slug column hasn't been added yet.
   try {
-    let figures: { id: string; slug?: string | null; created_at: string | null }[] = []
+    let figures: { id: string; slug?: string | null; created_at: string | null; image_url?: string | null }[] = []
     const withSlug = await supabaseAdmin
       .from("figures")
-      .select("id, slug, created_at")
+      .select("id, slug, created_at, image_url")
       .order("created_at", { ascending: false })
     if (withSlug.error) {
       const { data } = await supabaseAdmin
         .from("figures")
-        .select("id, created_at")
+        .select("id, created_at, image_url")
         .order("created_at", { ascending: false })
       figures = (data || []) as any
     } else {
@@ -46,6 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: fig.created_at ? new Date(fig.created_at) : new Date(),
           changeFrequency: "weekly",
           priority: 0.7,
+          ...(fig.image_url ? { images: [fig.image_url] } : {}),
         })
       }
     }
@@ -59,17 +60,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: listings } = await supabaseAdmin
       .from("listings")
-      .select("id, created_at")
+      .select("id, created_at, photos, figure:figures(image_url)")
       .eq("active", true)
       .order("created_at", { ascending: false })
 
-    for (const listing of listings || []) {
+    for (const listing of (listings || []) as any[]) {
+      // photos may come back as a native array (jsonb) or a JSON string,
+      // depending on the query path — mirrors parseImages() in
+      // components/FigureDetailContent.tsx / app/shop/[id]/page.tsx.
+      let photos: unknown = listing.photos
+      if (typeof photos === "string") {
+        try { photos = JSON.parse(photos) } catch { photos = [] }
+      }
+      const listingImage = Array.isArray(photos) && photos.length > 0 ? photos[0] : null
+      const figureEmbed = Array.isArray(listing.figure) ? listing.figure[0] : listing.figure
+      const image = listingImage || figureEmbed?.image_url || null
+
       for (const locale of LOCALES) {
         entries.push({
           url: `${BASE}${locale}/shop/${listing.id}`,
           lastModified: listing.created_at ? new Date(listing.created_at) : new Date(),
           changeFrequency: "weekly",
           priority: 0.7,
+          ...(image ? { images: [image] } : {}),
         })
       }
     }

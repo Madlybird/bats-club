@@ -18,7 +18,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     .eq("username", decodedUsername)
     .maybeSingle()
   if (!user) return { title: "User Not Found" }
-  return { title: `${user.name} (@${user.username}) | Bats Club` }
+  return { title: `${user.name} (@${user.username})` }
 }
 
 export default async function ProfilePageRu(props: Props) {

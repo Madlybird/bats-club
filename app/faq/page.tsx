@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import InfoPageShell from "@/components/InfoPageShell"
 
 export const metadata: Metadata = {
-  title: "FAQ | Bats Club",
+  title: "FAQ",
   description:
     "Frequently asked questions about Bats Club — shipping, orders, returns and contact information.",
   alternates: {

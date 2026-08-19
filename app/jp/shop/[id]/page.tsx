@@ -13,6 +13,7 @@ import { AgeGateReveal } from "@/components/AgeGate"
 import { jp } from "@/lib/dict"
 import { getRates, convertPrice } from "@/lib/currency"
 import { buildListingJsonLd } from "@/lib/listing-jsonld"
+import { buildBreadcrumbJsonLd } from "@/lib/breadcrumb-jsonld"
 import { Metadata } from "next"
 
 interface Props { params: Promise<{ id: string }> }
@@ -28,7 +29,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const figure = listing.figure as any
   const canonical = `https://batsclub.com/jp/shop/${params.id}`
   return {
-    title: `${figure?.name} を買う | Bats Club`,
+    title: `${figure?.name} を買う`,
     description: `${figure?.name}（${figure?.series}）。状態：${listing.condition}。Bats Clubから世界中へ発送。`,
     alternates: { canonical },
   }
@@ -81,12 +82,21 @@ export default async function ListingDetailPageJp(props: Props) {
 
   const conditionDisplay = dict[`shop_condition_${listing.condition.toLowerCase().replace(" ", "_")}` as keyof typeof dict] as string || listing.condition
   const jsonLd = buildListingJsonLd(listing, figure, displayImages, "jp")
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Bats Club", url: "https://batsclub.com/jp" },
+    { name: dict.shop_heading, url: "https://batsclub.com/jp/shop" },
+    { name: figure?.name, url: `https://batsclub.com/jp/shop/${listing.id}` },
+  ])
 
   return (
     <div className="relative min-h-screen">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
       <TrackViewItemOnMount listingId={listing.id} figureName={figure?.name} price={listing.price} series={figure?.series} />
       <BatsOverlay />
