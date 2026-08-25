@@ -8,6 +8,17 @@ import { Metadata } from "next"
 import { isUuid, lookupIdBySlug } from "@/lib/slug"
 import { isHiddenFigure } from "@/lib/hidden"
 import { localizeArticle } from "@/lib/articleI18n"
+import { buildListingJsonLd } from "@/lib/listing-jsonld"
+
+function parseImages(raw: unknown): string[] {
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw.filter((u): u is string => typeof u === "string")
+  if (typeof raw === "string") {
+    try { const p = JSON.parse(raw); return Array.isArray(p) ? p.filter((u): u is string => typeof u === "string") : [] }
+    catch { return [] }
+  }
+  return []
+}
 
 export const dynamicParams = true
 export const revalidate = 86400
@@ -176,17 +187,16 @@ export default async function FigureDetailPageRu(props: Props) {
 
   const slugForUrl = figure.slug || figureId
 
-  // Intentionally no Product JSON-LD on this page at all. /shop/[id] is
-  // the one shoppable, checkout-linked URL per listing and is what's
-  // submitted to Google Merchant via feed.xml — it's the single source
-  // of truth for price/availability. This page used to emit a bare
-  // Product (no offers) for SEO purposes, but a bare Product without
-  // offers/review/aggregateRating can never earn a rich result and just
-  // showed up as a permanent "invalid item" in Search Console's Product
-  // snippets report — so we drop the type here entirely rather than
-  // add fabricated offers/ratings that would either re-duplicate the
-  // Merchant listing or violate Google's structured-data policies.
-  const jsonLd = null
+  // Product+Offer JSON-LD, only when there's a real active listing to
+  // price it from — see app/figures/[slug]/page.tsx for why this is no
+  // longer unconditionally null (Google's Shopping auto-discovery was
+  // indexing this URL with no price, flagging active listings as
+  // "missing product price" / Not approved in Merchant Center).
+  const figureImages = parseImages(figure.images)
+  const displayImages = figureImages.length > 0 ? figureImages : figure.imageUrl ? [figure.imageUrl] : []
+  const jsonLd = listings.length > 0
+    ? buildListingJsonLd(listings[0], figure as any, displayImages, "ru")
+    : null
 
   return (
     <FigureDetailContent
