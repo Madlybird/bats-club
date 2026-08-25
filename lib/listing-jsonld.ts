@@ -38,6 +38,12 @@ export function buildListingJsonLd(
     description: listing.description?.trim() || `${figure.name} — ${figure.series}. Condition: ${listing.condition}.`,
     image: displayImages.length > 0 ? displayImages : figure.imageUrl ? [figure.imageUrl] : [],
     brand: { "@type": "Brand", name: figure.manufacturer || "Unknown" },
+    // No per-figure colour data exists in the DB, and painted PVC/resin
+    // figures are rarely a single colour anyway — "Multicolor" is
+    // Google's own accepted catch-all value for this attribute rather
+    // than leaving it unset (Merchant Center flags missing colour on
+    // every figure otherwise, even though it's a non-blocking hint).
+    color: "Multicolor",
     offers: {
       "@type": "Offer",
       url: `${BASE}${path}`,
