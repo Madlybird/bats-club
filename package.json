@@ -25,7 +25,11 @@
     "stripe": "^15.7.0"
   },
   "overrides": {
-    "nodemailer": "^9.0.5"
+    "nodemailer": "^9.0.5",
+    "next": {
+      "postcss": "^8.5.26",
+      "sharp": "^0.35.3"
+    }
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
