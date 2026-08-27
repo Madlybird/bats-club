@@ -7,6 +7,7 @@ import Toaster from "@/components/Toaster"
 import Footer from "@/components/Footer"
 import RegisterPrompt from "@/components/RegisterPrompt"
 import CookieConsentBanner from "@/components/CookieConsentBanner"
+import HtmlLangSync from "@/components/HtmlLangSync"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -115,6 +116,7 @@ export default function RootLayout({
         className="min-h-screen text-slate-200 antialiased font-inter overflow-x-clip"
       >
         <Providers>
+          <HtmlLangSync />
           <Navbar />
           <Toaster />
           <main className="overflow-x-clip">{children}</main>
