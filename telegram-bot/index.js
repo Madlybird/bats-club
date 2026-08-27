@@ -547,6 +547,7 @@ bot.on("message", async (msg) => {
     return bot.sendMessage(
       chatId,
       `✏️ *Managing ${figureName}* (not currently listed in the shop)\n\n` +
+        `• Send new photos (up to 10), then *DONE* — replace the archive photos\n` +
         `• \`PRICE <amount>\` (e.g. \`PRICE 150\`) — list it for sale\n` +
         `• *DELETE* — permanently remove from the archive\n\n` +
         `Or /cancel.`,
@@ -620,24 +621,25 @@ bot.on("message", async (msg) => {
       if (state.photoBuffers.length === 0) {
         return bot.sendMessage(chatId, "📸 Send at least one photo first, or /cancel.")
       }
-      if (!state.listingId) {
-        return bot.sendMessage(chatId, "⚠️ This figure has no shop listing to attach photos to. /cancel and list it for sale first.")
-      }
       try {
         await bot.sendMessage(chatId, "⏳ Uploading photos...")
         const imageUrls = await uploadAllPhotos(state.photoBuffers, state.figureName)
-        const { error } = await supabase
-          .from("listings")
-          .update({ photos: imageUrls })
-          .eq("id", state.listingId)
-        if (error) throw new Error(`DB update failed: ${error.message}`)
 
-        // The figure archive page and /archive both read figures.images
-        // (a separate column from listings.photos, which only backs the
-        // shop listing detail page). Keep them in sync here — otherwise a
-        // "photo update" only ever shows up on /shop/<id>, never on the
-        // figure's own page or the archive, which is what admins actually
-        // expect "update this figure's photos" to mean.
+        // Shop listing (if any) — /shop/<id> is the only surface that reads
+        // listings.photos. Archive-only figures have no listing row; that's
+        // fine, the figures.images write below is what their page renders.
+        if (state.listingId) {
+          const { error } = await supabase
+            .from("listings")
+            .update({ photos: imageUrls })
+            .eq("id", state.listingId)
+          if (error) throw new Error(`DB update failed: ${error.message}`)
+        }
+
+        // The figure archive page and /archive both read figures.images /
+        // figures.image_url (separate columns from listings.photos). This is
+        // the write that matters for an archive-only figure, and it keeps a
+        // listed figure's own page + the archive in sync with /shop.
         if (state.figureId) {
           const { error: figErr } = await supabase
             .from("figures")
@@ -648,11 +650,24 @@ bot.on("message", async (msg) => {
 
         const revalidated = await revalidateSite({ listingId: state.listingId, figureId: state.figureId })
 
+        // Point at whichever page the change is actually visible on.
+        let link
+        if (state.listingId) {
+          link = `batsclub.com/shop/${state.listingId}`
+        } else {
+          const { data: slugRow } = await supabase
+            .from("figures")
+            .select("slug")
+            .eq("id", state.figureId)
+            .maybeSingle()
+          link = `batsclub.com/figures/${slugRow?.slug || state.figureId}`
+        }
+
         resetState(userId)
         return bot.sendMessage(
           chatId,
           `✅ *Photos updated!*\n\n🏷️ ${state.figureName}\n📸 ${imageUrls.length} photo${imageUrls.length === 1 ? "" : "s"}\n\n` +
-            `📎 batsclub.com/shop/${state.listingId}` +
+            `📎 ${link}` +
             (revalidated ? "" : REVALIDATE_WARNING),
           { parse_mode: "Markdown" }
         )
