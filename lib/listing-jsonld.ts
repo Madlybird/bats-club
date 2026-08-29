@@ -52,8 +52,10 @@ export function buildListingJsonLd(
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/UsedCondition",
       seller: { "@type": "Organization", name: "Bats Club" },
-      // Rates here must mirror the <g:shipping> blocks in app/feed.xml/route.ts
-      // (Merchant Center feed) — Google cross-checks the two and flags mismatches.
+      // Rates + delivery time here must mirror the Merchant Center delivery
+      // policies (and the <g:shipping> blocks in app/feed.xml/route.ts) —
+      // Google cross-checks feed vs account and flags mismatches. MC policies:
+      // handling 1–3 + transit 7–12 = 8–15 working days for every region.
       shippingDetails: SHIPPING_COUNTRIES.map(({ country, price }) => ({
         "@type": "OfferShippingDetails",
         shippingRate: { "@type": "MonetaryAmount", value: price, currency: "USD" },
@@ -61,7 +63,7 @@ export function buildListingJsonLd(
         deliveryTime: {
           "@type": "ShippingDeliveryTime",
           handlingTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
-          transitTime: { "@type": "QuantitativeValue", minValue: 5, maxValue: 21, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 7, maxValue: 12, unitCode: "DAY" },
         },
       })),
       // Mirrors app/returns/page.tsx: 14-day window, transit-damage only,

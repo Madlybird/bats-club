@@ -63,11 +63,12 @@ export async function GET(req: Request) {
   const email: string | null = first.buyer?.email ?? null
   const deliveryCountry: string | null = first.shipping_address?.country ?? null
   // Not a real shipping promise, just a timer for when Google sends the
-  // review survey: order created_at + the transit-time estimate already
-  // published in the figure page's ShippingDeliveryTime JSON-LD
-  // (handling 1-3d + transit 14-21d, ~24 business days at the high end).
+  // review survey: order created_at + the delivery estimate published in
+  // the Merchant Center policies and the ShippingDeliveryTime JSON-LD
+  // (handling 1-3d + transit 7-12d = 8-15 working days, ~21 calendar days
+  // at the high end).
   const estimatedDeliveryDate = first.created_at
-    ? new Date(new Date(first.created_at).getTime() + 24 * 24 * 60 * 60 * 1000)
+    ? new Date(new Date(first.created_at).getTime() + 21 * 24 * 60 * 60 * 1000)
         .toISOString()
         .slice(0, 10)
     : null
