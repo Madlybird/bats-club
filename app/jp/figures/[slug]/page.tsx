@@ -9,6 +9,7 @@ import { isUuid, lookupIdBySlug } from "@/lib/slug"
 import { isHiddenFigure } from "@/lib/hidden"
 import { localizeArticle } from "@/lib/articleI18n"
 import { buildListingJsonLd } from "@/lib/listing-jsonld"
+import { figurePageMetadata } from "@/lib/product-metadata"
 
 function parseImages(raw: unknown): string[] {
   if (!raw) return []
@@ -67,6 +68,21 @@ const getFigureCore = cache(async (figureId: string) => {
   return data as (Record<string, any> & { slug: string | null; description_jp?: string | null }) | null
 })
 
+// See app/figures/[slug]/page.tsx: id of the cheapest active listing, or
+// null for archive-only figures. Figures with a live listing canonical to
+// their /shop/<id> page.
+const getActiveListingId = cache(async (figureId: string): Promise<string | null> => {
+  const { data } = await supabaseAdmin
+    .from("listings")
+    .select("id")
+    .eq("figure_id", figureId)
+    .eq("active", true)
+    .order("price", { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  return (data as { id: string } | null)?.id ?? null
+})
+
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   try {
@@ -78,19 +94,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     const fallback = `${figure.character} · ${figure.series} · ${figure.manufacturer} ${figure.scale}`
     const slugForUrl = figure.slug || figureId
-    const canonical = `https://batsclub.com/jp/figures/${slugForUrl}`
+    const title = `${figure.name} — ${figure.series}`
+    const image = parseImages(figure.images)[0] || figure.imageUrl || null
+    const activeListingId = await getActiveListingId(figureId)
     return {
-      title: `${figure.name} — ${figure.series}`,
+      title,
       description: (figure.description as string | null)?.trim() || fallback,
-      alternates: {
-        canonical,
-        languages: {
-          en: `https://batsclub.com/figures/${slugForUrl}`,
-          ru: `https://batsclub.com/ru/figures/${slugForUrl}`,
-          ja: canonical,
-          "x-default": `https://batsclub.com/figures/${slugForUrl}`,
-        },
-      },
+      ...figurePageMetadata(slugForUrl, "jp", title, image, activeListingId),
     }
   } catch (e: any) {
     if (e?.digest?.startsWith?.("NEXT_")) throw e

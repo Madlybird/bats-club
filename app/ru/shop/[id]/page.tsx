@@ -14,6 +14,7 @@ import { ru } from "@/lib/dict"
 import { getRates, convertPrice } from "@/lib/currency"
 import { buildListingJsonLd } from "@/lib/listing-jsonld"
 import { buildBreadcrumbJsonLd } from "@/lib/breadcrumb-jsonld"
+import { shopListingMetadata } from "@/lib/product-metadata"
 import { Metadata } from "next"
 
 interface Props { params: Promise<{ id: string }> }
@@ -22,16 +23,18 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const { data: listing } = await supabaseAdmin
     .from("listings")
-    .select("condition, figure:figures(name, series)")
+    .select("condition, photos, figure:figures(name, series, imageUrl:image_url, images)")
     .eq("id", params.id)
     .single()
   if (!listing) return { title: "Listing Not Found" }
   const figure = listing.figure as any
-  const canonical = `https://batsclub.com/ru/shop/${params.id}`
+  const image =
+    parseImages(listing.photos)[0] || parseImages(figure?.images)[0] || figure?.imageUrl || null
+  const title = `Купить ${figure?.name}`
   return {
-    title: `Купить ${figure?.name}`,
+    title,
     description: `${figure?.name} · ${figure?.series}. Состояние: ${listing.condition}. Доставка по всему миру от Bats Club.`,
-    alternates: { canonical },
+    ...shopListingMetadata(params.id, "ru", title, image),
   }
 }
 
