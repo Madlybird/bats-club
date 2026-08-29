@@ -43,18 +43,20 @@ interface ListingRow {
   figure: FigureRow | FigureRow[] | null
 }
 
-function firstImage(raw: unknown): string | null {
-  if (!raw) return null
-  if (Array.isArray(raw)) return raw.find((u): u is string => typeof u === "string") || null
+// photos/images may be a native array (jsonb) or a JSON string depending
+// on the query path — mirrors parseImages() in app/shop/[id]/page.tsx.
+function allImages(raw: unknown): string[] {
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw.filter((u): u is string => typeof u === "string")
   if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw)
-      return Array.isArray(parsed) ? parsed.find((u): u is string => typeof u === "string") || null : null
+      return Array.isArray(parsed) ? parsed.filter((u): u is string => typeof u === "string") : []
     } catch {
-      return null
+      return []
     }
   }
-  return null
+  return []
 }
 
 export async function GET() {
@@ -90,14 +92,28 @@ export async function GET() {
       // pad it with manufacturer/condition so it's not just the title twice.
       const description = figure.description
         || `${title}. ${figure.manufacturer ? `By ${figure.manufacturer}. ` : ""}Condition: ${row.condition}.`
-      const imageLink = firstImage(row.photos) || firstImage(figure.images) || figure.image_url || ""
+      const listingImages = allImages(row.photos)
+      const figureImages = allImages(figure.images)
+      const images = listingImages.length > 0
+        ? listingImages
+        : figureImages.length > 0
+        ? figureImages
+        : figure.image_url
+        ? [figure.image_url]
+        : []
+      const imageLink = images[0] || ""
+      // Google Merchant accepts up to 10 additional_image_link entries.
+      const additionalImageLinks = images
+        .slice(1, 11)
+        .map((u) => `    <g:additional_image_link>${xmlEscape(u)}</g:additional_image_link>`)
+        .join("\n")
 
       return `  <item>
     <g:id>${xmlEscape(row.id)}</g:id>
     <title>${xmlEscape(title)}</title>
     <description>${xmlEscape(description)}</description>
     <link>${BASE}/shop/${xmlEscape(row.id)}</link>
-    <g:image_link>${xmlEscape(imageLink)}</g:image_link>
+    <g:image_link>${xmlEscape(imageLink)}</g:image_link>${additionalImageLinks ? `\n${additionalImageLinks}` : ""}
     <g:price>${priceUsd} USD</g:price>
     <g:availability>in stock</g:availability>
     <g:condition>used</g:condition>

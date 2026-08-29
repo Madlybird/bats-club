@@ -78,11 +78,44 @@ export function buildListingJsonLd(
   }
 }
 
-// Flat shipping rates — the single source of truth referenced by both the
-// JSON-LD above and app/feed.xml/route.ts's <g:shipping> blocks.
+// Per-country shipping rates (first item, USD) — the single source of truth
+// referenced by both the JSON-LD above and app/feed.xml/route.ts's
+// <g:shipping> blocks. These MUST mirror the five delivery policies in
+// Merchant Center (USA / Europe / Asia / Rest of World / Russia) exactly —
+// Google cross-checks the feed against account settings and flags mismatches.
 export const SHIPPING_COUNTRIES = [
+  // USA policy + Europe policy — $12
   { country: "US", price: 12 },
-  { country: "JP", price: 17 },
+  { country: "CA", price: 12 },
   { country: "GB", price: 12 },
+  { country: "AT", price: 12 },
+  { country: "BE", price: 12 },
+  { country: "CH", price: 12 },
+  { country: "DE", price: 12 },
+  { country: "DK", price: 12 },
+  { country: "ES", price: 12 },
+  { country: "FI", price: 12 },
+  { country: "FR", price: 12 },
+  { country: "GR", price: 12 },
+  { country: "HU", price: 12 },
+  { country: "IE", price: 12 },
+  { country: "IT", price: 12 },
+  { country: "NL", price: 12 },
+  { country: "NO", price: 12 },
+  { country: "PL", price: 12 },
+  { country: "PT", price: 12 },
+  { country: "RO", price: 12 },
+  { country: "SE", price: 12 },
+  { country: "SK", price: 12 },
+  // Asia policy — $17
+  { country: "JP", price: 17 },
+  // Rest of World policy — $15
+  { country: "AU", price: 15 },
+  { country: "CL", price: 15 },
+  { country: "MX", price: 15 },
+  { country: "MA", price: 15 },
+  { country: "NZ", price: 15 },
+  // Russia policy — $9
   { country: "RU", price: 9 },
+  { country: "BY", price: 9 },
 ]
