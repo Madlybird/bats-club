@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
     supabaseAdmin.from("orders").select(`
       id, status, quantity, unitPrice:unit_price, shippingPrice:shipping_price, createdAt:created_at,
       buyer:users(username),
-      listing:listings(figure:figures(name))
+      listing:listings(figure:figures(name), art:art(title))
     `).order("created_at", { ascending: false }).limit(10),
   ])
 
@@ -92,7 +92,7 @@ export default async function AdminDashboard() {
                 <tr key={order.id} className="hover:bg-[#0a0a12] transition-colors">
                   <td className="px-5 py-3 font-mono text-xs text-slate-500">{order.id.slice(0, 8)}...</td>
                   <td className="px-5 py-3 text-slate-300">@{(order.buyer as any)?.username}</td>
-                  <td className="px-5 py-3 text-slate-300 truncate max-w-[180px]">{(order.listing as any)?.figure?.name}</td>
+                  <td className="px-5 py-3 text-slate-300 truncate max-w-[180px]">{(order.listing as any)?.figure?.name ?? (order.listing as any)?.art?.title ?? "—"}</td>
                   <td className="px-5 py-3 text-violet-400 font-medium">
                     ${((order.unitPrice * order.quantity + order.shippingPrice) / 100).toFixed(2)}
                   </td>

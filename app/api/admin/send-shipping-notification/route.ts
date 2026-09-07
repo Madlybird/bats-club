@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  let body: { orderId?: string; trackingNumber?: string; customerEmail?: string }
+  let body: { orderId?: string; trackingNumber?: string; customerEmail?: string; kind?: string }
   try {
     body = await req.json()
   } catch {
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
   }
 
   const { orderId, trackingNumber, customerEmail } = body
+  const itemNoun = body.kind === "art" ? "order" : "vintage figure"
   if (!orderId || !trackingNumber || !customerEmail) {
     return NextResponse.json(
       { error: "orderId, trackingNumber, and customerEmail are required" },
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
         </tr>
         <tr>
           <td style="padding:40px;">
-            <p style="margin:0 0 24px;font-size:16px;color:#ccc;line-height:1.6;">Your vintage figure has left our archive and is heading your way. 🖤</p>
+            <p style="margin:0 0 24px;font-size:16px;color:#ccc;line-height:1.6;">Your ${itemNoun} has left our archive and is heading your way. 🖤</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border:1px solid #2a0a1a;border-radius:8px;margin-bottom:28px;">
               <tr>
                 <td style="padding:20px 24px;border-bottom:1px solid #2a0a1a;">

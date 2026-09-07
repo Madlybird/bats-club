@@ -100,18 +100,18 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
 
 export async function sendOrderConfirmationEmail(
   email: string,
-  figureName: string,
+  itemName: string,
   price: number,
   country: string,
 ) {
   const html = wrap(`
     <h1 style="font-size:20px;font-weight:900;color:#fff;margin:0 0 8px">Order confirmed 🦇</h1>
     <p style="color:rgba(240,224,224,0.5);font-size:15px;line-height:1.6;margin:0 0 24px">
-      Thank you for your purchase! Your order has been confirmed, and your figure will ship within
+      Thank you for your purchase! Your order has been confirmed, and it will ship within
       the next 48 hours. We'll follow up by email with tracking details as soon as it's on its way.
     </p>
     <div style="background:rgba(255,45,120,0.08);border:1px solid rgba(255,45,120,0.25);border-radius:8px;padding:16px;margin:0 0 24px">
-      <p style="margin:0 0 8px;font-size:14px"><strong style="color:#fff">Figure:</strong> <span style="color:rgba(240,224,224,0.6)">${figureName}</span></p>
+      <p style="margin:0 0 8px;font-size:14px"><strong style="color:#fff">Item:</strong> <span style="color:rgba(240,224,224,0.6)">${itemName}</span></p>
       <p style="margin:0 0 8px;font-size:14px"><strong style="color:#fff">Price:</strong> <span style="color:#ff2d78">$${(price / 100).toFixed(2)}</span></p>
       <p style="margin:0;font-size:14px"><strong style="color:#fff">Shipping to:</strong> <span style="color:rgba(240,224,224,0.6)">${country}</span></p>
     </div>
@@ -121,7 +121,7 @@ export async function sendOrderConfirmationEmail(
   `)
 
   if (!process.env.RESEND_API_KEY) {
-    console.log(`[email:order] figure=${figureName} price=${price} to=${email}`)
+    console.log(`[email:order] item=${itemName} price=${price} to=${email}`)
     return
   }
 

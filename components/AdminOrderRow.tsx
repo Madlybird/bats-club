@@ -24,7 +24,7 @@ interface AdminOrderRowProps {
     shippingPrice: number
     createdAt: Date
     buyer: { username: string; name: string; email: string }
-    listing: { figure: { name: string; series: string } }
+    item: { kind: "figure" | "art"; name: string; subtitle: string }
   }
 }
 
@@ -57,6 +57,7 @@ export default function AdminOrderRow({ order }: AdminOrderRowProps) {
           orderId: order.id,
           trackingNumber: tracking,
           customerEmail: order.buyer.email,
+          kind: order.item.kind,
         }),
       })
       if (!res.ok) {
@@ -108,7 +109,18 @@ export default function AdminOrderRow({ order }: AdminOrderRowProps) {
         <p className="text-xs text-slate-500">@{order.buyer.username}</p>
       </td>
       <td className="px-4 py-3">
-        <p className="text-slate-200 text-sm truncate max-w-[150px]">{order.listing.figure.name}</p>
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${
+              order.item.kind === "art"
+                ? "bg-pink-900/30 text-pink-300 border border-pink-800/50"
+                : "bg-violet-900/30 text-violet-300 border border-violet-800/50"
+            }`}
+          >
+            {order.item.kind}
+          </span>
+        </div>
+        <p className="text-slate-200 text-sm truncate max-w-[150px] mt-0.5">{order.item.name}</p>
         <p className="text-xs text-slate-500">Qty: {order.quantity}</p>
       </td>
       <td className="px-4 py-3 text-violet-400 font-medium text-sm">

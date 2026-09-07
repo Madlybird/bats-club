@@ -1,7 +1,17 @@
+import Link from "next/link"
 import { supabaseAdmin } from "@/lib/supabase"
 import AdminOrderRow from "@/components/AdminOrderRow"
 
-export default async function AdminOrdersPage() {
+type ItemKind = "figure" | "art"
+
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>
+}) {
+  const { type } = await searchParams
+  const filter: "all" | ItemKind = type === "art" || type === "figure" ? type : "all"
+
   const { data: orders } = await supabaseAdmin
     .from("orders")
     .select(`
@@ -10,15 +20,22 @@ export default async function AdminOrdersPage() {
       shippingAddress:shipping_address, trackingNumber:tracking_number,
       createdAt:created_at,
       buyer:users(id, name, username, email),
-      listing:listings(id, price, condition, figure:figures(id, name, series, imageUrl:image_url))
+      listing:listings(
+        id, price, condition,
+        figure:figures(id, name, series, imageUrl:image_url),
+        art:art(id, title, type, series)
+      )
     `)
     .order("created_at", { ascending: false })
 
-  // Normalize to match AdminOrderRow's expected interface
+  // Normalize to match AdminOrderRow's expected interface. A listing is
+  // either a figure or an art piece — collapse both into one `item` shape.
   const normalized = (orders || []).map((o) => {
     const buyer = (Array.isArray(o.buyer) ? o.buyer[0] : o.buyer) as any
     const listing = (Array.isArray(o.listing) ? o.listing[0] : o.listing) as any
     const figure = Array.isArray(listing?.figure) ? listing.figure[0] : listing?.figure
+    const art = Array.isArray(listing?.art) ? listing.art[0] : listing?.art
+    const kind: ItemKind = art ? "art" : "figure"
     const addr = o.shippingAddress
     return {
       id: o.id,
@@ -32,16 +49,53 @@ export default async function AdminOrdersPage() {
         : String(addr ?? ""),
       createdAt: new Date(o.createdAt as string),
       buyer: { name: buyer?.name ?? "", username: buyer?.username ?? "", email: buyer?.email ?? "" },
-      listing: { figure: { name: figure?.name ?? "", series: figure?.series ?? "" } },
+      item: {
+        kind,
+        name: (art ? art.title : figure?.name) ?? "—",
+        subtitle: (art ? art.series || art.type : figure?.series) ?? "",
+      },
     }
   })
+
+  const counts = {
+    all: normalized.length,
+    figure: normalized.filter((o) => o.item.kind === "figure").length,
+    art: normalized.filter((o) => o.item.kind === "art").length,
+  }
+  const shown = filter === "all" ? normalized : normalized.filter((o) => o.item.kind === filter)
+
+  const tabs: { key: "all" | ItemKind; label: string }[] = [
+    { key: "all", label: `All (${counts.all})` },
+    { key: "figure", label: `Figures (${counts.figure})` },
+    { key: "art", label: `Art (${counts.art})` },
+  ]
 
   return (
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-black text-slate-100">Orders</h1>
-        <p className="text-slate-500 mt-1 text-sm">{normalized.length} total orders</p>
+        <p className="text-slate-500 mt-1 text-sm">{shown.length} {filter === "all" ? "total" : filter} orders</p>
       </div>
+
+      <div className="flex gap-2 mb-6">
+        {tabs.map((t) => {
+          const active = filter === t.key
+          return (
+            <Link
+              key={t.key}
+              href={t.key === "all" ? "/admin/orders" : `/admin/orders?type=${t.key}`}
+              className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                active
+                  ? "bg-violet-900/40 border-violet-700/60 text-violet-200"
+                  : "border-[#1a1a3a] text-slate-500 hover:text-slate-300 hover:border-[#2a2a4a]"
+              }`}
+            >
+              {t.label}
+            </Link>
+          )
+        })}
+      </div>
+
       <div className="flex gap-4 mb-6">
         {[
           { status: "PENDING", color: "text-yellow-400" },
@@ -52,7 +106,7 @@ export default async function AdminOrdersPage() {
         ].map((s) => (
           <div key={s.status} className="card px-4 py-3 flex items-center gap-2">
             <span className={`text-lg font-black ${s.color}`}>
-              {normalized.filter((o) => o.status === s.status).length}
+              {shown.filter((o) => o.status === s.status).length}
             </span>
             <span className="text-xs text-slate-500">{s.status}</span>
           </div>
@@ -74,10 +128,10 @@ export default async function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1a1a3a]">
-              {normalized.map((order) => (
+              {shown.map((order) => (
                 <AdminOrderRow key={order.id} order={order} />
               ))}
-              {normalized.length === 0 && (
+              {shown.length === 0 && (
                 <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-500 text-sm">No orders yet</td></tr>
               )}
             </tbody>
