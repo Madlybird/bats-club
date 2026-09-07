@@ -86,9 +86,13 @@ export async function POST(req: Request) {
 
     stage = "fetch-listings"
     const listingIds = items.map((i) => i.listingId)
-    const { data: listings, error: listingsError } = await supabaseAdmin
+    const { data: listingsData, error: listingsError } = await supabaseAdmin
       .from("listings")
-      .select("id, price, condition, stock, figure:figures(name, series, scale, imageUrl:image_url)")
+      .select(
+        "id, price, condition, stock, photos, " +
+          "figure:figures(name, series, scale, imageUrl:image_url), " +
+          "art:art(title, series, type, size)"
+      )
       .in("id", listingIds)
       .eq("active", true)
 
@@ -96,24 +100,52 @@ export async function POST(req: Request) {
       console.error("[checkout] supabase listings error:", listingsError)
       throw listingsError
     }
+    // Supabase's type-level select parser can't resolve the multi-relation
+    // embed here, so `listingsData` degrades to GenericStringError at the
+    // type level — cast to the real row shape we know it returns.
+    const listings = (listingsData as any[]) || []
     console.log(`[checkout] fetched ${listings?.length ?? 0}/${listingIds.length} listings`)
     if (!listings || listings.length !== listingIds.length) {
       return NextResponse.json({ error: "One or more items are no longer available" }, { status: 400 })
     }
+    // A listing describes either a figure or an art piece (never both).
+    // Normalise both into one shape for the name / description / image the
+    // Stripe line item and the error messages need.
+    const itemInfo = (listing: any): { name: string; description: string; image: string | null } => {
+      const figure = listing.figure as any
+      if (figure) {
+        return {
+          name: figure.name,
+          description: `${figure.series} · ${figure.scale} · ${listing.condition}`,
+          image: figure.imageUrl ?? null,
+        }
+      }
+      const art = listing.art as any
+      let photo: string | null = null
+      const raw = listing.photos
+      const arr = Array.isArray(raw) ? raw : typeof raw === "string" ? (() => { try { return JSON.parse(raw) } catch { return [] } })() : []
+      if (Array.isArray(arr) && typeof arr[0] === "string") photo = arr[0]
+      return {
+        name: art?.title ?? "Item",
+        description: [art?.series, art?.type, art?.size].filter(Boolean).join(" · "),
+        image: photo,
+      }
+    }
+
     // Map requested quantity by listingId (default 1 if omitted).
     const requestedQty = new Map<string, number>()
     for (const i of items) {
       requestedQty.set(i.listingId, Math.max(1, Math.floor(Number(i.quantity ?? 1))))
     }
     for (const listing of listings) {
-      const figure = listing.figure as any
+      const name = itemInfo(listing).name
       if (listing.stock < 1) {
-        return NextResponse.json({ error: `${figure?.name} is out of stock` }, { status: 400 })
+        return NextResponse.json({ error: `${name} is out of stock` }, { status: 400 })
       }
       const qty = requestedQty.get(listing.id) ?? 1
       if (qty > listing.stock) {
         return NextResponse.json(
-          { error: `Only ${listing.stock} of ${figure?.name} available` },
+          { error: `Only ${listing.stock} of ${name} available` },
           { status: 400 }
         )
       }
@@ -143,14 +175,14 @@ export async function POST(req: Request) {
       "https://batsclub.com"
 
     const stripeLineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = listings.map((listing) => {
-      const figure = listing.figure as any
+      const info = itemInfo(listing)
       return {
         price_data: {
           currency: "usd",
           product_data: {
-            name: figure.name,
-            description: `${figure.series} · ${figure.scale} · ${listing.condition}`,
-            images: figure.imageUrl ? [figure.imageUrl] : [],
+            name: info.name,
+            description: info.description || undefined,
+            images: info.image ? [info.image] : [],
           },
           unit_amount: listing.price,
         },
@@ -158,7 +190,7 @@ export async function POST(req: Request) {
       }
     })
 
-    const shippingLabel = `Shipping to ${country} (${listings.length} ${listings.length === 1 ? "figure" : "figures"})`
+    const shippingLabel = `Shipping to ${country} (${listings.length} ${listings.length === 1 ? "item" : "items"})`
     stripeLineItems.push({
       price_data: {
         currency: "usd",

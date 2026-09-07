@@ -98,6 +98,8 @@ export default async function ShopPage(props: Props) {
       seller:users(id, name, username)
     `)
     .eq("active", true)
+    // Art listings (art_id set, figure_id null) live on /art only — never the shop.
+    .not("figure_id", "is", null)
 
   const priceRange = parsePriceRange(price)
   if (priceRange) {

@@ -8,7 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = []
 
   // Static pages
-  const staticPages = ["/", "/archive", "/shop", "/articles", "/faq", "/privacy", "/terms", "/about"]
+  const staticPages = ["/", "/archive", "/shop", "/art", "/articles", "/faq", "/privacy", "/terms", "/about"]
   for (const page of staticPages) {
     for (const locale of LOCALES) {
       entries.push({
@@ -62,6 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("listings")
       .select("id, created_at, photos, figure:figures(image_url)")
       .eq("active", true)
+      .not("figure_id", "is", null) // art listings are emitted as /art/[id] below
       .order("created_at", { ascending: false })
 
     for (const listing of (listings || []) as any[]) {
@@ -88,6 +89,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch (e) {
     console.error("[sitemap] listings query failed:", e)
+  }
+
+  // Art listing pages (/art/[id]) — separate from the figure /shop/[id] loop
+  // above so the two catalogs never cross-emit each other's URLs.
+  try {
+    const { data: artListings } = await supabaseAdmin
+      .from("listings")
+      .select("id, created_at, photos")
+      .eq("active", true)
+      .not("art_id", "is", null)
+      .order("created_at", { ascending: false })
+
+    for (const listing of (artListings || []) as any[]) {
+      let photos: unknown = listing.photos
+      if (typeof photos === "string") {
+        try { photos = JSON.parse(photos) } catch { photos = [] }
+      }
+      const image = Array.isArray(photos) && photos.length > 0 ? photos[0] : null
+
+      for (const locale of LOCALES) {
+        entries.push({
+          url: `${BASE}${locale}/art/${listing.id}`,
+          lastModified: listing.created_at ? new Date(listing.created_at) : new Date(),
+          changeFrequency: "weekly",
+          priority: 0.7,
+          ...(image ? { images: [image] } : {}),
+        })
+      }
+    }
+  } catch (e) {
+    console.error("[sitemap] art listings query failed:", e)
   }
 
   // Article pages
