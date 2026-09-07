@@ -68,7 +68,7 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
 
       <div className="relative">
         <ScrollReveal>
-          <div className="border-b border-white/[0.05]">
+          <div>
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
               <span className="inline-block w-8 h-px bg-[#ff2d78] mb-4" />
               <h1
@@ -77,9 +77,6 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
               >
                 {s.heading}
               </h1>
-              <p className="text-white/35 mt-2 text-sm font-medium">
-                {items.length} {s.count_suffix} · {s.by_line}
-              </p>
             </div>
           </div>
         </ScrollReveal>

@@ -8,8 +8,6 @@ export interface ArtStrings {
   page_title: string
   page_desc: string
   heading: string           // the <h1> — lowercase, matches /archive style
-  by_line: string           // "prints by SINBIOX"
-  count_suffix: string      // "N {count_suffix}"
   filter_all: string
   sort_newest: string
   sort_price_asc: string
@@ -49,8 +47,6 @@ export const ART_I18N: Record<ArtLocale, ArtStrings> = {
     page_title: "Art",
     page_desc: "Original art by SINBIOX — posters, prints, postcards, stickers, canvas and zines. Ships worldwide.",
     heading: "art",
-    by_line: "prints by SINBIOX",
-    count_suffix: "works",
     filter_all: "All",
     sort_newest: "Newest",
     sort_price_asc: "Price: low to high",
@@ -88,8 +84,6 @@ export const ART_I18N: Record<ArtLocale, ArtStrings> = {
     page_title: "Арт",
     page_desc: "Оригинальный арт SINBIOX — постеры, принты, открытки, стикеры, холсты и зины. Доставка по миру.",
     heading: "арт",
-    by_line: "принты — SINBIOX",
-    count_suffix: "работ",
     filter_all: "Все",
     sort_newest: "Новые",
     sort_price_asc: "Цена: по возрастанию",
@@ -127,8 +121,6 @@ export const ART_I18N: Record<ArtLocale, ArtStrings> = {
     page_title: "アート",
     page_desc: "SINBIOX のオリジナルアート — ポスター、プリント、ポストカード、ステッカー、キャンバス、 zine。海外発送可。",
     heading: "アート",
-    by_line: "prints by SINBIOX",
-    count_suffix: "点",
     filter_all: "すべて",
     sort_newest: "新着順",
     sort_price_asc: "価格が安い順",
