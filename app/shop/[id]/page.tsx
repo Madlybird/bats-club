@@ -38,6 +38,7 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
       .from("listings")
       .select("id")
       .eq("active", true)
+      .not("figure_id", "is", null) // art listings render on /art/[id], not here
       .order("created_at", { ascending: false })
       .limit(100)
     if (error) return []
@@ -54,7 +55,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     .select("condition, photos, figure:figures(name, series, imageUrl:image_url, images)")
     .eq("id", params.id)
     .single()
-  if (!listing) return { title: "Listing Not Found" }
+  if (!listing || !listing.figure) return { title: "Listing Not Found" }
   const figure = listing.figure as any
   const image =
     parseImages(listing.photos)[0] || parseImages(figure?.images)[0] || figure?.imageUrl || null
@@ -94,7 +95,9 @@ export default async function ListingDetailPage(props: Props) {
     .eq("id", params.id)
     .single()
 
-  if (!listing || !listing.active) notFound()
+  // !listing.figure ⇒ this is an art listing (figure_id null) — it lives at
+  // /art/[id], so 404 here rather than render a half-empty figure page.
+  if (!listing || !listing.active || !listing.figure) notFound()
 
   const figure = listing.figure as any
   const photos = parseImages(listing.photos)

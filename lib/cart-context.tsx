@@ -10,6 +10,9 @@ export interface CartItem {
   price: number // in cents
   condition: string
   quantity: number
+  /** "art" for /art listings, undefined/"figure" for figure listings. Used
+   *  for GA4 item_category; the cart/checkout otherwise treat both the same. */
+  kind?: "figure" | "art"
 }
 
 export type AddItemResult = "added" | "already"

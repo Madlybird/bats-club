@@ -48,6 +48,21 @@ export function shopListingMetadata(
 }
 
 /**
+ * `alternates` + `openGraph` for an /art/<id> listing page in `locale`.
+ * Self-canonical, hreflang across the three locale variants — mirrors
+ * shopListingMetadata but for the art section.
+ */
+export function artListingMetadata(
+  id: string,
+  locale: Locale,
+  title: string,
+  image: string | null
+): ProductMeta {
+  const path = `/art/${id}`
+  return block(localeUrl(locale, path), path, title, image)
+}
+
+/**
  * `alternates` + `openGraph` for a /figures/<slug> archive page in `locale`.
  *
  * When `activeListingId` is set (the figure has a live listing) canonical and

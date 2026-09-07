@@ -217,9 +217,12 @@ export async function POST(req: Request) {
           // Fetch figure names for the email
           const { data: figureData } = await supabaseAdmin
             .from("listings")
-            .select("figure:figures(name)")
+            .select("figure:figures(name), art:art(title)")
             .in("id", listingIds)
-          const figureNames = (figureData || []).map((l: any) => l.figure?.name).filter(Boolean).join(", ")
+          const figureNames = (figureData || [])
+            .map((l: any) => l.figure?.name || l.art?.title)
+            .filter(Boolean)
+            .join(", ")
           const totalPrice = listingPrices.reduce((a: number, b: number) => a + b, 0)
           const country = (shippingFromStripe as any)?.country || (shippingAddress as any)?.country || "—"
           await sendOrderConfirmationEmail(buyerEmail, figureNames, totalPrice, country).catch((err: any) =>
@@ -263,7 +266,7 @@ export async function POST(req: Request) {
 async function decrementStock(listingId: string, quantity: number) {
   const { data: listing, error: fetchError } = await supabaseAdmin
     .from("listings")
-    .select("stock")
+    .select("stock, art_id")
     .eq("id", listingId)
     .single()
   if (fetchError || !listing) {
@@ -272,7 +275,9 @@ async function decrementStock(listingId: string, quantity: number) {
   }
   const newStock = Math.max(0, listing.stock - quantity)
   const update: Record<string, any> = { stock: newStock }
-  if (newStock <= 0) update.active = false
+  // Figures are 1-of-1: sold out ⇒ delist. Art can be reprinted, so a
+  // sold-out art listing stays active and shows a "Sold out" badge on /art.
+  if (newStock <= 0 && !listing.art_id) update.active = false
   const { error: updateError } = await supabaseAdmin
     .from("listings")
     .update(update)
@@ -358,10 +363,13 @@ async function addFigureToCollection(userId: string, listingId: string) {
     .select("figure_id")
     .eq("id", listingId)
     .single()
-  if (listingError || !listing?.figure_id) {
+  if (listingError) {
     console.error(`[stripe webhook] addFigureToCollection: listing ${listingId} lookup failed:`, listingError)
     return
   }
+  // Art listings have no figure_id — there's no figure collection to add
+  // them to. Expected, not an error.
+  if (!listing?.figure_id) return
   const { error: upsertError } = await supabaseAdmin
     .from("user_figures")
     .upsert(

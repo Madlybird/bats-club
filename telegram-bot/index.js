@@ -40,9 +40,33 @@ const DATA_TEMPLATE =
 
 const ADMIN_SELLER_ID = "28cc57d7-86c7-4d63-ac20-e9b1b9718773"
 
+// ── Art section ───────────────────────────────────────────────────────────────
+// Original art by SINBIOX. Separate `art` table; the sellable row is a
+// `listings` row with art_id set (figure_id null). Never touches `figures`.
+const ART_TYPES = ["Poster", "Digital Print", "Postcard", "Sticker", "Canvas", "Zine"]
+const ART_FIELDS = ["title", "size", "series", "year", "material", "edition", "description"]
+const ART_REQUIRED_FIELDS = ["title", "size", "description"]
+const ART_DATA_TEMPLATE =
+  "📝 *Fill in the art data and send it back* (required: Title, Size, Description):\n\n" +
+  "```\n" +
+  "Title: \n" +
+  "Size: \n" +
+  "Series: \n" +
+  "Year: \n" +
+  "Material: \n" +
+  "Edition: \n" +
+  "Description: \n" +
+  "```"
+
 // Steps during which the photo handler should buffer incoming photos
 // (as opposed to rejecting them because another flow is in progress).
-const PHOTO_COLLECT_STEPS = ["collecting_photos", "editing_photos"]
+const PHOTO_COLLECT_STEPS = [
+  "collecting_photos",
+  "editing_photos",
+  "choosing_category",
+  "art_collecting_photos",
+  "art_editing_photos",
+]
 
 const UUID_RE = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
 
@@ -58,6 +82,15 @@ function extractListingId(text) {
 // the fallback when extractListingId() finds nothing.
 function extractFigureSlug(text) {
   const match = text.match(/figures\/([a-z0-9-]+)/i)
+  return match ? match[1] : null
+}
+
+// Pulls the listing id out of a pasted batsclub.com/art/<id> link (any locale
+// prefix). Returns null if the text isn't an /art/ link — a bare UUID is
+// deliberately NOT treated as an art id (that path stays the figure/listing
+// flow); only an explicit /art/ link routes here.
+function extractArtListingId(text) {
+  const match = text.match(/\/art\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/)
   return match ? match[1] : null
 }
 
@@ -153,6 +186,22 @@ function parseFigureTemplate(text, base = {}) {
   return { data, missing }
 }
 
+// Same "Label: value" parser as parseFigureTemplate but for the art template.
+function parseArtTemplate(text, base = {}) {
+  const data = { ...base }
+  for (const line of text.split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Za-z]+)\s*:\s*(.*)$/)
+    if (!match) continue
+    const label = match[1].toLowerCase()
+    const value = match[2].trim()
+    if (!ART_FIELDS.includes(label)) continue
+    if (!value) continue
+    data[label] = label === "year" ? parseYear(value) : value
+  }
+  const missing = ART_REQUIRED_FIELDS.filter((f) => !data[f])
+  return { data, missing }
+}
+
 function parseYear(raw) {
   if (raw === null || raw === undefined) return null
   const n = typeof raw === "number" ? raw : parseInt(raw)
@@ -169,26 +218,26 @@ function parseYear(raw) {
   return null
 }
 
-async function uploadToSupabase(imageBuffer, figureName, index) {
+async function uploadToSupabase(imageBuffer, figureName, index, bucket = "figures") {
   const slug = slugify(figureName)
   const timestamp = Date.now()
   const suffix = index > 0 ? `-${index}` : ""
   const fileName = `${slug}-${timestamp}${suffix}.jpg`
 
   const { error } = await supabase.storage
-    .from("figures")
+    .from(bucket)
     .upload(fileName, imageBuffer, { contentType: "image/jpeg", upsert: false })
 
   if (error) throw new Error(`Storage upload failed: ${error.message}`)
 
-  const { data } = supabase.storage.from("figures").getPublicUrl(fileName)
+  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
   return data.publicUrl
 }
 
-async function uploadAllPhotos(photoBuffers, figureName) {
+async function uploadAllPhotos(photoBuffers, figureName, bucket = "figures") {
   const urls = []
   for (let i = 0; i < photoBuffers.length; i++) {
-    const url = await uploadToSupabase(photoBuffers[i], figureName, i)
+    const url = await uploadToSupabase(photoBuffers[i], figureName, i, bucket)
     urls.push(url)
   }
   return urls // index 0 = cover photo
@@ -316,6 +365,77 @@ async function deleteFigureAndListings(figureId) {
   return revalidateSite({ figureId })
 }
 
+// ── Art writes ────────────────────────────────────────────────────────────────
+
+async function saveArt(artData) {
+  const row = {
+    title: artData.title,
+    artist: "SINBIOX",
+    type: artData.type,
+    series: artData.series || null,
+    year: artData.year ?? null,
+    size: artData.size,
+    material: artData.material || null,
+    edition: artData.edition || null,
+    description: artData.description || null,
+    is_mature: !!artData.isMature,
+  }
+  const { data, error } = await supabase.from("art").insert(row).select("id, title").single()
+  if (error) throw new Error(`Art insert failed: ${error.message}`)
+  return data
+}
+
+// 1 art piece = 1 listing. condition is always "New" for art.
+async function createArtListing(artId, priceCents, stock, photos) {
+  const { data, error } = await supabase
+    .from("listings")
+    .insert({
+      art_id: artId,
+      seller_id: ADMIN_SELLER_ID,
+      price: priceCents,
+      condition: "New",
+      stock,
+      photos,
+      active: true,
+    })
+    .select("id")
+    .single()
+  if (error) throw new Error(`Art listing insert failed: ${error.message}`)
+  return data.id
+}
+
+// Hard-deletes an art piece and its listing. Refuses if the listing has real
+// orders attached (same protection as deleteFigureAndListings).
+async function deleteArtAndListing(listingId) {
+  const { data: listing, error: findErr } = await supabase
+    .from("listings")
+    .select("id, art_id")
+    .eq("id", listingId)
+    .maybeSingle()
+  if (findErr) throw new Error(`Lookup failed: ${findErr.message}`)
+  if (!listing || !listing.art_id) throw new Error("Not an art listing.")
+
+  const { data: orders, error: ordersErr } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("listing_id", listingId)
+    .limit(1)
+  if (ordersErr) throw new Error(`Order lookup failed: ${ordersErr.message}`)
+  if (orders && orders.length > 0) {
+    throw new Error(
+      `Cannot delete — order(s) exist for this listing. Refusing to delete order history.`
+    )
+  }
+
+  const { error: delListingErr } = await supabase.from("listings").delete().eq("id", listingId)
+  if (delListingErr) throw new Error(`Failed to delete listing: ${delListingErr.message}`)
+
+  const { error: delArtErr } = await supabase.from("art").delete().eq("id", listing.art_id)
+  if (delArtErr) throw new Error(`Failed to delete art: ${delArtErr.message}`)
+
+  return revalidateSite({ artId: listing.art_id })
+}
+
 // Bypasses the site's ISR cache on /figures/[slug] (and the archive/shop
 // listing pages) right after a direct-Supabase write, since the bot has no
 // admin session to trigger Next.js's normal revalidatePath() call.
@@ -375,6 +495,57 @@ async function finalize(chatId, userId, state) {
   return figure
 }
 
+function formatArtData(d) {
+  return (
+    `🖼️ *Art data extracted:*\n\n` +
+    `*Title:* ${d.title}\n` +
+    `*Type:* ${d.type}\n` +
+    `*Size:* ${d.size}\n` +
+    `*Series:* ${d.series || "—"}\n` +
+    `*Year:* ${d.year ?? "—"}\n` +
+    `*Material:* ${d.material || "—"}\n` +
+    `*Edition:* ${d.edition || "—"}\n` +
+    `*Description:* ${d.description || "—"}\n\n` +
+    `Is this correct? Reply *YES* to confirm, or send corrected lines in \`Label: value\` format.`
+  )
+}
+
+async function finalizeArt(chatId, state) {
+  await bot.sendMessage(chatId, "⏳ Uploading and saving art...")
+  const photos = await uploadAllPhotos(state.photoBuffers, state.artData.title, "art")
+  const art = await saveArt(state.artData)
+  const listingId = await createArtListing(art.id, state.price, state.stock, photos)
+  return { art, listingId }
+}
+
+const ART_TYPE_KEYBOARD = {
+  reply_markup: {
+    inline_keyboard: [
+      [ { text: "Poster", callback_data: "arttype:Poster" }, { text: "Digital Print", callback_data: "arttype:Digital Print" } ],
+      [ { text: "Postcard", callback_data: "arttype:Postcard" }, { text: "Sticker", callback_data: "arttype:Sticker" } ],
+      [ { text: "Canvas", callback_data: "arttype:Canvas" }, { text: "Zine", callback_data: "arttype:Zine" } ],
+    ],
+  },
+}
+
+const CATEGORY_KEYBOARD = {
+  reply_markup: {
+    inline_keyboard: [[
+      { text: "📦 Figure", callback_data: "cat:figure" },
+      { text: "🖼️ Art", callback_data: "cat:art" },
+    ]],
+  },
+}
+
+const MATURE_KEYBOARD = {
+  reply_markup: {
+    inline_keyboard: [[
+      { text: "🔞 Yes, 18+", callback_data: "artmature:yes" },
+      { text: "No", callback_data: "artmature:no" },
+    ]],
+  },
+}
+
 // ── Photo handler ─────────────────────────────────────────────────────────────
 
 bot.on("photo", async (msg) => {
@@ -396,13 +567,12 @@ bot.on("photo", async (msg) => {
     return bot.sendMessage(chatId, "⚠️ Maximum 10 photos reached. Type *DONE* to continue.", { parse_mode: "Markdown" })
   }
 
-  // Claim the "collecting_photos" step synchronously (before the async
-  // download) so photos arriving back-to-back — e.g. sent as an album —
-  // don't race each other into starting separate listings. (Not needed
-  // for "editing_photos" — that step is already claimed by the link
-  // handler before any photo arrives.)
-  if (state.step === "idle") {
-    setState(userId, { step: "collecting_photos", photoBuffers: [] })
+  // First photo of a fresh flow: buffer it and ask which catalog it's for.
+  // Claim "choosing_category" synchronously (before the async download) so an
+  // album of photos doesn't race into starting several flows.
+  const firstPhoto = state.step === "idle"
+  if (firstPhoto) {
+    setState(userId, { step: "choosing_category", photoBuffers: [] })
   }
 
   try {
@@ -413,9 +583,27 @@ bot.on("photo", async (msg) => {
     if (!PHOTO_COLLECT_STEPS.includes(freshState.step)) return
     const newBuffers = [...freshState.photoBuffers, buf]
     setState(userId, { ...freshState, photoBuffers: newBuffers })
-    const doneHint = freshState.step === "editing_photos"
-      ? "Send more photos, or type *DONE* to save (replaces the listing's current photos)."
-      : "Send more photos of this figure, or type *DONE* when finished."
+
+    if (freshState.step === "choosing_category") {
+      // Only prompt on the very first photo; extra album photos just buffer.
+      if (newBuffers.length === 1) {
+        return bot.sendMessage(
+          chatId,
+          "📸 Photo received. What are you adding?",
+          CATEGORY_KEYBOARD
+        )
+      }
+      return
+    }
+
+    const doneHint =
+      freshState.step === "editing_photos"
+        ? "Send more photos, or type *DONE* to save (replaces the listing's current photos)."
+        : freshState.step === "art_editing_photos"
+        ? "Send more photos, or type *DONE* to save (replaces the art's current photos)."
+        : freshState.step === "art_collecting_photos"
+        ? "Send more photos of this piece, or type *DONE* when finished."
+        : "Send more photos of this figure, or type *DONE* when finished."
     return bot.sendMessage(
       chatId,
       `📸 Photo ${newBuffers.length} added *(up to ${10 - newBuffers.length} more)*. ${doneHint}`,
@@ -424,6 +612,63 @@ bot.on("photo", async (msg) => {
   } catch (err) {
     console.error("Photo download error:", err)
     return bot.sendMessage(chatId, `❌ Error saving photo: ${err.message}`)
+  }
+})
+
+// ── Callback queries (inline keyboards) ───────────────────────────────────────
+
+bot.on("callback_query", async (query) => {
+  const userId = query.from.id
+  const chatId = query.message?.chat?.id
+  const data = query.data || ""
+  if (!isAdmin(userId) || !chatId) return bot.answerCallbackQuery(query.id)
+
+  const state = getState(userId)
+
+  try {
+    // Category pick after the first photo.
+    if (data === "cat:figure" && state.step === "choosing_category") {
+      setState(userId, { step: "collecting_photos", photoBuffers: state.photoBuffers || [] })
+      await bot.answerCallbackQuery(query.id, { text: "Figure" })
+      const n = (state.photoBuffers || []).length
+      return bot.sendMessage(
+        chatId,
+        `📦 *Figure.* ${n} photo${n === 1 ? "" : "s"} so far — send more, or type *DONE* when finished.`,
+        { parse_mode: "Markdown" }
+      )
+    }
+    if (data === "cat:art" && state.step === "choosing_category") {
+      setState(userId, { step: "art_collecting_photos", photoBuffers: state.photoBuffers || [] })
+      await bot.answerCallbackQuery(query.id, { text: "Art" })
+      const n = (state.photoBuffers || []).length
+      return bot.sendMessage(
+        chatId,
+        `🖼️ *Art.* ${n} photo${n === 1 ? "" : "s"} so far — send more, or type *DONE* when finished.`,
+        { parse_mode: "Markdown" }
+      )
+    }
+
+    // Art type pick.
+    if (data.startsWith("arttype:") && state.step === "art_choosing_type") {
+      const type = data.slice("arttype:".length)
+      if (!ART_TYPES.includes(type)) return bot.answerCallbackQuery(query.id)
+      setState(userId, { ...state, step: "art_awaiting_data", artData: { type } })
+      await bot.answerCallbackQuery(query.id, { text: type })
+      return bot.sendMessage(chatId, ART_DATA_TEMPLATE, { parse_mode: "Markdown" })
+    }
+
+    // Mature pick.
+    if (data.startsWith("artmature:") && state.step === "art_awaiting_mature") {
+      const isMature = data === "artmature:yes"
+      setState(userId, { ...state, step: "art_awaiting_stock", artData: { ...state.artData, isMature } })
+      await bot.answerCallbackQuery(query.id, { text: isMature ? "18+" : "No" })
+      return bot.sendMessage(chatId, "🔢 How many are *in stock*? Reply with a number.", { parse_mode: "Markdown" })
+    }
+
+    return bot.answerCallbackQuery(query.id)
+  } catch (err) {
+    console.error("callback_query error:", err)
+    return bot.answerCallbackQuery(query.id, { text: "Error" })
   }
 })
 
@@ -440,11 +685,12 @@ bot.on("message", async (msg) => {
   if (text === "/start" || text === "/help") {
     return bot.sendMessage(
       chatId,
-      "👋 *Bats Club Figure Bot*\n\nSend up to 10 photos of a figure (type *DONE* when finished), then fill in the data template to add it to the catalog.\n\n" +
-        "✏️ Paste a batsclub.com/shop/... link (or just the listing ID) to manage an existing listing:\n" +
-        "• Send new photos + *DONE* — replace photos\n" +
-        "• `PRICE <amount>` — change price\n" +
-        "• *DELETE* — permanently remove from archive and shop\n\n" +
+      "👋 *Bats Club Bot*\n\nSend up to 10 photos, then pick *📦 Figure* or *🖼️ Art*.\n\n" +
+        "*Figure:* photos → *DONE* → data template → optional shop listing.\n" +
+        "*Art:* photos → *DONE* → pick type → data template → 18+? → stock → price.\n\n" +
+        "✏️ Paste a link to manage an existing item:\n" +
+        "• `batsclub.com/shop/<id>` — figure listing: photos / `PRICE` / *DELETE*\n" +
+        "• `batsclub.com/art/<id>` — art listing: photos / `PRICE` / `STOCK` / *DELETE*\n\n" +
         "/cancel — cancel current operation",
       { parse_mode: "Markdown" }
     )
@@ -459,8 +705,47 @@ bot.on("message", async (msg) => {
 
   const state = getState(userId)
 
+  // Waiting on the category buttons — nudge if they type instead.
+  if (state.step === "choosing_category") {
+    return bot.sendMessage(chatId, "👆 Tap *📦 Figure* or *🖼️ Art* above, or /cancel.", { parse_mode: "Markdown" })
+  }
+
   // ── Idle: pasted a shop/archive link or ID → start management flow ───────
   if (state.step === "idle") {
+    // A batsclub.com/art/<id> link → manage that art listing.
+    const artListingId = extractArtListingId(text)
+    if (artListingId) {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("id, price, stock, photos, art_id, art:art(title)")
+        .eq("id", artListingId)
+        .maybeSingle()
+      if (error || !data || !data.art_id) {
+        return bot.sendMessage(chatId, "❌ Art listing not found. Check the link and try again.")
+      }
+      const art = Array.isArray(data.art) ? data.art[0] : data.art
+      const artTitle = art?.title || "art"
+      setState(userId, {
+        step: "art_editing_photos",
+        listingId: data.id,
+        artId: data.art_id,
+        artTitle,
+        photoBuffers: [],
+      })
+      const photoCount = Array.isArray(data.photos) ? data.photos.length : 0
+      return bot.sendMessage(
+        chatId,
+        `🖼️ *Managing "${artTitle}"*\n\n` +
+          `Current: ${photoCount} photo${photoCount === 1 ? "" : "s"} · $${(data.price / 100).toFixed(2)} · stock ${data.stock}\n\n` +
+          `• Send new photos (up to 10), then *DONE* — replace photos\n` +
+          `• \`PRICE <amount>\` — change price\n` +
+          `• \`STOCK <number>\` — change stock\n` +
+          `• *DELETE* — permanently remove from /art\n\n` +
+          `Or /cancel.`,
+        { parse_mode: "Markdown" }
+      )
+    }
+
     const listingId = extractListingId(text)
     const figureSlug = extractFigureSlug(text)
     if (!listingId && !figureSlug) return // not a link/ID at all — ignore
@@ -840,6 +1125,201 @@ bot.on("message", async (msg) => {
       resetState(userId)
       return bot.sendMessage(chatId, `❌ Failed to save: ${err.message}`)
     }
+  }
+
+  // ══ ART FLOW ═════════════════════════════════════════════════════════════════
+
+  // ── Step: art_collecting_photos ──────────────────────────────────────────────
+  if (state.step === "art_collecting_photos") {
+    if (text.toUpperCase() === "DONE") {
+      if (state.photoBuffers.length === 0) {
+        return bot.sendMessage(chatId, "📸 Send at least one photo first.")
+      }
+      setState(userId, { ...state, step: "art_choosing_type" })
+      return bot.sendMessage(chatId, "🎨 Pick the *type*:", { parse_mode: "Markdown", ...ART_TYPE_KEYBOARD })
+    }
+    return bot.sendMessage(chatId, "📸 Send more photos or type *DONE* when finished.", { parse_mode: "Markdown" })
+  }
+
+  // ── Step: art_choosing_type (waiting on the inline keyboard) ─────────────────
+  if (state.step === "art_choosing_type") {
+    return bot.sendMessage(chatId, "🎨 Pick the *type* using the buttons above.", { parse_mode: "Markdown", ...ART_TYPE_KEYBOARD })
+  }
+
+  // ── Step: art_awaiting_data ────────────────────────────────────────────────
+  if (state.step === "art_awaiting_data") {
+    const { data, missing } = parseArtTemplate(text, { type: state.artData.type })
+    if (missing.length > 0) {
+      return bot.sendMessage(
+        chatId,
+        `⚠️ Missing required field(s): ${missing.join(", ")}. Send the template again with all required fields filled in.`
+      )
+    }
+    setState(userId, { ...state, step: "art_awaiting_confirmation", artData: { ...data, type: state.artData.type } })
+    return bot.sendMessage(chatId, formatArtData({ ...data, type: state.artData.type }), { parse_mode: "Markdown" })
+  }
+
+  // ── Step: art_awaiting_confirmation ───────────────────────────────────────
+  if (state.step === "art_awaiting_confirmation") {
+    if (text.toUpperCase() === "YES") {
+      setState(userId, { ...state, step: "art_awaiting_mature" })
+      return bot.sendMessage(chatId, "🔞 Is this *18+ / mature* content?", { parse_mode: "Markdown", ...MATURE_KEYBOARD })
+    }
+    const { data } = parseArtTemplate(text, state.artData)
+    setState(userId, { ...state, artData: { ...data, type: state.artData.type } })
+    return bot.sendMessage(chatId, formatArtData({ ...data, type: state.artData.type }), { parse_mode: "Markdown" })
+  }
+
+  // ── Step: art_awaiting_mature (waiting on the inline keyboard) ──────────────
+  if (state.step === "art_awaiting_mature") {
+    return bot.sendMessage(chatId, "🔞 Use the buttons above — is this 18+?", MATURE_KEYBOARD)
+  }
+
+  // ── Step: art_awaiting_stock ──────────────────────────────────────────────
+  if (state.step === "art_awaiting_stock") {
+    const n = parseInt(text.trim(), 10)
+    if (isNaN(n) || n < 0) {
+      return bot.sendMessage(chatId, "⚠️ Send a whole number for the stock (e.g. `5`).", { parse_mode: "Markdown" })
+    }
+    setState(userId, { ...state, step: "art_awaiting_price", stock: n })
+    return bot.sendMessage(chatId, "💰 *Price* in USD? Reply with a number (e.g. `45`).", { parse_mode: "Markdown" })
+  }
+
+  // ── Step: art_awaiting_price → save ───────────────────────────────────────
+  if (state.step === "art_awaiting_price") {
+    const price = parseFloat(text.trim())
+    if (isNaN(price) || price <= 0) {
+      return bot.sendMessage(chatId, "⚠️ Send a valid price (e.g. `45`).", { parse_mode: "Markdown" })
+    }
+    try {
+      const withPrice = { ...state, price: Math.round(price * 100) }
+      const { art, listingId } = await finalizeArt(chatId, withPrice)
+      const revalidated = await revalidateSite({ artId: art.id })
+      resetState(userId)
+      return bot.sendMessage(
+        chatId,
+        `✅ *Art added!*\n\n🖼️ ${art.title}\n💰 $${price.toFixed(2)} · stock ${state.stock} · ${state.artData.type}\n\n` +
+          `📎 batsclub.com/art/${listingId}` +
+          (revalidated ? "" : REVALIDATE_WARNING),
+        { parse_mode: "Markdown" }
+      )
+    } catch (err) {
+      console.error("Art save error:", err)
+      resetState(userId)
+      return bot.sendMessage(chatId, `❌ Failed to save: ${err.message}`)
+    }
+  }
+
+  // ── Step: art_editing_photos (manage an existing art listing) ──────────────
+  if (state.step === "art_editing_photos") {
+    const upper = text.toUpperCase()
+
+    if (state.photoBuffers.length === 0 && upper === "DELETE") {
+      setState(userId, { step: "art_confirming_delete", listingId: state.listingId, artId: state.artId, artTitle: state.artTitle })
+      return bot.sendMessage(
+        chatId,
+        `⚠️ This will *permanently delete* "${state.artTitle}" from /art. This cannot be undone.\n\nReply *DELETE CONFIRM* to proceed, or /cancel.`,
+        { parse_mode: "Markdown" }
+      )
+    }
+
+    if (state.photoBuffers.length === 0 && upper.startsWith("PRICE")) {
+      const price = parseFloat(text.split(/\s+/)[1])
+      if (isNaN(price) || price <= 0) {
+        return bot.sendMessage(chatId, "⚠️ Include a valid price. Example: `PRICE 45`", { parse_mode: "Markdown" })
+      }
+      try {
+        const { error } = await supabase.from("listings").update({ price: Math.round(price * 100) }).eq("id", state.listingId)
+        if (error) throw new Error(error.message)
+        const revalidated = await revalidateSite({ artId: state.artId })
+        resetState(userId)
+        return bot.sendMessage(
+          chatId,
+          `✅ *Price updated!*\n\n🖼️ ${state.artTitle}\n💰 $${price.toFixed(2)}\n\n📎 batsclub.com/art/${state.listingId}` +
+            (revalidated ? "" : REVALIDATE_WARNING),
+          { parse_mode: "Markdown" }
+        )
+      } catch (err) {
+        console.error("Art price update error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ Failed to update price: ${err.message}`)
+      }
+    }
+
+    if (state.photoBuffers.length === 0 && upper.startsWith("STOCK")) {
+      const n = parseInt(text.split(/\s+/)[1], 10)
+      if (isNaN(n) || n < 0) {
+        return bot.sendMessage(chatId, "⚠️ Include a whole number. Example: `STOCK 5`", { parse_mode: "Markdown" })
+      }
+      try {
+        const { error } = await supabase.from("listings").update({ stock: n }).eq("id", state.listingId)
+        if (error) throw new Error(error.message)
+        const revalidated = await revalidateSite({ artId: state.artId })
+        resetState(userId)
+        return bot.sendMessage(
+          chatId,
+          `✅ *Stock updated!*\n\n🖼️ ${state.artTitle}\n📦 stock ${n}\n\n📎 batsclub.com/art/${state.listingId}` +
+            (revalidated ? "" : REVALIDATE_WARNING),
+          { parse_mode: "Markdown" }
+        )
+      } catch (err) {
+        console.error("Art stock update error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ Failed to update stock: ${err.message}`)
+      }
+    }
+
+    if (upper === "DONE") {
+      if (state.photoBuffers.length === 0) {
+        return bot.sendMessage(chatId, "📸 Send at least one photo first, or /cancel.")
+      }
+      try {
+        await bot.sendMessage(chatId, "⏳ Uploading photos...")
+        const imageUrls = await uploadAllPhotos(state.photoBuffers, state.artTitle, "art")
+        const { error } = await supabase.from("listings").update({ photos: imageUrls }).eq("id", state.listingId)
+        if (error) throw new Error(error.message)
+        const revalidated = await revalidateSite({ artId: state.artId })
+        resetState(userId)
+        return bot.sendMessage(
+          chatId,
+          `✅ *Photos updated!*\n\n🖼️ ${state.artTitle}\n📸 ${imageUrls.length} photo${imageUrls.length === 1 ? "" : "s"}\n\n` +
+            `📎 batsclub.com/art/${state.listingId}` +
+            (revalidated ? "" : REVALIDATE_WARNING),
+          { parse_mode: "Markdown" }
+        )
+      } catch (err) {
+        console.error("Art photo update error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ Failed to update photos: ${err.message}`)
+      }
+    }
+
+    return bot.sendMessage(
+      chatId,
+      "📸 Send photos + *DONE* to replace them. Or `PRICE <amount>` / `STOCK <number>` / *DELETE* (before sending photos).",
+      { parse_mode: "Markdown" }
+    )
+  }
+
+  // ── Step: art_confirming_delete ───────────────────────────────────────────
+  if (state.step === "art_confirming_delete") {
+    if (text.toUpperCase() === "DELETE CONFIRM") {
+      try {
+        const revalidated = await deleteArtAndListing(state.listingId)
+        resetState(userId)
+        return bot.sendMessage(
+          chatId,
+          `🗑️ *Deleted!*\n\n"${state.artTitle}" has been permanently removed from /art.` +
+            (revalidated ? "" : REVALIDATE_WARNING),
+          { parse_mode: "Markdown" }
+        )
+      } catch (err) {
+        console.error("Art delete error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ ${err.message}`)
+      }
+    }
+    return bot.sendMessage(chatId, "⚠️ Reply *DELETE CONFIRM* to permanently delete, or /cancel.", { parse_mode: "Markdown" })
   }
 })
 

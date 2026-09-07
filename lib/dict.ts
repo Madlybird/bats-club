@@ -143,6 +143,7 @@ export interface Dict {
   // ── Navbar ──
   nav_archive: string
   nav_shop: string
+  nav_art: string
   nav_articles: string
   nav_faq: string
   nav_signin: string
@@ -447,6 +448,7 @@ export const en: Dict = {
 
   nav_archive: "Archive",
   nav_shop: "Shop",
+  nav_art: "Art",
   nav_articles: "Articles",
   nav_faq: "FAQ",
   nav_signin: "Sign In",
@@ -743,6 +745,7 @@ export const ru: Dict = {
 
   nav_archive: "Архив",
   nav_shop: "Магазин",
+  nav_art: "Арт",
   nav_articles: "Статьи",
   nav_faq: "FAQ",
   nav_signin: "Войти",
@@ -1039,6 +1042,7 @@ export const jp: Dict = {
 
   nav_archive: "アーカイブ",
   nav_shop: "ショップ",
+  nav_art: "アート",
   nav_articles: "記事",
   nav_faq: "FAQ",
   nav_signin: "ログイン",

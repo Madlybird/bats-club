@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
   }
 
-  let body: { figureId?: string; listingId?: string; paths?: string[] } = {}
+  let body: { figureId?: string; listingId?: string; artId?: string; paths?: string[] } = {}
   try {
     body = await req.json()
   } catch {
@@ -50,6 +50,19 @@ export async function POST(req: Request) {
   push("/jp")
   push("/ru")
   push("/feed.xml")
+
+  // Art section. /art (+ locales) is force-dynamic so revalidating it is a
+  // no-op, but the /art/[id] detail template is ISR — refresh it whenever
+  // the bot touches an art listing.
+  if (body.artId) {
+    push("/art")
+    push("/ru/art")
+    push("/jp/art")
+    revalidatePath("/art/[id]", "page")
+    revalidatePath("/ru/art/[id]", "page")
+    revalidatePath("/jp/art/[id]", "page")
+    revalidated.push("/art/[id]", "/ru/art/[id]", "/jp/art/[id]")
+  }
 
   if (body.figureId) {
     // Revalidate the entire /figures/[slug] page template rather than a

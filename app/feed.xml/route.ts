@@ -67,6 +67,8 @@ export async function GET() {
     )
     .eq("active", true)
     .gt("stock", 0)
+    // Figures only — art has its own Merchant feed (art-feed.xml, Phase 2).
+    .not("figure_id", "is", null)
 
   if (error) {
     console.error("[feed.xml] supabase error:", error)

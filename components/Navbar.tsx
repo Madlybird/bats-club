@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useCart } from "@/lib/cart-context"
 import { en, ru, jp } from "@/lib/dict"
 
@@ -34,10 +34,23 @@ export default function Navbar() {
   const bare = stripLocale(pathname)
   const { count: cartCount } = useCart()
 
+  // The /art link only appears once there's at least one active art listing
+  // (spec: don't link to an empty page). Cheap edge-cached check.
+  const [showArt, setShowArt] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/art/active")
+      .then((r) => (r.ok ? r.json() : { active: false }))
+      .then((d) => { if (!cancelled) setShowArt(!!d?.active) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
   const dict = DICTS[locale]
 
   const archiveHref = withLocale(locale, "/archive")
   const shopHref = withLocale(locale, "/shop")
+  const artHref = withLocale(locale, "/art")
   const articlesHref = withLocale(locale, "/articles")
 
   return (
@@ -54,6 +67,7 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center gap-1">
             <NavLink href={archiveHref}>{dict.nav_archive}</NavLink>
             <NavLink href={shopHref}>{dict.nav_shop}</NavLink>
+            {showArt && <NavLink href={artHref}>{dict.nav_art}</NavLink>}
             <NavLink href={articlesHref}>{dict.nav_articles}</NavLink>
           </nav>
 
@@ -175,6 +189,7 @@ export default function Navbar() {
           <div className="md:hidden py-4 border-t border-white/5 space-y-1">
             <MobileNavLink href={archiveHref} onClick={() => setMobileOpen(false)}>{dict.nav_archive}</MobileNavLink>
             <MobileNavLink href={shopHref} onClick={() => setMobileOpen(false)}>{dict.nav_shop}</MobileNavLink>
+            {showArt && <MobileNavLink href={artHref} onClick={() => setMobileOpen(false)}>{dict.nav_art}</MobileNavLink>}
             <MobileNavLink href={articlesHref} onClick={() => setMobileOpen(false)}>{dict.nav_articles}</MobileNavLink>
             {/* Language switcher mobile */}
             <div className="flex gap-3 px-3 py-2">
