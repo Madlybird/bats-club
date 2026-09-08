@@ -89,12 +89,8 @@ export async function POST(req: Request) {
     if (items.length > MAX_CART_LINES) {
       return NextResponse.json({ error: "Too many items in the cart" }, { status: 400 })
     }
-    if (!country) {
-      return NextResponse.json({ error: "Country is required" }, { status: 400 })
-    }
-    if (!ALLOWED_COUNTRIES.has(country)) {
-      return NextResponse.json({ error: "We don't ship to this country." }, { status: 400 })
-    }
+    // `country` is required only when something physical ships — checked after
+    // the listings are fetched (a digital-only cart needs no address).
 
     stage = "fetch-listings"
     const listingIds = items.map((i) => i.listingId)
@@ -103,7 +99,7 @@ export async function POST(req: Request) {
       .select(
         "id, price, condition, stock, photos, " +
           "figure:figures(name, series, scale, imageUrl:image_url), " +
-          "art:art(title, series, type, size)"
+          "art:art(title, series, type, size, is_digital, file_path, file_name)"
       )
       .in("id", listingIds)
       .eq("active", true)
@@ -144,15 +140,20 @@ export async function POST(req: Request) {
       }
     }
 
+    const isDigital = (l: any) => !!l.art?.is_digital
+
     // Map requested quantity by listingId — coerce to a positive integer,
-    // fall back to 1 for anything non-numeric / < 1 (validated against stock
-    // and the per-type cap below).
+    // fall back to 1. Digital downloads are always quantity 1.
     const requestedQty = new Map<string, number>()
     for (const i of items) {
       const n = Math.floor(Number(i.quantity ?? 1))
       requestedQty.set(i.listingId, Number.isFinite(n) && n >= 1 ? n : 1)
     }
     for (const listing of listings) {
+      if (isDigital(listing)) {
+        requestedQty.set(listing.id, 1)
+        continue // unlimited copies, no stock to check
+      }
       const name = itemInfo(listing).name
       if (listing.stock < 1) {
         return NextResponse.json({ error: `${name} is out of stock` }, { status: 400 })
@@ -167,10 +168,22 @@ export async function POST(req: Request) {
     }
 
     // A listing points at exactly one of figure / art. They ship differently:
-    // figures on the tiered per-order table (max 3), art as one weight-priced
-    // ePacket parcel with a per-type quantity cap. A mixed cart pays both.
+    // figures on the tiered per-order table (max 3), physical art as one
+    // weight-priced ePacket parcel with a per-type quantity cap, digital art
+    // not at all. A mixed cart pays for whatever physically ships.
     const figureListings = listings.filter((l) => l.figure)
     const artListings = listings.filter((l) => l.art)
+    const hasPhysical =
+      figureListings.length > 0 || artListings.some((l) => !isDigital(l))
+
+    if (hasPhysical) {
+      if (!country) {
+        return NextResponse.json({ error: "Country is required" }, { status: 400 })
+      }
+      if (!ALLOWED_COUNTRIES.has(country)) {
+        return NextResponse.json({ error: "We don't ship to this country." }, { status: 400 })
+      }
+    }
 
     if (figureListings.length > MAX_ORDER_QUANTITY) {
       return NextResponse.json(
@@ -179,6 +192,7 @@ export async function POST(req: Request) {
       )
     }
     for (const listing of artListings) {
+      if (isDigital(listing)) continue
       const type = listing.art?.type ?? ""
       const qty = requestedQty.get(listing.id) ?? 1
       const cap = artCategoryMax(type)
@@ -191,14 +205,15 @@ export async function POST(req: Request) {
     }
 
     const figureShip = figureListings.length > 0
-      ? getShippingInfo(country, figureListings.length)
+      ? getShippingInfo(country ?? "", figureListings.length)
       : null
     const artShip = artListings.length > 0
       ? getArtShippingInfo(
-          country,
+          country ?? "",
           artListings.map((l) => ({
             type: l.art?.type ?? "",
             quantity: requestedQty.get(l.id) ?? 1,
+            isDigital: isDigital(l),
           }))
         )
       : null
@@ -233,12 +248,11 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SITE_URL ||
       "https://batsclub.com"
 
-    // Figures are 1-of-1 so their quantity is always 1; art carries the
-    // buyer's requested quantity (validated against stock + the per-type cap
-    // above).
+    // Figures are 1-of-1; physical art carries the requested quantity; digital
+    // downloads are always 1 (forced above).
+    const qtyOf = (listing: any) => (listing.art ? (requestedQty.get(listing.id) ?? 1) : 1)
     const stripeLineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = listings.map((listing) => {
       const info = itemInfo(listing)
-      const qty = listing.art ? (requestedQty.get(listing.id) ?? 1) : 1
       return {
         price_data: {
           currency: "usd",
@@ -249,22 +263,27 @@ export async function POST(req: Request) {
           },
           unit_amount: listing.price,
         },
-        quantity: qty,
+        quantity: qtyOf(listing),
       }
     })
 
-    const totalUnits = listings.reduce((n, l) => n + (l.art ? (requestedQty.get(l.id) ?? 1) : 1), 0)
-    const shippingLabel = `Shipping to ${country} (${totalUnits} ${totalUnits === 1 ? "item" : "items"})`
-    stripeLineItems.push({
-      price_data: {
-        currency: "usd",
-        product_data: { name: shippingLabel },
-        unit_amount: shippingCents,
-      },
-      quantity: 1,
-    })
+    if (shippingCents > 0) {
+      const totalUnits = listings.reduce((n, l) => n + qtyOf(l), 0)
+      stripeLineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `Shipping to ${country} (${totalUnits} ${totalUnits === 1 ? "item" : "items"})`,
+          },
+          unit_amount: shippingCents,
+        },
+        quantity: 1,
+      })
+    }
 
-    // Build Checkout Session params.
+    // Build Checkout Session params. A digital-only order collects no shipping
+    // address; a physical (or mixed) order locks the address country to the
+    // one the shipping quote was computed for.
     const params: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       line_items: stripeLineItems,
@@ -272,13 +291,12 @@ export async function POST(req: Request) {
       success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cart`,
       customer_email: session?.user?.email || undefined,
-      // Lock Stripe's address collection to the country the shipping quote
-      // was computed for — otherwise a buyer could pick a cheap zone in the
-      // cart and then ship to an expensive one on Stripe's page.
-      shipping_address_collection: {
+    }
+    if (hasPhysical) {
+      params.shipping_address_collection = {
         allowed_countries: [country] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
-      },
-      phone_number_collection: { enabled: true },
+      }
+      params.phone_number_collection = { enabled: true }
     }
 
     if (promoDiscountCents > 0) {
@@ -303,7 +321,8 @@ export async function POST(req: Request) {
       buyer_id: session?.user?.id || "",
       listing_ids: JSON.stringify(listings.map((l) => l.id)),
       listing_prices: JSON.stringify(listings.map((l) => l.price)),
-      listing_quantities: JSON.stringify(listings.map((l) => (l.art ? (requestedQty.get(l.id) ?? 1) : 1))),
+      listing_quantities: JSON.stringify(listings.map((l) => qtyOf(l))),
+      listing_is_digital: JSON.stringify(listings.map((l) => isDigital(l))),
       shipping_cents: String(shippingCents),
       promo_discount_cents: String(promoDiscountCents),
       shipping_address: JSON.stringify(shippingAddress || {}),

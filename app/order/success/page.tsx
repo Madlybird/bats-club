@@ -5,6 +5,7 @@ import BatsOverlay from "@/components/BatsOverlay"
 import ClearCartOnMount from "@/components/ClearCartOnMount"
 import TrackPurchaseOnMount from "@/components/TrackPurchaseOnMount"
 import GoogleCustomerReviewsOptIn from "@/components/GoogleCustomerReviewsOptIn"
+import DigitalDownloadsPanel from "@/components/DigitalDownloadsPanel"
 
 export const metadata: Metadata = {
   title: "Order Confirmed",
@@ -54,8 +55,12 @@ export default function OrderSuccessPage() {
           order confirmed!
         </h1>
         <p className="text-white/50 text-base leading-relaxed mb-10 max-w-sm mx-auto">
-          Thank you for your purchase. We&apos;ll contact you via email with shipping details.
+          Thank you for your purchase. We&apos;ll contact you via email with any shipping details.
         </p>
+
+        <Suspense fallback={null}>
+          <DigitalDownloadsPanel />
+        </Suspense>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link

@@ -119,6 +119,8 @@ function artZoneFor(countryCode: string): keyof typeof ART_ZONE_FIT | null {
 export interface ArtCartLine {
   type: string
   quantity: number
+  /** Digital downloads have no shipping — excluded from the weight. */
+  isDigital?: boolean
 }
 
 export function artUnitWeight(type: string): number {
@@ -129,10 +131,12 @@ export function artCategoryMax(type: string): number {
   return ART_CATEGORY_MAX[type] ?? ART_CATEGORY_MAX_FALLBACK
 }
 
-/** Total packed weight (grams) of the art part of a cart, incl. packaging. */
+/** Total packed weight (grams) of the physical art in a cart, incl. packaging.
+ *  Digital-download lines contribute nothing. */
 export function artShipmentWeight(lines: ArtCartLine[]): number {
   const g = lines.reduce(
-    (sum, l) => sum + artUnitWeight(l.type) * Math.max(1, Math.floor(l.quantity)),
+    (sum, l) =>
+      l.isDigital ? sum : sum + artUnitWeight(l.type) * Math.max(1, Math.floor(l.quantity)),
     0,
   )
   return g > 0 ? ART_PACKAGING_G + g : 0
@@ -144,7 +148,14 @@ export function artShipmentWeight(lines: ArtCartLine[]): number {
  * isn't served or the shipment would exceed the 2 kg ePacket ceiling.
  */
 export function getArtShippingInfo(countryCode: string, lines: ArtCartLine[]): ShippingInfo {
-  if (!countryCode || lines.length === 0) {
+  const grams = artShipmentWeight(lines)
+
+  // Nothing physical to ship (empty, or all digital downloads) → no charge,
+  // no country needed.
+  if (grams === 0) {
+    return { blocked: false, priceCents: 0, priceDisplay: "", blockedMessage: "" }
+  }
+  if (!countryCode) {
     return { blocked: false, priceCents: 0, priceDisplay: "", blockedMessage: "" }
   }
   const zone = artZoneFor(countryCode)
@@ -152,7 +163,6 @@ export function getArtShippingInfo(countryCode: string, lines: ArtCartLine[]): S
     return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: REGION_BLOCKED_MSG }
   }
 
-  const grams = artShipmentWeight(lines)
   if (grams > ART_MAX_WEIGHT_G) {
     return {
       blocked: true,

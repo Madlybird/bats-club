@@ -261,6 +261,9 @@ export interface Dict {
   cart_art_too_heavy: string
   cart_art_over_cap: string
   cart_art_item_cap: string
+  cart_digital_badge: string
+  cart_digital_note: string
+  cart_digital_free_ship: string
 
   // ── Register page ──
   register_heading: string
@@ -558,6 +561,9 @@ export const en: Dict = {
   cart_art_too_heavy: "This art order is too large to ship in one package (over 2 kg). Reduce the quantities, or place it as two separate orders. Questions? support@batsclub.com",
   cart_art_over_cap: "One of your art items is over its per-order limit. Reduce the quantity to check out.",
   cart_art_item_cap: "Max {X} per order — reduce to check out.",
+  cart_digital_badge: "Digital",
+  cart_digital_note: "Digital download (PDF)",
+  cart_digital_free_ship: "None (digital)",
 
   register_heading: "Create Account",
   register_subtitle: "Join the collector community",
@@ -854,6 +860,9 @@ export const ru: Dict = {
   cart_art_too_heavy: "Этот арт-заказ слишком большой для одной посылки (более 2 кг). Уменьшите количество или оформите двумя отдельными заказами. Вопросы: support@batsclub.com",
   cart_art_over_cap: "Одна из арт-позиций превышает лимит на заказ. Уменьшите количество, чтобы оформить.",
   cart_art_item_cap: "Макс. {X} за заказ — уменьшите, чтобы оформить.",
+  cart_digital_badge: "Цифровой",
+  cart_digital_note: "Цифровой файл (PDF)",
+  cart_digital_free_ship: "Нет (цифровой)",
 
   register_heading: "Создать аккаунт",
   register_subtitle: "Присоединяйся к сообществу коллекционеров",
@@ -1150,6 +1159,9 @@ export const jp: Dict = {
   cart_art_too_heavy: "このアート注文は1つの荷物で発送するには大きすぎます（2 kg超）。数量を減らすか、2回に分けてご注文ください。ご質問は support@batsclub.com まで。",
   cart_art_over_cap: "アート商品のいずれかが1注文あたりの上限を超えています。数量を減らしてください。",
   cart_art_item_cap: "1注文あたり最大{X}点 — 数量を減らしてください。",
+  cart_digital_badge: "デジタル",
+  cart_digital_note: "デジタルダウンロード（PDF）",
+  cart_digital_free_ship: "なし（デジタル）",
 
   register_heading: "アカウント作成",
   register_subtitle: "コレクターコミュニティに参加",

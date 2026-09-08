@@ -379,6 +379,9 @@ async function saveArt(artData) {
     edition: artData.edition || null,
     description: artData.description || null,
     is_mature: !!artData.isMature,
+    is_digital: !!artData.isDigital,
+    file_path: artData.filePath || null,
+    file_name: artData.fileName || null,
   }
   const { data, error } = await supabase.from("art").insert(row).select("id, title").single()
   if (error) throw new Error(`Art insert failed: ${error.message}`)
@@ -499,7 +502,8 @@ function formatArtData(d) {
   return (
     `🖼️ *Art data extracted:*\n\n` +
     `*Title:* ${d.title}\n` +
-    `*Type:* ${d.type}\n` +
+    `*Type:* ${d.type}${d.isDigital ? " · 💾 digital (PDF)" : ""}\n` +
+    (d.isDigital ? `*File:* ${d.fileName || "—"}\n` : "") +
     `*Size:* ${d.size}\n` +
     `*Series:* ${d.series || "—"}\n` +
     `*Year:* ${d.year ?? "—"}\n` +
@@ -514,8 +518,31 @@ async function finalizeArt(chatId, state) {
   await bot.sendMessage(chatId, "⏳ Uploading and saving art...")
   const photos = await uploadAllPhotos(state.photoBuffers, state.artData.title, "art")
   const art = await saveArt(state.artData)
-  const listingId = await createArtListing(art.id, state.price, state.stock, photos)
+  // Digital pieces have unlimited copies → stock null.
+  const stock = state.artData.isDigital ? null : state.stock
+  const listingId = await createArtListing(art.id, state.price, stock, photos)
   return { art, listingId }
+}
+
+const DIGITAL_KEYBOARD = {
+  reply_markup: {
+    inline_keyboard: [[
+      { text: "💾 Digital (PDF)", callback_data: "artdigital:yes" },
+      { text: "📦 Physical", callback_data: "artdigital:no" },
+    ]],
+  },
+}
+
+// Downloads a Telegram document and puts it in the private art-files bucket.
+async function uploadArtFile(fileId, fileName) {
+  const buf = await downloadFile(fileId)
+  const safe = String(fileName || "file.pdf").replace(/[^a-zA-Z0-9._-]/g, "_")
+  const key = `${Date.now()}-${safe}`
+  const { error } = await supabase.storage
+    .from("art-files")
+    .upload(key, buf, { contentType: "application/pdf", upsert: false })
+  if (error) throw new Error(`File upload failed: ${error.message}`)
+  return { path: key, name: safe }
 }
 
 const ART_TYPE_KEYBOARD = {
@@ -615,6 +642,44 @@ bot.on("photo", async (msg) => {
   }
 })
 
+// ── Document handler (digital art PDF) ────────────────────────────────────────
+
+bot.on("document", async (msg) => {
+  const userId = msg.from.id
+  const chatId = msg.chat.id
+  if (!isAdmin(userId)) return
+
+  const state = getState(userId)
+  if (state.step !== "art_awaiting_file" && state.step !== "art_awaiting_filename") {
+    return bot.sendMessage(chatId, "⚠️ Not expecting a file right now. Send /cancel to restart.")
+  }
+
+  const doc = msg.document
+  const size = doc.file_size || 0
+  if (size > 20 * 1024 * 1024) {
+    setState(userId, { ...state, step: "art_awaiting_filename" })
+    return bot.sendMessage(
+      chatId,
+      "⚠️ That file is over 20 MB — Telegram won't let the bot download it.\n\nUpload it to the `art-files` bucket in the Supabase dashboard, then reply here with the *exact filename*.",
+      { parse_mode: "Markdown" }
+    )
+  }
+
+  try {
+    await bot.sendMessage(chatId, "⏳ Saving file…")
+    const { path, name } = await uploadArtFile(doc.file_id, doc.file_name || "art.pdf")
+    setState(userId, {
+      ...state,
+      step: "art_awaiting_data",
+      artData: { ...state.artData, filePath: path, fileName: name },
+    })
+    return bot.sendMessage(chatId, `✅ File saved (\`${name}\`).\n\n` + ART_DATA_TEMPLATE, { parse_mode: "Markdown" })
+  } catch (err) {
+    console.error("Art file upload error:", err)
+    return bot.sendMessage(chatId, `❌ Failed to save file: ${err.message}`)
+  }
+})
+
 // ── Callback queries (inline keyboards) ───────────────────────────────────────
 
 bot.on("callback_query", async (query) => {
@@ -648,20 +713,42 @@ bot.on("callback_query", async (query) => {
       )
     }
 
-    // Art type pick.
+    // Art type pick → ask digital vs physical.
     if (data.startsWith("arttype:") && state.step === "art_choosing_type") {
       const type = data.slice("arttype:".length)
       if (!ART_TYPES.includes(type)) return bot.answerCallbackQuery(query.id)
-      setState(userId, { ...state, step: "art_awaiting_data", artData: { type } })
+      setState(userId, { ...state, step: "art_awaiting_digital", artData: { type } })
       await bot.answerCallbackQuery(query.id, { text: type })
+      return bot.sendMessage(chatId, "💾 *Digital download* or *physical* item?", { parse_mode: "Markdown", ...DIGITAL_KEYBOARD })
+    }
+
+    // Digital vs physical pick.
+    if (data.startsWith("artdigital:") && state.step === "art_awaiting_digital") {
+      const isDigital = data === "artdigital:yes"
+      if (isDigital) {
+        setState(userId, { ...state, step: "art_awaiting_file", artData: { ...state.artData, isDigital: true } })
+        await bot.answerCallbackQuery(query.id, { text: "Digital" })
+        return bot.sendMessage(
+          chatId,
+          "📎 Send the *PDF* now as a *file / document* (not a photo).\n\nOver 20 MB? Upload it to the `art-files` bucket in Supabase and reply with the exact filename instead.",
+          { parse_mode: "Markdown" }
+        )
+      }
+      setState(userId, { ...state, step: "art_awaiting_data", artData: { ...state.artData, isDigital: false } })
+      await bot.answerCallbackQuery(query.id, { text: "Physical" })
       return bot.sendMessage(chatId, ART_DATA_TEMPLATE, { parse_mode: "Markdown" })
     }
 
-    // Mature pick.
+    // Mature pick → stock (physical) or straight to price (digital = unlimited).
     if (data.startsWith("artmature:") && state.step === "art_awaiting_mature") {
       const isMature = data === "artmature:yes"
-      setState(userId, { ...state, step: "art_awaiting_stock", artData: { ...state.artData, isMature } })
+      const nextData = { ...state.artData, isMature }
       await bot.answerCallbackQuery(query.id, { text: isMature ? "18+" : "No" })
+      if (state.artData.isDigital) {
+        setState(userId, { ...state, step: "art_awaiting_price", artData: nextData })
+        return bot.sendMessage(chatId, "💰 *Price* in USD? Reply with a number (e.g. `12`).", { parse_mode: "Markdown" })
+      }
+      setState(userId, { ...state, step: "art_awaiting_stock", artData: nextData })
       return bot.sendMessage(chatId, "🔢 How many are *in stock*? Reply with a number.", { parse_mode: "Markdown" })
     }
 
@@ -1146,6 +1233,39 @@ bot.on("message", async (msg) => {
     return bot.sendMessage(chatId, "🎨 Pick the *type* using the buttons above.", { parse_mode: "Markdown", ...ART_TYPE_KEYBOARD })
   }
 
+  // ── Step: art_awaiting_digital (waiting on the inline keyboard) ─────────────
+  if (state.step === "art_awaiting_digital") {
+    return bot.sendMessage(chatId, "💾 Use the buttons above — *Digital (PDF)* or *Physical*?", { parse_mode: "Markdown", ...DIGITAL_KEYBOARD })
+  }
+
+  // ── Step: art_awaiting_file (waiting on a PDF document) ────────────────────
+  if (state.step === "art_awaiting_file") {
+    return bot.sendMessage(chatId, "📎 Send the *PDF* as a file / document (paperclip → File), not as text.", { parse_mode: "Markdown" })
+  }
+
+  // ── Step: art_awaiting_filename (large file uploaded via dashboard) ────────
+  if (state.step === "art_awaiting_filename") {
+    const fname = text.trim()
+    if (!fname) return bot.sendMessage(chatId, "Send the exact filename you uploaded to the `art-files` bucket.", { parse_mode: "Markdown" })
+    try {
+      const { data: files, error } = await supabase.storage.from("art-files").list("", { limit: 1000 })
+      if (error) throw new Error(error.message)
+      const hit = (files || []).find((f) => f.name === fname)
+      if (!hit) {
+        return bot.sendMessage(chatId, `❌ No file named \`${fname}\` in the \`art-files\` bucket. Check the name and try again.`, { parse_mode: "Markdown" })
+      }
+      setState(userId, {
+        ...state,
+        step: "art_awaiting_data",
+        artData: { ...state.artData, filePath: fname, fileName: fname },
+      })
+      return bot.sendMessage(chatId, `✅ Linked \`${fname}\`.\n\n` + ART_DATA_TEMPLATE, { parse_mode: "Markdown" })
+    } catch (err) {
+      console.error("Art filename verify error:", err)
+      return bot.sendMessage(chatId, `❌ Couldn't check the bucket: ${err.message}`)
+    }
+  }
+
   // ── Step: art_awaiting_data ────────────────────────────────────────────────
   if (state.step === "art_awaiting_data") {
     const { data, missing } = parseArtTemplate(text, { type: state.artData.type })
@@ -1196,9 +1316,10 @@ bot.on("message", async (msg) => {
       const { art, listingId } = await finalizeArt(chatId, withPrice)
       const revalidated = await revalidateSite({ artId: art.id })
       resetState(userId)
+      const stockBit = state.artData.isDigital ? "digital (PDF)" : `stock ${state.stock}`
       return bot.sendMessage(
         chatId,
-        `✅ *Art added!*\n\n🖼️ ${art.title}\n💰 $${price.toFixed(2)} · stock ${state.stock} · ${state.artData.type}\n\n` +
+        `✅ *Art added!*\n\n🖼️ ${art.title}\n💰 $${price.toFixed(2)} · ${stockBit} · ${state.artData.type}\n\n` +
           `📎 batsclub.com/art/${listingId}` +
           (revalidated ? "" : REVALIDATE_WARNING),
         { parse_mode: "Markdown" }

@@ -30,7 +30,7 @@ interface Props {
 
 export default function ArtCard({ item, labels, ageGateLabels, basePath = "/art", priority = false }: Props) {
   const href = `${basePath}/${item.id}`
-  const soldOut = item.stock <= 0
+  const soldOut = !item.isDigital && item.stock <= 0
   const fresh = !soldOut && isNew(item.createdAt)
   const subtitle = item.series || item.type
 
@@ -122,6 +122,7 @@ export default function ArtCard({ item, labels, ageGateLabels, basePath = "/art"
                 condition: "New",
                 kind: "art",
                 artType: item.type,
+                isDigital: item.isDigital,
               }}
               label={labels.addToCart}
               toastAlreadyInCart={labels.alreadyInCart}

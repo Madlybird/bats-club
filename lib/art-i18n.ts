@@ -30,6 +30,8 @@ export interface ArtStrings {
   last_one: string
   sold_out_note: string
   shipping_note: string
+  digital_note: string          // shown in place of shipping_note for a digital piece
+  digital_availability: string  // spec "Availability" value for a digital piece
   spec_type: string
   spec_series: string
   spec_year: string
@@ -69,6 +71,8 @@ export const ART_I18N: Record<ArtLocale, ArtStrings> = {
     last_one: "1 available — last one",
     sold_out_note: "Sold out.",
     shipping_note: "Ships worldwide · rolled in a tube or flat with a board · 14–28 working days",
+    digital_note: "Digital download (PDF) · link emailed after purchase · available 7 days",
+    digital_availability: "Digital download",
     spec_type: "Type",
     spec_series: "Series",
     spec_year: "Year",
@@ -106,6 +110,8 @@ export const ART_I18N: Record<ArtLocale, ArtStrings> = {
     last_one: "Осталась 1 шт.",
     sold_out_note: "Продано.",
     shipping_note: "Доставка по миру · в тубусе или плоско с подложкой · 14–28 рабочих дней",
+    digital_note: "Цифровой файл (PDF) · ссылка на почту после оплаты · доступна 7 дней",
+    digital_availability: "Цифровой файл",
     spec_type: "Тип",
     spec_series: "Серия",
     spec_year: "Год",
@@ -143,6 +149,8 @@ export const ART_I18N: Record<ArtLocale, ArtStrings> = {
     last_one: "残り1点",
     sold_out_note: "売り切れ。",
     shipping_note: "海外発送 · 筒または板入れ平梱包 · 14〜28営業日",
+    digital_note: "デジタルダウンロード（PDF）· 購入後メールでリンク送付 · 7日間有効",
+    digital_availability: "デジタルダウンロード",
     spec_type: "種類",
     spec_series: "シリーズ",
     spec_year: "年",

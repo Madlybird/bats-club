@@ -105,6 +105,10 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   )
   const selectedCountry = COUNTRIES.find((c) => c.code === countryCode)
 
+  // Anything that actually ships: every figure, plus non-digital art. A cart of
+  // only digital downloads needs no country, no address, no shipping line.
+  const hasPhysical = effectiveItems.some((i) => i.kind !== "art" || !i.isDigital)
+
   // Figures and art ship separately, each on its own model; a mixed cart pays both.
   const figShip = effectiveFigureItems.length > 0
     ? getShippingInfo(countryCode, effectiveFigureItems.length)
@@ -112,7 +116,11 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const artShip = artItems.length > 0
     ? getArtShippingInfo(
         countryCode,
-        artItems.map((i) => ({ type: i.artType ?? "", quantity: i.quantity }))
+        artItems.map((i) => ({
+          type: i.artType ?? "",
+          quantity: i.quantity,
+          isDigital: i.isDigital,
+        }))
       )
     : null
   const shippingBlocked = Boolean(figShip?.blocked || artShip?.blocked)
@@ -121,7 +129,9 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     : artShip?.blocked
       ? artShip.blockedMessage
       : ""
-  const artLineOverCap = artItems.some((i) => i.quantity > artCategoryMax(i.artType ?? ""))
+  const artLineOverCap = artItems.some(
+    (i) => !i.isDigital && i.quantity > artCategoryMax(i.artType ?? "")
+  )
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -134,13 +144,14 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   }, [])
 
   const itemsSubtotal = effectiveItems.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  const shippingCents = countryCode && !shippingBlocked && effectiveItems.length > 0
+  const shippingReady = hasPhysical ? Boolean(countryCode) : true
+  const shippingCents = shippingReady && !shippingBlocked && effectiveItems.length > 0
     ? (figShip?.priceCents ?? 0) + (artShip?.priceCents ?? 0)
     : 0
   const shippingDisplay = `$${(shippingCents / 100).toFixed(2)}`
   const shippingBreakdown =
-    figShip && artShip && !shippingBlocked
-      ? `Figures ${figShip.priceDisplay} + Art ${artShip.priceDisplay} — ship separately`
+    figShip && (artShip?.priceCents ?? 0) > 0 && !shippingBlocked
+      ? `Figures ${figShip.priceDisplay} + Art ${artShip!.priceDisplay} — ship separately`
       : ""
 
   const PROMO_RATES: Record<string, number> = {}
@@ -169,7 +180,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     effectiveItems.length >= 1 && figureSelectionValid && !artLineOverCap && !shippingBlocked
 
   const handlePay = async () => {
-    if (!address.phone) {
+    if (hasPhysical && !address.phone) {
       setError("Please fill in all required fields")
       return
     }
@@ -322,6 +333,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => {
                 const isArt = item.kind === "art"
+                const isDigitalArt = isArt && !!item.isDigital
                 const detailHref = isArt ? `/art/${item.listingId}` : `/shop/${item.listingId}`
                 const cap = artCategoryMax(item.artType ?? "")
                 const showCheckbox = figureOverLimit && !isArt
@@ -391,8 +403,10 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                         </h3>
                       </Link>
                       <p className="text-white/35 text-xs mt-0.5">{item.figureSeries}</p>
-                      <span className="badge badge-violet text-[10px] mt-1 inline-block">{item.condition}</span>
-                      {isArt && item.quantity > cap && (
+                      <span className="badge badge-violet text-[10px] mt-1 inline-block">
+                        {isDigitalArt ? dict.cart_digital_badge : item.condition}
+                      </span>
+                      {isArt && !isDigitalArt && item.quantity > cap && (
                         <p className="text-[11px] text-amber-400 mt-1">
                           {dict.cart_art_item_cap.replace("{X}", String(cap))}
                         </p>
@@ -400,27 +414,33 @@ export default function CartPageContent({ dict, shopHref }: Props) {
 
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setQuantity(item.listingId, item.quantity - 1)}
-                            disabled={isArt && item.quantity <= 1}
-                            className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
-                            aria-label="Decrease quantity"
-                          >
-                            −
-                          </button>
-                          {isArt && (
+                          {isDigitalArt ? (
+                            <span className="text-white/40 text-xs">{dict.cart_digital_note}</span>
+                          ) : (
                             <>
-                              <span className="text-white/70 text-sm font-medium w-5 text-center tabular-nums">
-                                {item.quantity}
-                              </span>
                               <button
-                                onClick={() => setQuantity(item.listingId, Math.min(cap, item.quantity + 1))}
-                                disabled={item.quantity >= cap}
+                                onClick={() => setQuantity(item.listingId, item.quantity - 1)}
+                                disabled={isArt && item.quantity <= 1}
                                 className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
-                                aria-label="Increase quantity"
+                                aria-label="Decrease quantity"
                               >
-                                +
+                                −
                               </button>
+                              {isArt && (
+                                <>
+                                  <span className="text-white/70 text-sm font-medium w-5 text-center tabular-nums">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    onClick={() => setQuantity(item.listingId, Math.min(cap, item.quantity + 1))}
+                                    disabled={item.quantity >= cap}
+                                    className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                                    aria-label="Increase quantity"
+                                  >
+                                    +
+                                  </button>
+                                </>
+                              )}
                             </>
                           )}
                         </div>
@@ -452,7 +472,8 @@ export default function CartPageContent({ dict, shopHref }: Props) {
 
             {/* Right: Order summary */}
             <div className="space-y-4">
-              {/* Country selector */}
+              {/* Country selector — only when something physical ships */}
+              {hasPhysical && (
               <div className="rounded-2xl border border-white/[0.06] p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
                 <h3 className="font-bold text-white text-sm mb-4">{dict.cart_shipping_dest}</h3>
                 <div ref={dropRef} className="relative">
@@ -484,6 +505,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   <p className="mt-3 text-sm text-amber-400 leading-relaxed">{shippingBlockedMsg}</p>
                 )}
               </div>
+              )}
 
               {/* Promo code */}
               <div className="rounded-2xl border border-white/[0.06] p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
@@ -535,7 +557,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                     <span>${(itemsSubtotal / 100).toFixed(2)}</span>
                   </div>
 
-                  {countryCode && !shippingBlocked && effectiveItems.length > 0 && (
+                  {hasPhysical && countryCode && !shippingBlocked && effectiveItems.length > 0 && (
                     <div className="flex justify-between text-white/50">
                       <span>
                         {dict.cart_shipping} ({selectedCountry?.name})
@@ -546,6 +568,12 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   {shippingBreakdown && (
                     <p className="text-[11px] text-white/30 -mt-1">{shippingBreakdown}</p>
                   )}
+                  {!hasPhysical && effectiveItems.length > 0 && (
+                    <div className="flex justify-between text-white/50">
+                      <span>{dict.cart_shipping}</span>
+                      <span>{dict.cart_digital_free_ship}</span>
+                    </div>
+                  )}
 
                   {promoDiscountCents > 0 && (
                     <div className="flex justify-between text-emerald-400 text-xs">
@@ -555,7 +583,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   )}
                 </div>
 
-                {countryCode && !shippingBlocked && effectiveItems.length > 0 ? (
+                {shippingReady && !shippingBlocked && effectiveItems.length > 0 ? (
                   <div className="flex justify-between font-black text-white border-t border-white/[0.06] pt-3">
                     <span>{dict.cart_total}</span>
                     <span style={{ color: "#ff2d78" }}>
@@ -576,14 +604,20 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   <button
                     onClick={() => {
                       trackProceedToCheckout(totalCents, effectiveUnits)
-                      setShowAddress(true)
+                      if (hasPhysical) setShowAddress(true)
+                      else handlePay()
                     }}
-                    disabled={!countryCode || shippingBlocked || !selectionValid}
+                    disabled={!shippingReady || shippingBlocked || !selectionValid || loading || redirecting}
                     className="w-full py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed mt-1"
                     style={{ backgroundColor: "#ff2d78" }}
                   >
-                    {dict.cart_proceed}
+                    {loading || redirecting ? dict.cart_paying : hasPhysical ? dict.cart_proceed : dict.cart_pay}
                   </button>
+                )}
+                {!showAddress && !hasPhysical && error && (
+                  <p className="text-red-400 text-sm bg-red-900/20 border border-red-900/50 rounded-lg px-3 py-2">
+                    {error}
+                  </p>
                 )}
               </div>
 

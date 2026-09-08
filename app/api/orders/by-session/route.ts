@@ -32,7 +32,7 @@ export async function GET(req: Request) {
   const { data: orders, error } = await supabaseAdmin
     .from("orders")
     .select(`
-      listing_id, unit_price, shipping_price, quantity, created_at,
+      id, listing_id, unit_price, shipping_price, quantity, created_at,
       shipping_address, buyer:users(email),
       listing:listings(figure:figures(name), art:art(title))
     `)
@@ -46,6 +46,22 @@ export async function GET(req: Request) {
 
   if (!orders || orders.length === 0) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
+  // Digital download links for this order (still within their 7-day window).
+  const orderIds = Array.from(new Set([...orders.map((o: any) => o.id), sessionId]))
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://batsclub.com"
+  let downloadLinks: string[] = []
+  try {
+    const { data: dls } = await supabaseAdmin
+      .from("digital_downloads")
+      .select("token, expires_at")
+      .in("order_id", orderIds)
+    downloadLinks = (dls || [])
+      .filter((d: any) => new Date(d.expires_at).getTime() > Date.now())
+      .map((d: any) => `${baseUrl}/api/download/${d.token}`)
+  } catch (e) {
+    console.error("[orders/by-session] download link lookup failed:", e)
   }
 
   const items = orders.map((o: any) => ({
@@ -80,5 +96,6 @@ export async function GET(req: Request) {
     email,
     deliveryCountry,
     estimatedDeliveryDate,
+    downloadLinks,
   })
 }

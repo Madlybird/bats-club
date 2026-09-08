@@ -17,6 +17,8 @@ export interface CartItem {
   /** Art type ("Poster" | "Zine" | …) — only set for art listings. Drives the
    *  per-type shipping weight and the per-order quantity cap. */
   artType?: string
+  /** Digital download (PDF) — no shipping, quantity locked to 1. */
+  isDigital?: boolean
 }
 
 export type AddItemResult = "added" | "already"

@@ -20,14 +20,17 @@ interface Props {
 }
 
 export default function ArtDetail({ item, strings: s, description, basePath, cartHref, shareLabel, ageGateLabels }: Props) {
-  const soldOut = item.stock <= 0
+  // Digital downloads are never "sold out" (unlimited copies) and ship nothing.
+  const soldOut = !item.isDigital && item.stock <= 0
   const price = `$${(item.price / 100).toFixed(2)}`
 
-  const availability = soldOut
-    ? s.sold_out_note
-    : item.stock === 1
-      ? s.last_one
-      : s.in_stock.replace("{n}", String(item.stock))
+  const availability = item.isDigital
+    ? s.digital_availability
+    : soldOut
+      ? s.sold_out_note
+      : item.stock === 1
+        ? s.last_one
+        : s.in_stock.replace("{n}", String(item.stock))
 
   const spec: [string, string | null | undefined][] = [
     [s.spec_type, item.type],
@@ -48,6 +51,7 @@ export default function ArtDetail({ item, strings: s, description, basePath, car
     condition: "New",
     kind: "art" as const,
     artType: item.type,
+    isDigital: item.isDigital,
   }
 
   return (
@@ -101,7 +105,9 @@ export default function ArtDetail({ item, strings: s, description, basePath, car
 
                 <div className="rounded-2xl border border-white/[0.06] p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
                   <span className="text-4xl font-black" style={{ color: "#ff2d78" }}>{price}</span>
-                  <p className="text-xs text-white/25 mt-1">{s.shipping_note}</p>
+                  <p className="text-xs text-white/25 mt-1">
+                    {item.isDigital ? s.digital_note : s.shipping_note}
+                  </p>
                 </div>
 
                 <div className="space-y-2">

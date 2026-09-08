@@ -53,6 +53,9 @@ export async function POST(req: Request) {
         ? JSON.parse(meta.listing_quantities)
         : []
       const qtyAt = (i: number) => Math.max(1, Math.floor(Number(listingQuantities[i] ?? 1)))
+      const listingIsDigital: boolean[] = meta.listing_is_digital
+        ? JSON.parse(meta.listing_is_digital)
+        : []
       const shippingCents = Number(meta.shipping_cents || "0")
       const promoDiscountCents = Number(meta.promo_discount_cents || "0")
       const shippingAddress = meta.shipping_address ? JSON.parse(meta.shipping_address) : {}
@@ -168,11 +171,29 @@ export async function POST(req: Request) {
           console.log(`[stripe webhook] guest checkout resolved to buyer ${resolvedBuyerId}`)
         }
 
+        // Digital lines: pull their file so we can mint a download token per
+        // order below.
+        const digitalIds = listingIds.filter((_, i) => listingIsDigital[i])
+        const artFileByListing = new Map<string, { path: string; name: string | null }>()
+        if (digitalIds.length > 0) {
+          const { data: fileRows } = await supabaseAdmin
+            .from("listings")
+            .select("id, art:art(file_path, file_name)")
+            .in("id", digitalIds)
+          for (const r of (fileRows || []) as any[]) {
+            const art = Array.isArray(r.art) ? r.art[0] : r.art
+            if (art?.file_path) artFileByListing.set(r.id, { path: art.file_path, name: art.file_name ?? null })
+          }
+        }
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://batsclub.com"
+        const downloadLinks: string[] = []
+
         // New flow: create orders NOW (after payment confirmed)
         for (let i = 0; i < listingIds.length; i++) {
           const listingId = listingIds[i]
           const price = listingPrices[i] ?? 0
-          const quantity = qtyAt(i)
+          const digital = !!listingIsDigital[i]
+          const quantity = digital ? 1 : qtyAt(i)
           const finalShippingAddress = shippingFromStripe || shippingAddress
 
           const orderRow = {
@@ -212,9 +233,35 @@ export async function POST(req: Request) {
             console.error(`[stripe webhook] order insert ${i} failed:`, insertError)
             throw insertError
           }
-          console.log(`[stripe webhook] order ${inserted?.id} created (PAID) qty=${quantity}`)
+          console.log(`[stripe webhook] order ${inserted?.id} created (PAID) qty=${quantity}${digital ? " digital" : ""}`)
 
-          await decrementStock(listingId, quantity)
+          if (digital) {
+            // Digital: no stock to decrement; mint a 7-day download token.
+            const file = artFileByListing.get(listingId)
+            if (file) {
+              const token = crypto.randomBytes(32).toString("base64url")
+              const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+              const { error: dlErr } = await supabaseAdmin.from("digital_downloads").insert({
+                token,
+                order_id: inserted?.id ?? session.id,
+                listing_id: listingId,
+                file_path: file.path,
+                file_name: file.name,
+                expires_at: expiresAt,
+              })
+              if (dlErr) {
+                console.error(`[stripe webhook] digital_downloads insert failed for ${listingId}:`, dlErr)
+              } else {
+                downloadLinks.push(`${baseUrl}/api/download/${token}`)
+              }
+            } else {
+              console.error(
+                `[ALERT] [stripe webhook] digital listing ${listingId} has no file — buyer paid, no download issued.`
+              )
+            }
+          } else {
+            await decrementStock(listingId, quantity)
+          }
           await addFigureToCollection(resolvedBuyerId, listingId)
         }
 
@@ -249,11 +296,18 @@ export async function POST(req: Request) {
             .map((l: any) => l.figure?.name || l.art?.title)
             .filter(Boolean)
             .join(", ")
-          const totalPrice = listingPrices.reduce((a: number, b: number) => a + b, 0)
-          const country = (shippingFromStripe as any)?.country || (shippingAddress as any)?.country || "—"
-          await sendOrderConfirmationEmail(buyerEmail, figureNames, totalPrice, country).catch((err: any) =>
-            console.error("[stripe webhook] order email failed:", err)
+          const totalPrice = listingPrices.reduce(
+            (sum: number, p: number, i: number) => sum + (p ?? 0) * qtyAt(i),
+            0
           )
+          const country = (shippingFromStripe as any)?.country || (shippingAddress as any)?.country || "—"
+          await sendOrderConfirmationEmail(
+            buyerEmail,
+            figureNames,
+            totalPrice,
+            country,
+            downloadLinks
+          ).catch((err: any) => console.error("[stripe webhook] order email failed:", err))
         }
       }
     } catch (error) {

@@ -103,25 +103,41 @@ export async function sendOrderConfirmationEmail(
   itemName: string,
   price: number,
   country: string,
+  downloadLinks: string[] = [],
 ) {
+  const hasPhysicalShipping = !!country && country !== "—"
+  const shipLine = hasPhysicalShipping
+    ? `<p style="margin:8px 0 0;font-size:14px"><strong style="color:#fff">Shipping to:</strong> <span style="color:rgba(240,224,224,0.6)">${country}</span></p>`
+    : ""
+  const followUp = hasPhysicalShipping
+    ? " We'll email you with tracking details as soon as it ships."
+    : ""
+  const downloadBlock = downloadLinks.length
+    ? `
+    <div style="background:rgba(255,45,120,0.08);border:1px solid rgba(255,45,120,0.25);border-radius:8px;padding:16px;margin:0 0 24px">
+      <p style="margin:0 0 12px;font-size:14px;color:#fff;font-weight:700">Your download${downloadLinks.length > 1 ? "s" : ""}</p>
+      ${downloadLinks.map((u) => btn(u, "Download PDF")).join(" ")}
+      <p style="margin:12px 0 0;font-size:12px;color:rgba(240,224,224,0.35)">Available for 7 days. Personal use only — no resale or redistribution of the file.</p>
+    </div>`
+    : ""
   const html = wrap(`
     <h1 style="font-size:20px;font-weight:900;color:#fff;margin:0 0 8px">Order confirmed 🦇</h1>
     <p style="color:rgba(240,224,224,0.5);font-size:15px;line-height:1.6;margin:0 0 24px">
-      Thank you for your purchase! Your order has been confirmed, and it will ship within
-      the next 48 hours. We'll follow up by email with tracking details as soon as it's on its way.
+      Thank you for your purchase! Your order is confirmed.${followUp}
     </p>
     <div style="background:rgba(255,45,120,0.08);border:1px solid rgba(255,45,120,0.25);border-radius:8px;padding:16px;margin:0 0 24px">
       <p style="margin:0 0 8px;font-size:14px"><strong style="color:#fff">Item:</strong> <span style="color:rgba(240,224,224,0.6)">${itemName}</span></p>
-      <p style="margin:0 0 8px;font-size:14px"><strong style="color:#fff">Price:</strong> <span style="color:#ff2d78">$${(price / 100).toFixed(2)}</span></p>
-      <p style="margin:0;font-size:14px"><strong style="color:#fff">Shipping to:</strong> <span style="color:rgba(240,224,224,0.6)">${country}</span></p>
+      <p style="margin:0;font-size:14px"><strong style="color:#fff">Price:</strong> <span style="color:#ff2d78">$${(price / 100).toFixed(2)}</span></p>
+      ${shipLine}
     </div>
+    ${downloadBlock}
     <p style="color:rgba(240,224,224,0.3);font-size:12px;margin:0">
       Questions? Email <a href="mailto:support@batsclub.com" style="color:#ff2d78;text-decoration:none">support@batsclub.com</a>
     </p>
   `)
 
   if (!process.env.RESEND_API_KEY) {
-    console.log(`[email:order] item=${itemName} price=${price} to=${email}`)
+    console.log(`[email:order] item=${itemName} price=${price} to=${email} downloads=${downloadLinks.length}`)
     return
   }
 

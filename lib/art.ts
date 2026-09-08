@@ -25,6 +25,7 @@ export interface ArtListRow {
   series: string | null
   size: string
   isMature: boolean
+  isDigital: boolean
   price: number
   stock: number
   coverImage: string | null
@@ -68,7 +69,7 @@ export const getArtForList = cache(async (): Promise<ArtListRow[]> => {
     .from("listings")
     .select(
       "id, price, stock, photos, created_at, " +
-        "art:art!inner(id, title, artist, type, series, size, is_mature)",
+        "art:art!inner(id, title, artist, type, series, size, is_mature, is_digital)",
     )
     .eq("active", true)
     .not("art_id", "is", null)
@@ -92,6 +93,7 @@ export const getArtForList = cache(async (): Promise<ArtListRow[]> => {
         series: a.series ?? null,
         size: a.size,
         isMature: !!a.is_mature,
+        isDigital: !!a.is_digital,
         price: row.price,
         stock: row.stock ?? 0,
         coverImage: parseImages(row.photos)[0] ?? null,
@@ -107,7 +109,7 @@ export async function getArtItem(listingId: string): Promise<ArtDetailRow | null
     .select(
       "id, price, stock, photos, created_at, active, " +
         "art:art(id, title, artist, type, series, size, year, material, edition, " +
-        "description, description_ru, description_jp, is_mature)",
+        "description, description_ru, description_jp, is_mature, is_digital)",
     )
     .eq("id", listingId)
     .maybeSingle()
@@ -131,6 +133,7 @@ export async function getArtItem(listingId: string): Promise<ArtDetailRow | null
     series: a.series ?? null,
     size: a.size,
     isMature: !!a.is_mature,
+    isDigital: !!a.is_digital,
     price: row.price,
     stock: row.stock ?? 0,
     coverImage: photos[0] ?? null,

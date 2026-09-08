@@ -57,6 +57,7 @@ export default function ReturnsPage() {
           <li>Art is sold as new, direct from the artist. Returns are accepted only for items damaged in transit or with a manufacturing defect, reported within 14 days of delivery, with an unboxing video meeting the requirements on this page.</li>
           <li>The following are not defects and are not eligible for return: minor variation in colour, trimming or finish on printed items; slight differences between a screen image and the printed piece.</li>
           <li>Change-of-mind returns and exchanges are not accepted.</li>
+          <li>Digital downloads are non-refundable once the download link has been issued.</li>
           <li>For approved returns we cover return shipping. Refunds are processed within 5–10 business days to your original payment method.</li>
         </ul>
       </section>
