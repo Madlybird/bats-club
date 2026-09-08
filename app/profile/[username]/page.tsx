@@ -62,33 +62,9 @@ export default async function ProfilePage(props: Props) {
   const purchaseCount = await getUserPurchaseCount(userId)
 
   const haveFigureIds = have.map((uf: any) => uf.figure?.id).filter(Boolean)
-  let rarityScore = 0
-  let rarityPercentile = 100
   let activeListings: any[] = []
 
   if (haveFigureIds.length > 0) {
-    try {
-      const { data: figureCounts } = await supabaseAdmin
-        .from("user_figures")
-        .select("figureId:figure_id")
-        .eq("status", "HAVE")
-        .in("figure_id", haveFigureIds)
-      const countMap = new Map<string, number>()
-      for (const row of figureCounts || []) {
-        countMap.set(row.figureId, (countMap.get(row.figureId) || 0) + 1)
-      }
-      for (const fid of haveFigureIds) {
-        rarityScore += 1 / (countMap.get(fid) || 1)
-      }
-      const { count: totalCollectors } = await supabaseAdmin
-        .from("user_figures")
-        .select("user_id", { count: "exact", head: true })
-        .eq("status", "HAVE")
-      if (totalCollectors && totalCollectors > 1) {
-        rarityPercentile = Math.max(1, Math.round((1 / totalCollectors) * 100))
-      }
-    } catch (e) { console.error("[profile] rarity query failed:", e) }
-
     try {
       const { data } = await supabaseAdmin
         .from("listings")
@@ -125,8 +101,6 @@ export default async function ProfilePage(props: Props) {
       profileBasePath="/profile"
       isOwner={session?.user?.id === userId}
       purchaseCount={purchaseCount}
-      rarityScore={rarityScore}
-      rarityPercentile={rarityPercentile}
       huntingCounts={huntingCounts}
       activeListings={activeListings as any}
       locale="en"

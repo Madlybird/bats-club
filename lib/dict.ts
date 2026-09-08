@@ -196,9 +196,6 @@ export interface Dict {
   profile_browse_archive: string
   profile_edit: string
   profile_share: string
-  profile_rarity_score: string
-  profile_rarity_tooltip: string
-  profile_rarity_percentile: string
   profile_stamp_card: string
   profile_stamp_tooltip: string
   profile_stamp_reward: string
@@ -216,7 +213,6 @@ export interface Dict {
   profile_view_all: string
   profile_for_sale: string
   profile_share_profile: string
-  profile_series_dna_tooltip: string
   profile_stamp_claim: string
   profile_hunt_share: string
 
@@ -497,9 +493,6 @@ export const en: Dict = {
   profile_browse_archive: "Browse Archive",
   profile_edit: "Edit profile",
   profile_share: "Copy link",
-  profile_rarity_score: "Rarity Score",
-  profile_rarity_tooltip: "Your rarity score is calculated based on how rare each figure in your collection is. The fewer collectors own a figure, the higher its rarity weight.",
-  profile_rarity_percentile: "top {X}% of collectors",
   profile_stamp_card: "Stamp Card",
   profile_stamp_tooltip: "Every purchase earns 1 stamp. Collect 10 to unlock free worldwide shipping on your next order.",
   profile_stamp_reward: "Free worldwide shipping — applied automatically on order 10",
@@ -517,7 +510,6 @@ export const en: Dict = {
   profile_view_all: "View all",
   profile_for_sale: "for sale",
   profile_share_profile: "Share Profile",
-  profile_series_dna_tooltip: "Auto-calculated from your collection, grouped by series and era. The hotter the series, the brighter it glows.",
   profile_stamp_claim: "Claim",
   profile_hunt_share: "Share",
 
@@ -794,9 +786,6 @@ export const ru: Dict = {
   profile_browse_archive: "Открыть архив",
   profile_edit: "Редактировать",
   profile_share: "Копировать ссылку",
-  profile_rarity_score: "Редкость",
-  profile_rarity_tooltip: "Ваш показатель редкости рассчитывается на основе того, насколько редка каждая фигурка в вашей коллекции. Чем меньше коллекционеров владеют фигуркой, тем выше её вес редкости.",
-  profile_rarity_percentile: "топ {X}% коллекционеров",
   profile_stamp_card: "Карта штампов",
   profile_stamp_tooltip: "Каждая покупка даёт 1 штамп. Соберите 10 и получите бесплатную доставку по миру на следующий заказ.",
   profile_stamp_reward: "Бесплатная доставка по миру — применяется автоматически на 10-м заказе",
@@ -814,7 +803,6 @@ export const ru: Dict = {
   profile_view_all: "Смотреть все",
   profile_for_sale: "в продаже",
   profile_share_profile: "Поделиться профилем",
-  profile_series_dna_tooltip: "Рассчитывается автоматически из вашей коллекции по сериям и эпохе.",
   profile_stamp_claim: "Получить",
   profile_hunt_share: "Поделиться",
 
@@ -1091,9 +1079,6 @@ export const jp: Dict = {
   profile_browse_archive: "アーカイブを見る",
   profile_edit: "プロフィール編集",
   profile_share: "リンクをコピー",
-  profile_rarity_score: "レアリティスコア",
-  profile_rarity_tooltip: "レアリティスコアは、コレクション内の各フィギュアの希少性に基づいて計算されます。所有するコレクターが少ないほど、レアリティウェイトが高くなります。",
-  profile_rarity_percentile: "コレクターのトップ{X}%",
   profile_stamp_card: "スタンプカード",
   profile_stamp_tooltip: "購入ごとに1スタンプ。10個集めると次の注文で世界無料配送が解放されます。",
   profile_stamp_reward: "世界無料配送 — 10回目の注文で自動適用",
@@ -1111,7 +1096,6 @@ export const jp: Dict = {
   profile_view_all: "すべて見る",
   profile_for_sale: "販売中",
   profile_share_profile: "プロフィールをシェア",
-  profile_series_dna_tooltip: "コレクションからシリーズと年代別に自動計算されます。",
   profile_stamp_claim: "受け取る",
   profile_hunt_share: "シェア",
 

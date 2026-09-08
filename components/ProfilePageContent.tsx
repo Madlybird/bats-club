@@ -43,8 +43,6 @@ interface Props {
   profileBasePath: string
   isOwner?: boolean
   purchaseCount: number
-  rarityScore: number
-  rarityPercentile: number
   huntingCounts: Record<string, number>
   activeListings: ActiveListing[]
   locale: "en" | "ru" | "jp"
@@ -62,20 +60,6 @@ function formatMemberSince(dateStr: Date | string, locale: "en" | "ru" | "jp"): 
   return `${MONTHS_EN[m]} ${y}`
 }
 
-function getEra(year: number | null | undefined, locale: "en" | "ru" | "jp"): string {
-  const labels: Record<string, Record<string, string>> = {
-    "90s": { en: "1990s", ru: "1990-е", jp: "1990年代" },
-    "early00s": { en: "Early 2000s", ru: "Ранние 2000-е", jp: "2000年代前半" },
-    "late00s": { en: "Late 2000s", ru: "Поздние 2000-е", jp: "2000年代後半" },
-    "2010s": { en: "2010s+", ru: "2010-е и позже", jp: "2010年代以降" },
-  }
-  if (!year) return labels["2010s"][locale]
-  if (year < 2000) return labels["90s"][locale]
-  if (year <= 2004) return labels["early00s"][locale]
-  if (year <= 2009) return labels["late00s"][locale]
-  return labels["2010s"][locale]
-}
-
 export default function ProfilePageContent({
   user,
   have,
@@ -85,8 +69,6 @@ export default function ProfilePageContent({
   profileBasePath,
   isOwner = false,
   purchaseCount,
-  rarityScore,
-  rarityPercentile,
   huntingCounts,
   activeListings,
   locale,
@@ -95,21 +77,6 @@ export default function ProfilePageContent({
   const stamps = purchaseCount % 10
   const activeListingFigureIds = new Set(activeListings.map((l) => l.figureId))
   const [collectionExpanded, setCollectionExpanded] = useState(false)
-
-  // Series DNA
-  const seriesMap = new Map<string, { series: string; era: string; count: number }>()
-  for (const item of have) {
-    const era = getEra(item.figure.year, locale)
-    const key = `${item.figure.series}__${era}`
-    const existing = seriesMap.get(key)
-    if (existing) {
-      existing.count++
-    } else {
-      seriesMap.set(key, { series: item.figure.series, era, count: 1 })
-    }
-  }
-  const seriesDna = Array.from(seriesMap.values()).sort((a, b) => b.count - a.count)
-  const topSeriesKeys = new Set(seriesDna.slice(0, 2).map((s) => `${s.series}__${s.era}`))
 
   const displayCollection = collectionExpanded ? have : have.slice(0, 6)
 
@@ -194,49 +161,7 @@ export default function ProfilePageContent({
           <StatCell value={purchaseCount} label={dict.profile_purchases} />
         </section>
 
-        {/* ── 3. Rarity Score with neon glow ── */}
-        {have.length > 0 && (
-          <section
-            className="rounded-lg p-5 space-y-3"
-            style={{ background: "rgba(255,45,120,0.08)", border: "1px solid rgba(255,45,120,0.13)" }}
-          >
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>
-                {dict.profile_rarity_score}
-              </h2>
-              <InfoTooltip text={dict.profile_rarity_tooltip} />
-            </div>
-            <div className="flex items-baseline gap-3">
-              <span
-                className="text-3xl font-black"
-                style={{
-                  color: "#ff2d78",
-                  textShadow: "0 0 10px rgba(255,45,120,0.6), 0 0 30px rgba(255,45,120,0.3), 0 0 60px rgba(255,45,120,0.15)",
-                }}
-              >
-                {rarityScore.toFixed(1)}
-              </span>
-              <span className="text-xs" style={{ color: "rgba(240,224,224,0.4)" }}>
-                {dict.profile_rarity_percentile.replace("{X}", String(rarityPercentile))}
-              </span>
-            </div>
-            <div
-              className="h-1.5 rounded-full overflow-hidden"
-              style={{ background: "rgba(255,45,120,0.13)" }}
-            >
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${Math.min(100, 100 - rarityPercentile)}%`,
-                  background: "#ff2d78",
-                  boxShadow: "0 0 8px rgba(255,45,120,0.6), 0 0 20px rgba(255,45,120,0.3)",
-                }}
-              />
-            </div>
-          </section>
-        )}
-
-        {/* ── 4. Stamp Card (compact) ── */}
+        {/* ── 3. Stamp Card (compact) ── */}
         <section
           className="rounded-lg p-4 space-y-3"
           style={{ background: "rgba(255,45,120,0.08)", border: "1px solid rgba(255,45,120,0.13)" }}
@@ -290,48 +215,7 @@ export default function ProfilePageContent({
           </p>
         </section>
 
-        {/* ── 5. Series DNA ── */}
-        {seriesDna.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>Series DNA</h2>
-              <InfoTooltip text={dict.profile_series_dna_tooltip} />
-            </div>
-            <div className="space-y-2">
-              {seriesDna.map((entry) => {
-                const key = `${entry.series}__${entry.era}`
-                const hot = topSeriesKeys.has(key)
-                return (
-                  <div
-                    key={key}
-                    className="flex items-center justify-between rounded-md px-3 py-2"
-                    style={{
-                      background: hot ? "rgba(255,45,120,0.12)" : "rgba(255,45,120,0.04)",
-                      border: `1px solid ${hot ? "rgba(255,45,120,0.35)" : "rgba(255,45,120,0.13)"}`,
-                    }}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm font-medium truncate" style={{ color: "#f0e0e0" }}>
-                        {entry.series}
-                      </span>
-                      <span
-                        className="text-[10px] px-1.5 py-0.5 rounded-sm flex-shrink-0"
-                        style={{ background: "rgba(255,45,120,0.15)", color: "rgba(240,224,224,0.5)" }}
-                      >
-                        {entry.era}
-                      </span>
-                    </div>
-                    <span className="text-xs font-bold flex-shrink-0 ml-2" style={{ color: "#ff2d78" }}>
-                      {entry.count}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* ���─ 6. Hunt Board (LARGE — full grid) ── */}
+        {/* ── 4. Hunt Board (LARGE — full grid) ── */}
         <section className="space-y-3" id="hunt-board">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>Hunt Board</h2>
@@ -406,7 +290,7 @@ export default function ProfilePageContent({
           )}
         </section>
 
-        {/* ── 7. Collection (COMPACT — list rows) ── */}
+        {/* ── 5. Collection (COMPACT — list rows) ── */}
         <section className="space-y-3">
           <h2 className="text-sm font-bold" style={{ color: "#f0e0e0" }}>{dict.profile_collection}</h2>
           {have.length === 0 ? (
