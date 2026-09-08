@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
-import { getShippingInfo, MAX_ORDER_QUANTITY } from "@/lib/shipping"
+import { getShippingInfo, getArtShippingInfo, artCategoryMax, MAX_ORDER_QUANTITY } from "@/lib/shipping"
 import { trackProceedToCheckout, trackBeginCheckout } from "@/lib/analytics"
 import BatsOverlay from "@/components/BatsOverlay"
 import type { Dict } from "@/lib/dict"
@@ -61,25 +61,32 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const [redirecting, setRedirecting] = useState(false)
   const [error, setError] = useState("")
 
-  // ── Selection (3-item order cap) ────────────────────────────────
-  const overLimit = items.length > MAX_ORDER_QUANTITY
+  // ── Split cart: figures use the tiered per-order table (max 3, selectable
+  //    when over), art ships as one weight-priced ePacket parcel with a
+  //    per-type quantity cap. A mixed cart pays both.
+  const figureItems = items.filter((i) => i.kind !== "art")
+  const artItems = items.filter((i) => i.kind === "art")
+
+  const figureOverLimit = figureItems.length > MAX_ORDER_QUANTITY
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  // Prune selection when items are removed from the cart.
+  // Prune selection when figure items leave the cart.
   useEffect(() => {
     setSelectedIds((prev) => {
       const next = new Set<string>()
       for (const id of Array.from(prev)) {
-        if (items.some((i) => i.listingId === id)) next.add(id)
+        if (figureItems.some((i) => i.listingId === id)) next.add(id)
       }
       return next
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items])
 
-  const effectiveItems = overLimit
-    ? items.filter((i) => selectedIds.has(i.listingId))
-    : items
-  const effectiveQty = effectiveItems.length
+  const effectiveFigureItems = figureOverLimit
+    ? figureItems.filter((i) => selectedIds.has(i.listingId))
+    : figureItems
+  const effectiveItems = [...effectiveFigureItems, ...artItems]
+  const effectiveUnits = effectiveItems.reduce((n, i) => n + i.quantity, 0)
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -97,7 +104,24 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     c.name.toLowerCase().includes(countrySearch.toLowerCase())
   )
   const selectedCountry = COUNTRIES.find((c) => c.code === countryCode)
-  const shipping = getShippingInfo(countryCode, Math.max(1, effectiveQty))
+
+  // Figures and art ship separately, each on its own model; a mixed cart pays both.
+  const figShip = effectiveFigureItems.length > 0
+    ? getShippingInfo(countryCode, effectiveFigureItems.length)
+    : null
+  const artShip = artItems.length > 0
+    ? getArtShippingInfo(
+        countryCode,
+        artItems.map((i) => ({ type: i.artType ?? "", quantity: i.quantity }))
+      )
+    : null
+  const shippingBlocked = Boolean(figShip?.blocked || artShip?.blocked)
+  const shippingBlockedMsg = figShip?.blocked
+    ? figShip.blockedMessage
+    : artShip?.blocked
+      ? artShip.blockedMessage
+      : ""
+  const artLineOverCap = artItems.some((i) => i.quantity > artCategoryMax(i.artType ?? ""))
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -110,10 +134,14 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   }, [])
 
   const itemsSubtotal = effectiveItems.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  const shippingCents = countryCode && !shipping.blocked && effectiveQty > 0
-    ? shipping.priceCents
+  const shippingCents = countryCode && !shippingBlocked && effectiveItems.length > 0
+    ? (figShip?.priceCents ?? 0) + (artShip?.priceCents ?? 0)
     : 0
   const shippingDisplay = `$${(shippingCents / 100).toFixed(2)}`
+  const shippingBreakdown =
+    figShip && artShip && !shippingBlocked
+      ? `Figures ${figShip.priceDisplay} + Art ${artShip.priceDisplay} — ship separately`
+      : ""
 
   const PROMO_RATES: Record<string, number> = {}
   const promoRate = appliedPromo ? (PROMO_RATES[appliedPromo] ?? 0) : 0
@@ -134,9 +162,11 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   }
 
   // Can the user move past the selection step?
-  const selectionValid = overLimit
-    ? effectiveQty >= 1 && effectiveQty <= MAX_ORDER_QUANTITY
-    : items.length >= 1 && items.length <= MAX_ORDER_QUANTITY
+  const figureSelectionValid = figureOverLimit
+    ? effectiveFigureItems.length >= 1 && effectiveFigureItems.length <= MAX_ORDER_QUANTITY
+    : true
+  const selectionValid =
+    effectiveItems.length >= 1 && figureSelectionValid && !artLineOverCap && !shippingBlocked
 
   const handlePay = async () => {
     if (!address.phone) {
@@ -149,7 +179,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     }
     setLoading(true)
     setError("")
-    trackBeginCheckout(totalCents, effectiveQty)
+    trackBeginCheckout(totalCents, effectiveUnits)
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -214,8 +244,11 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     { key: "phone", label: dict.cart_field_phone, placeholder: "+1 555 000 0000", type: "tel" },
   ] as const
 
-  const selectedCount = overLimit ? selectedIds.size : items.length
+  const selectedCount = figureOverLimit ? selectedIds.size : figureItems.length
   const selectedCountLabel = dict.cart_selected_count.replace("{X}", String(selectedCount))
+  const artTooHeavy = Boolean(
+    artShip?.blocked && artShip.blockedMessage.toLowerCase().includes("2 kg"),
+  )
 
   return (
     <div className="relative min-h-screen">
@@ -245,7 +278,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
             </p>
           </div>
 
-          {overLimit && (
+          {figureOverLimit && (
             <div
               className="mb-6 rounded-2xl border border-amber-400/40 p-4 flex items-start gap-3"
               style={{ background: "rgba(251,191,36,0.06)" }}
@@ -260,24 +293,52 @@ export default function CartPageContent({ dict, shopHref }: Props) {
             </div>
           )}
 
+          {artTooHeavy && (
+            <div
+              className="mb-6 rounded-2xl border border-amber-400/40 p-4 flex items-start gap-3"
+              style={{ background: "rgba(251,191,36,0.06)" }}
+            >
+              <svg className="w-5 h-5 flex-shrink-0 text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-sm font-medium text-white/90 leading-snug flex-1">{dict.cart_art_too_heavy}</p>
+            </div>
+          )}
+
+          {artLineOverCap && (
+            <div
+              className="mb-6 rounded-2xl border border-amber-400/40 p-4 flex items-start gap-3"
+              style={{ background: "rgba(251,191,36,0.06)" }}
+            >
+              <svg className="w-5 h-5 flex-shrink-0 text-amber-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-sm font-medium text-white/90 leading-snug flex-1">{dict.cart_art_over_cap}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left: Items list */}
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => {
+                const isArt = item.kind === "art"
+                const detailHref = isArt ? `/art/${item.listingId}` : `/shop/${item.listingId}`
+                const cap = artCategoryMax(item.artType ?? "")
+                const showCheckbox = figureOverLimit && !isArt
                 const isSelected = selectedIds.has(item.listingId)
                 const canSelectMore = selectedIds.size < MAX_ORDER_QUANTITY
-                const checkboxDisabled = overLimit && !isSelected && !canSelectMore
+                const checkboxDisabled = showCheckbox && !isSelected && !canSelectMore
                 return (
                   <div
                     key={item.listingId}
                     className={`flex gap-4 rounded-2xl border p-4 transition-colors ${
-                      overLimit && isSelected
+                      showCheckbox && isSelected
                         ? "border-[#ff2d78]/50"
                         : "border-white/[0.06]"
-                    } ${overLimit && !isSelected ? "opacity-70" : ""}`}
+                    } ${showCheckbox && !isSelected ? "opacity-70" : ""}`}
                     style={{ background: "rgba(255,255,255,0.02)" }}
                   >
-                    {overLimit && (
+                    {showCheckbox && (
                       <label className="flex-shrink-0 self-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -304,7 +365,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                       </label>
                     )}
 
-                    <Link href={`/shop/${item.listingId}`} className="flex-shrink-0">
+                    <Link href={detailHref} className="flex-shrink-0">
                       <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: "#0a0a0a" }}>
                         {item.figureImageUrl ? (
                           <Image
@@ -324,22 +385,44 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                     </Link>
 
                     <div className="flex-1 min-w-0">
-                      <Link href={`/shop/${item.listingId}`}>
+                      <Link href={detailHref}>
                         <h3 className="font-bold text-white text-sm leading-tight hover:text-[#ff2d78] transition-colors line-clamp-2">
                           {item.figureName}
                         </h3>
                       </Link>
                       <p className="text-white/35 text-xs mt-0.5">{item.figureSeries}</p>
                       <span className="badge badge-violet text-[10px] mt-1 inline-block">{item.condition}</span>
+                      {isArt && item.quantity > cap && (
+                        <p className="text-[11px] text-amber-400 mt-1">
+                          {dict.cart_art_item_cap.replace("{X}", String(cap))}
+                        </p>
+                      )}
 
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setQuantity(item.listingId, item.quantity - 1)}
-                            className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center"
+                            disabled={isArt && item.quantity <= 1}
+                            className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Decrease quantity"
                           >
                             −
                           </button>
+                          {isArt && (
+                            <>
+                              <span className="text-white/70 text-sm font-medium w-5 text-center tabular-nums">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() => setQuantity(item.listingId, Math.min(cap, item.quantity + 1))}
+                                disabled={item.quantity >= cap}
+                                className="w-6 h-6 rounded border border-white/[0.12] text-white/50 hover:text-white hover:border-[#ff2d78] transition-colors text-xs flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                                aria-label="Increase quantity"
+                              >
+                                +
+                              </button>
+                            </>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -362,7 +445,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                 )
               })}
 
-              {!overLimit && items.length > 0 && (
+              {!figureOverLimit && figureItems.length > 0 && (
                 <p className="text-xs text-white/35 pt-1">{dict.cart_max_info}</p>
               )}
             </div>
@@ -397,8 +480,8 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                     </div>
                   )}
                 </div>
-                {countryCode && shipping.blocked && (
-                  <p className="mt-3 text-sm text-amber-400 leading-relaxed">{shipping.blockedMessage}</p>
+                {countryCode && shippingBlocked && (
+                  <p className="mt-3 text-sm text-amber-400 leading-relaxed">{shippingBlockedMsg}</p>
                 )}
               </div>
 
@@ -448,17 +531,20 @@ export default function CartPageContent({ dict, shopHref }: Props) {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-white/50">
-                    <span>{dict.cart_subtotal} ({effectiveQty})</span>
+                    <span>{dict.cart_subtotal} ({effectiveUnits})</span>
                     <span>${(itemsSubtotal / 100).toFixed(2)}</span>
                   </div>
 
-                  {countryCode && !shipping.blocked && effectiveQty > 0 && (
+                  {countryCode && !shippingBlocked && effectiveItems.length > 0 && (
                     <div className="flex justify-between text-white/50">
                       <span>
                         {dict.cart_shipping} ({selectedCountry?.name})
                       </span>
                       <span>{shippingDisplay}</span>
                     </div>
+                  )}
+                  {shippingBreakdown && (
+                    <p className="text-[11px] text-white/30 -mt-1">{shippingBreakdown}</p>
                   )}
 
                   {promoDiscountCents > 0 && (
@@ -469,7 +555,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   )}
                 </div>
 
-                {countryCode && !shipping.blocked && effectiveQty > 0 ? (
+                {countryCode && !shippingBlocked && effectiveItems.length > 0 ? (
                   <div className="flex justify-between font-black text-white border-t border-white/[0.06] pt-3">
                     <span>{dict.cart_total}</span>
                     <span style={{ color: "#ff2d78" }}>
@@ -482,17 +568,17 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   </p>
                 )}
 
-                {overLimit && (
+                {figureOverLimit && (
                   <p className="text-xs text-white/40 text-center">{selectedCountLabel}</p>
                 )}
 
                 {!showAddress && (
                   <button
                     onClick={() => {
-                      trackProceedToCheckout(totalCents, effectiveQty)
+                      trackProceedToCheckout(totalCents, effectiveUnits)
                       setShowAddress(true)
                     }}
-                    disabled={!countryCode || shipping.blocked || !selectionValid}
+                    disabled={!countryCode || shippingBlocked || !selectionValid}
                     className="w-full py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed mt-1"
                     style={{ backgroundColor: "#ff2d78" }}
                   >

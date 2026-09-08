@@ -121,6 +121,7 @@ export default function ArtCard({ item, labels, ageGateLabels, basePath = "/art"
                 price: item.price,
                 condition: "New",
                 kind: "art",
+                artType: item.type,
               }}
               label={labels.addToCart}
               toastAlreadyInCart={labels.alreadyInCart}

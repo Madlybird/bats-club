@@ -47,6 +47,12 @@ export async function POST(req: Request) {
       const buyerId = meta.buyer_id
       const listingIds: string[] = meta.listing_ids ? JSON.parse(meta.listing_ids) : []
       const listingPrices: number[] = meta.listing_prices ? JSON.parse(meta.listing_prices) : []
+      // Per-listing quantity — art can be ordered in multiples; figures are
+      // always 1. Absent on pre-quantity sessions → default to 1 each.
+      const listingQuantities: number[] = meta.listing_quantities
+        ? JSON.parse(meta.listing_quantities)
+        : []
+      const qtyAt = (i: number) => Math.max(1, Math.floor(Number(listingQuantities[i] ?? 1)))
       const shippingCents = Number(meta.shipping_cents || "0")
       const promoDiscountCents = Number(meta.promo_discount_cents || "0")
       const shippingAddress = meta.shipping_address ? JSON.parse(meta.shipping_address) : {}
@@ -147,6 +153,7 @@ export async function POST(req: Request) {
         for (let i = 0; i < listingIds.length; i++) {
           const listingId = listingIds[i]
           const price = listingPrices[i] ?? 0
+          const quantity = qtyAt(i)
           const finalShippingAddress = shippingFromStripe || shippingAddress
 
           const orderRow = {
@@ -156,7 +163,7 @@ export async function POST(req: Request) {
             shipping_address: finalShippingAddress,
             unit_price: price,
             shipping_price: i === 0 ? shippingCents - promoDiscountCents : 0,
-            quantity: 1,
+            quantity,
             stripe_session_id: session.id,
           }
           console.log(`[stripe webhook] inserting order ${i + 1}/${listingIds.length}`, {
@@ -186,9 +193,9 @@ export async function POST(req: Request) {
             console.error(`[stripe webhook] order insert ${i} failed:`, insertError)
             throw insertError
           }
-          console.log(`[stripe webhook] order ${inserted?.id} created (PAID)`)
+          console.log(`[stripe webhook] order ${inserted?.id} created (PAID) qty=${quantity}`)
 
-          await decrementStock(listingId, 1)
+          await decrementStock(listingId, quantity)
           await addFigureToCollection(resolvedBuyerId, listingId)
         }
 

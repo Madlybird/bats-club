@@ -11,8 +11,12 @@ export interface CartItem {
   condition: string
   quantity: number
   /** "art" for /art listings, undefined/"figure" for figure listings. Used
-   *  for GA4 item_category; the cart/checkout otherwise treat both the same. */
+   *  for GA4 item_category and to pick the shipping model (figures use the
+   *  tiered per-order table, art is priced by ePacket weight). */
   kind?: "figure" | "art"
+  /** Art type ("Poster" | "Zine" | …) — only set for art listings. Drives the
+   *  per-type shipping weight and the per-order quantity cap. */
+  artType?: string
 }
 
 export type AddItemResult = "added" | "already"

@@ -4,7 +4,17 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import { stripe } from "@/lib/stripe"
-import { getShippingInfo, ALLOWED_COUNTRIES, MAX_ORDER_QUANTITY } from "@/lib/shipping"
+import {
+  getShippingInfo,
+  getArtShippingInfo,
+  artCategoryMax,
+  ALLOWED_COUNTRIES,
+  MAX_ORDER_QUANTITY,
+} from "@/lib/shipping"
+
+// Loose abuse cap on distinct cart lines (real per-kind caps applied after the
+// listings are fetched: max 3 figures, per-type max on art).
+const MAX_CART_LINES = 60
 
 // In-app promo codes (server-side, applied as a Stripe coupon).
 // Stripe-managed promo codes can be applied via the Checkout UI when
@@ -69,19 +79,11 @@ export async function POST(req: Request) {
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 })
     }
-    if (items.length > MAX_ORDER_QUANTITY) {
-      return NextResponse.json(
-        { error: `Order limit exceeded: maximum ${MAX_ORDER_QUANTITY} figures per order` },
-        { status: 400 }
-      )
+    if (items.length > MAX_CART_LINES) {
+      return NextResponse.json({ error: "Too many items in the cart" }, { status: 400 })
     }
     if (!country) {
       return NextResponse.json({ error: "Country is required" }, { status: 400 })
-    }
-
-    const shippingInfo = getShippingInfo(country, items.length)
-    if (shippingInfo.blocked) {
-      return NextResponse.json({ error: shippingInfo.blockedMessage }, { status: 400 })
     }
 
     stage = "fetch-listings"
@@ -151,10 +153,54 @@ export async function POST(req: Request) {
       }
     }
 
-    // Shipping is quantity-tiered directly in getShippingInfo (1/2/3).
-    const shippingCents = shippingInfo.priceCents
+    // A listing points at exactly one of figure / art. They ship differently:
+    // figures on the tiered per-order table (max 3), art as one weight-priced
+    // ePacket parcel with a per-type quantity cap. A mixed cart pays both.
+    const figureListings = listings.filter((l) => l.figure)
+    const artListings = listings.filter((l) => l.art)
 
-    const itemsSubtotal = listings.reduce((sum, l) => sum + l.price, 0)
+    if (figureListings.length > MAX_ORDER_QUANTITY) {
+      return NextResponse.json(
+        { error: `Maximum ${MAX_ORDER_QUANTITY} figures per order` },
+        { status: 400 }
+      )
+    }
+    for (const listing of artListings) {
+      const type = listing.art?.type ?? ""
+      const qty = requestedQty.get(listing.id) ?? 1
+      const cap = artCategoryMax(type)
+      if (qty > cap) {
+        return NextResponse.json(
+          { error: `Maximum ${cap} of ${itemInfo(listing).name} per order` },
+          { status: 400 }
+        )
+      }
+    }
+
+    const figureShip = figureListings.length > 0
+      ? getShippingInfo(country, figureListings.length)
+      : null
+    const artShip = artListings.length > 0
+      ? getArtShippingInfo(
+          country,
+          artListings.map((l) => ({
+            type: l.art?.type ?? "",
+            quantity: requestedQty.get(l.id) ?? 1,
+          }))
+        )
+      : null
+    if (figureShip?.blocked) {
+      return NextResponse.json({ error: figureShip.blockedMessage }, { status: 400 })
+    }
+    if (artShip?.blocked) {
+      return NextResponse.json({ error: artShip.blockedMessage }, { status: 400 })
+    }
+    const shippingCents = (figureShip?.priceCents ?? 0) + (artShip?.priceCents ?? 0)
+
+    const itemsSubtotal = listings.reduce(
+      (sum, l) => sum + l.price * (requestedQty.get(l.id) ?? 1),
+      0
+    )
 
     // In-app promo (kept for backwards compat with the old cart UI).
     let promoDiscountCents = 0
@@ -174,8 +220,12 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SITE_URL ||
       "https://batsclub.com"
 
+    // Figures are 1-of-1 so their quantity is always 1; art carries the
+    // buyer's requested quantity (validated against stock + the per-type cap
+    // above).
     const stripeLineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = listings.map((listing) => {
       const info = itemInfo(listing)
+      const qty = listing.art ? (requestedQty.get(listing.id) ?? 1) : 1
       return {
         price_data: {
           currency: "usd",
@@ -186,11 +236,12 @@ export async function POST(req: Request) {
           },
           unit_amount: listing.price,
         },
-        quantity: 1,
+        quantity: qty,
       }
     })
 
-    const shippingLabel = `Shipping to ${country} (${listings.length} ${listings.length === 1 ? "item" : "items"})`
+    const totalUnits = listings.reduce((n, l) => n + (l.art ? (requestedQty.get(l.id) ?? 1) : 1), 0)
+    const shippingLabel = `Shipping to ${country} (${totalUnits} ${totalUnits === 1 ? "item" : "items"})`
     stripeLineItems.push({
       price_data: {
         currency: "usd",
@@ -238,6 +289,7 @@ export async function POST(req: Request) {
       buyer_id: session?.user?.id || "",
       listing_ids: JSON.stringify(listings.map((l) => l.id)),
       listing_prices: JSON.stringify(listings.map((l) => l.price)),
+      listing_quantities: JSON.stringify(listings.map((l) => (l.art ? (requestedQty.get(l.id) ?? 1) : 1))),
       shipping_cents: String(shippingCents),
       promo_discount_cents: String(promoDiscountCents),
       shipping_address: JSON.stringify(shippingAddress || {}),

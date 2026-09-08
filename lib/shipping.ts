@@ -41,20 +41,20 @@ function tierFor(countryCode: string): readonly [number, number, number] | null 
   return null
 }
 
-export function getShippingInfo(countryCode: string, quantity: number = 1): ShippingInfo {
-  const BLOCKED_MSG =
-    "Unfortunately, we don't ship to this region at this time. Please contact us at support@batsclub.com for alternative options."
+const REGION_BLOCKED_MSG =
+  "Unfortunately, we don't ship to this region at this time. Please contact us at support@batsclub.com for alternative options."
 
+export function getShippingInfo(countryCode: string, quantity: number = 1): ShippingInfo {
   if (!countryCode) {
     return { blocked: false, priceCents: 0, priceDisplay: "", blockedMessage: "" }
   }
   if (!ALLOWED_COUNTRIES.has(countryCode)) {
-    return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: BLOCKED_MSG }
+    return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: REGION_BLOCKED_MSG }
   }
 
   const tier = tierFor(countryCode)
   if (!tier) {
-    return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: BLOCKED_MSG }
+    return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: REGION_BLOCKED_MSG }
   }
 
   const qty = Math.max(1, Math.min(MAX_ORDER_QUANTITY, Math.floor(quantity)))
@@ -63,6 +63,113 @@ export function getShippingInfo(countryCode: string, quantity: number = 1): Ship
     blocked: false,
     priceCents,
     priceDisplay: `$${(priceCents / 100).toFixed(2)}`,
+    blockedMessage: "",
+  }
+}
+
+// ── Art shipping — ePacket (tracked), priced by total shipment weight ─────────
+// Fitted from thailandpost.co.th ePacket rates (Sept 2026): THB ≈ base + slope·g.
+// One rolled tube / mailer per order, so the whole art part of a cart ships as a
+// single package. Figures ship separately on the tiered table above.
+
+/** Estimated packed weight per art type, grams. Unknown type falls back to 60g. */
+export const ART_UNIT_WEIGHT_G: Record<string, number> = {
+  Postcard: 15,
+  Sticker: 15,
+  "Digital Print": 45,
+  Poster: 55,
+  Zine: 120,
+  Canvas: 600,
+}
+const ART_UNIT_WEIGHT_FALLBACK_G = 60
+
+/** Max quantity of one art type in a single order (stepper cap). */
+export const ART_CATEGORY_MAX: Record<string, number> = {
+  Postcard: 40,
+  Sticker: 40,
+  "Digital Print": 30,
+  Poster: 25,
+  Zine: 12,
+  Canvas: 3,
+}
+export const ART_CATEGORY_MAX_FALLBACK = 20
+
+const ART_PACKAGING_G = 90 // tube / rigid mailer, added once per order
+const ART_MAX_WEIGHT_G = 2000 // ePacket ceiling — above this the order must be split
+const THB_PER_USD = 35 // review quarterly
+const ART_HANDLING_USD = 2 // packaging + handling, once per art shipment
+
+const ART_ZONE_FIT: Record<string, { base: number; slope: number }> = {
+  ASIA: { base: 145, slope: 0.39 },
+  EUROPE: { base: 220, slope: 0.48 },
+  RU: { base: 175, slope: 0.87 },
+  US_CA: { base: 220, slope: 1.17 },
+  REST: { base: 190, slope: 1.07 },
+}
+
+function artZoneFor(countryCode: string): keyof typeof ART_ZONE_FIT | null {
+  if (countryCode === "RU") return "RU"
+  if (EUROPE.has(countryCode)) return "EUROPE"
+  if (countryCode === "US" || countryCode === "CA") return "US_CA"
+  if (countryCode === "JP") return "ASIA"
+  if (ALLOWED_COUNTRIES.has(countryCode)) return "REST"
+  return null
+}
+
+export interface ArtCartLine {
+  type: string
+  quantity: number
+}
+
+export function artUnitWeight(type: string): number {
+  return ART_UNIT_WEIGHT_G[type] ?? ART_UNIT_WEIGHT_FALLBACK_G
+}
+
+export function artCategoryMax(type: string): number {
+  return ART_CATEGORY_MAX[type] ?? ART_CATEGORY_MAX_FALLBACK
+}
+
+/** Total packed weight (grams) of the art part of a cart, incl. packaging. */
+export function artShipmentWeight(lines: ArtCartLine[]): number {
+  const g = lines.reduce(
+    (sum, l) => sum + artUnitWeight(l.type) * Math.max(1, Math.floor(l.quantity)),
+    0,
+  )
+  return g > 0 ? ART_PACKAGING_G + g : 0
+}
+
+/**
+ * Shipping cost for the art part of a cart. `lines` is one entry per art
+ * listing with its quantity. Returns `blocked` with a message when the country
+ * isn't served or the shipment would exceed the 2 kg ePacket ceiling.
+ */
+export function getArtShippingInfo(countryCode: string, lines: ArtCartLine[]): ShippingInfo {
+  if (!countryCode || lines.length === 0) {
+    return { blocked: false, priceCents: 0, priceDisplay: "", blockedMessage: "" }
+  }
+  const zone = artZoneFor(countryCode)
+  if (!zone) {
+    return { blocked: true, priceCents: 0, priceDisplay: "", blockedMessage: REGION_BLOCKED_MSG }
+  }
+
+  const grams = artShipmentWeight(lines)
+  if (grams > ART_MAX_WEIGHT_G) {
+    return {
+      blocked: true,
+      priceCents: 0,
+      priceDisplay: "",
+      blockedMessage:
+        "This art order is too large to ship in one package (over 2 kg). Reduce the quantities, or place it as two separate orders. Questions? support@batsclub.com",
+    }
+  }
+
+  const { base, slope } = ART_ZONE_FIT[zone]
+  const usd = Math.ceil((base + slope * grams) / THB_PER_USD) + ART_HANDLING_USD
+  const priceCents = usd * 100
+  return {
+    blocked: false,
+    priceCents,
+    priceDisplay: `$${usd.toFixed(2)}`,
     blockedMessage: "",
   }
 }

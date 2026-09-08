@@ -47,6 +47,7 @@ export default function ArtDetail({ item, strings: s, description, basePath, car
     price: item.price,
     condition: "New",
     kind: "art" as const,
+    artType: item.type,
   }
 
   return (
