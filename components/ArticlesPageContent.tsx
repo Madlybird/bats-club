@@ -40,7 +40,7 @@ export default function ArticlesPageContent({ articles, dict, articlesHref = "/a
 
       <div className="relative">
         <ScrollReveal>
-          <div className="border-b border-white/[0.05]">
+          <div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
               <span className="inline-block w-8 h-px bg-[#ff2d78] mb-6" />
               <h1

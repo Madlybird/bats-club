@@ -108,7 +108,7 @@ export default async function ListingDetailPageRu(props: Props) {
       <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       <div className="relative">
         <ScrollReveal>
-          <div className="border-b border-white/[0.05]">
+          <div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
               <nav className="flex items-center gap-2 text-sm text-white/30">
                 <Link href="/ru/shop" className="hover:text-[#ff2d78] transition-colors">{dict.shop_heading}</Link>

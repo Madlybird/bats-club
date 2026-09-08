@@ -141,7 +141,7 @@ export default function FigureDetailContent({
               immediately and users don't see the footer fade in first
               while hero content is still at opacity 0 waiting for the
               IntersectionObserver to fire post-hydration. */}
-          <div className="border-b border-white/[0.05]">
+          <div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
               <nav className="flex items-center gap-2 text-sm text-white/30">
                 <Link href={archiveHref} className="hover:text-[#ff2d78] transition-colors">
