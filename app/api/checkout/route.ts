@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import { stripe } from "@/lib/stripe"
+import { checkRateLimit } from "@/lib/rate-limit"
 import {
   getShippingInfo,
   getArtShippingInfo,
@@ -49,6 +50,12 @@ export async function POST(req: Request) {
     )
   }
 
+  // Each call spins up a Stripe Checkout Session — nothing moves money or
+  // stock until payment, but throttle session spam for defence-in-depth
+  // (consistent with the other token/lookup endpoints).
+  const limited = checkRateLimit(req, "checkout", 30, 5 * 60 * 1000)
+  if (limited) return limited
+
   // Guest checkout is allowed — Stripe collects a verified email +
   // shipping address on its own hosted page, so a site account isn't
   // required to buy. If the buyer is logged in, we still tag the
@@ -84,6 +91,9 @@ export async function POST(req: Request) {
     }
     if (!country) {
       return NextResponse.json({ error: "Country is required" }, { status: 400 })
+    }
+    if (!ALLOWED_COUNTRIES.has(country)) {
+      return NextResponse.json({ error: "We don't ship to this country." }, { status: 400 })
     }
 
     stage = "fetch-listings"
@@ -134,10 +144,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // Map requested quantity by listingId (default 1 if omitted).
+    // Map requested quantity by listingId — coerce to a positive integer,
+    // fall back to 1 for anything non-numeric / < 1 (validated against stock
+    // and the per-type cap below).
     const requestedQty = new Map<string, number>()
     for (const i of items) {
-      requestedQty.set(i.listingId, Math.max(1, Math.floor(Number(i.quantity ?? 1))))
+      const n = Math.floor(Number(i.quantity ?? 1))
+      requestedQty.set(i.listingId, Number.isFinite(n) && n >= 1 ? n : 1)
     }
     for (const listing of listings) {
       const name = itemInfo(listing).name
@@ -259,10 +272,11 @@ export async function POST(req: Request) {
       success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cart`,
       customer_email: session?.user?.email || undefined,
-      // Let Stripe collect a verified shipping address — the webhook
-      // mirrors it back into the order row as the source of truth.
+      // Lock Stripe's address collection to the country the shipping quote
+      // was computed for — otherwise a buyer could pick a cheap zone in the
+      // cart and then ship to an expensive one on Stripe's page.
       shipping_address_collection: {
-        allowed_countries: Array.from(ALLOWED_COUNTRIES) as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
+        allowed_countries: [country] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
       },
       phone_number_collection: { enabled: true },
     }
