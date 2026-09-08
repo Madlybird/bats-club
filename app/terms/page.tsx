@@ -54,6 +54,23 @@ export default function TermsPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">Art</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          The Art section sells original works created by SINBIOX — posters, prints, postcards, stickers, canvas and zines, produced by the artist and sold as new.
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-2 mt-3">
+          <li><span className="text-white font-semibold">Condition.</span> All art is sold as new. Minor variation in colour, trim or finish on printed items is inherent to the medium and is not a defect.</li>
+          <li><span className="text-white font-semibold">Availability &amp; pricing.</span> Availability is shown in real time. Prices are in USD and locked in at the moment the order is placed.</li>
+          <li><span className="text-white font-semibold">Shipping.</span> Art ships to supported regions with tracking. Estimated delivery is 14–28 working days. Orders to unsupported regions are refunded in full.</li>
+          <li><span className="text-white font-semibold">Customs &amp; import taxes.</span> International orders may be subject to customs duties and import taxes charged by the destination country; these are the recipient&apos;s responsibility. If a package is refused over unpaid customs fees and returned to us, the original shipping cost is not refunded.</li>
+          <li><span className="text-white font-semibold">Age-restricted works.</span> Some art depicts artistic nudity or suggestive themes and is labelled 18+. By purchasing a labelled item you confirm you are of legal age in your jurisdiction.</li>
+          <li><span className="text-white font-semibold">Intellectual property.</span> Purchase of a work transfers ownership of that single physical copy only. SINBIOX retains all copyright, moral rights and other intellectual-property rights in the artwork and its image. You may not reproduce, copy, scan, photograph for distribution, print, publish, distribute, sell reproductions of, publicly or commercially display, or create derivative works from any purchased work, in whole or in part. No licence to the artwork is granted. The work must not be altered or presented in a way that misrepresents the artist.</li>
+          <li><span className="text-white font-semibold">Returns.</span> Returns are accepted only for transit damage or a manufacturing defect, within 14 days of delivery, with an unboxing video. Change-of-mind returns and exchanges are not accepted.</li>
+          <li><span className="text-white font-semibold">Payments &amp; governing law.</span> Payments are processed by Stripe in USD. These terms are governed by the laws of the Hong Kong SAR.</li>
+        </ul>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">Product Condition</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           Each figure is pre-owned and comes from a private 1990s–2000s Japanese collection. The condition is disclosed on every product page: Mint, Near Mint, Good, Fair or Poor. By placing an order you accept the stated condition.

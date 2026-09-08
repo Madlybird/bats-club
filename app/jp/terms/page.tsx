@@ -54,6 +54,23 @@ export default function TermsJpPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">アート</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          アートセクションでは、SINBIOX が制作したオリジナル作品（ポスター、プリント、ポストカード、ステッカー、キャンバス、zine）を新品として販売しています。
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-2 mt-3">
+          <li><span className="text-white font-semibold">状態。</span> すべてのアートは新品として販売されます。印刷物における色・裁断・仕上げのわずかな違いは素材の特性であり、不良品ではありません。</li>
+          <li><span className="text-white font-semibold">在庫と価格。</span> 在庫はリアルタイムで表示されます。価格は米ドル建てで、ご注文時点で確定します。</li>
+          <li><span className="text-white font-semibold">配送。</span> アートは対応地域へ追跡番号付きで発送されます。配送予定期間は14〜28営業日です。対応外地域へのご注文は全額返金いたします。</li>
+          <li><span className="text-white font-semibold">関税・輸入税。</span> 国際注文には、お届け先の国の関税・輸入税が課される場合があり、これらは受取人の負担となります。未払いの関税により荷物が返送された場合、元の送料は返金されません。</li>
+          <li><span className="text-white font-semibold">年齢制限のある作品。</span> 一部の作品には芸術的なヌードや示唆的なテーマが含まれ、18+ と表示されています。表示のある作品を購入することで、お客様がご自身の国・地域の法律上の成人であることを確認したものとみなします。</li>
+          <li><span className="text-white font-semibold">知的財産。</span> 作品の購入により移転するのは、その物理的な現物1点の所有権のみです。作品およびその画像に関する著作権、著作者人格権その他の知的財産権はすべて SINBIOX が保有します。購入した作品の全部または一部を、複製・コピー・スキャン・配布目的での撮影・印刷・出版・頒布・複製品の販売・公のまたは商業的な展示すること、および二次的著作物を作成することはできません。作品に関するライセンスは付与されません。作品を改変したり、著作者の意図を誤認させる方法で提示したりしてはなりません。</li>
+          <li><span className="text-white font-semibold">返品。</span> 返品は、配送中の破損または製造上の欠陥がある場合に限り、受け取りから14日以内に、開封動画を添えて承ります。お客様都合の返品および交換はお受けできません。</li>
+          <li><span className="text-white font-semibold">支払いと準拠法。</span> お支払いは Stripe により米ドルで処理されます。本規約は香港特別行政区の法律に準拠します。</li>
+        </ul>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">商品の状態について</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           各フィギュアは中古品であり、1990〜2000年代の日本の個人コレクションからのものです。状態は各商品ページに記載されています：Mint（新品同様）、Near Mint（ほぼ新品）、Good（良好）、Fair（普通）、Poor（悪い）。ご注文いただくことで、記載された状態をご承諾いただいたものとみなします。

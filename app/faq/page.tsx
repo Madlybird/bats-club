@@ -45,6 +45,30 @@ const FAQ: { q: string; a: string }[] = [
     q: "How do I contact support?",
     a: "Email us at support@batsclub.com",
   },
+  {
+    q: "What is the Art section?",
+    a: "The Art section offers original works by SINBIOX — posters, prints, postcards, stickers, canvas and zines. Every piece is made by the artist and sold as new.",
+  },
+  {
+    q: "How does shipping work for art?",
+    a: "We ship worldwide with tracking to Europe, Russia, the USA, Canada, Australia, New Zealand and Japan. We do not ship to Africa, China, Hong Kong, Macau, Thailand, Israel, the UAE, Saudi Arabia or Turkey. Estimated delivery is 14–28 working days. Orders ship within 1–3 business days of payment. Rates per order — Russia: $9 / $14 / $22. Europe: $12 / $18 / $26. USA & Canada: $12 / $18 / $26. Japan: $17 / $26 / $42. Rest of the world: $15 / $20 / $30.",
+  },
+  {
+    q: "What condition is the art in?",
+    a: "All art is sold as new, direct from the artist. Minor variation in colour, trim or finish on printed items is inherent to the medium and is not a defect.",
+  },
+  {
+    q: "Can I return art?",
+    a: "Returns are accepted only for items damaged in transit or with a manufacturing defect, within 14 days of delivery, with photos and an unboxing video. Change-of-mind returns are not accepted. See the Returns Policy.",
+  },
+  {
+    q: "Is any art age-restricted?",
+    a: "Some works contain artistic nudity or suggestive themes and are labelled 18+. By purchasing a labelled item you confirm you are of legal age in your jurisdiction.",
+  },
+  {
+    q: "Do I get the rights to the artwork when I buy it?",
+    a: "No. You own the physical piece you purchased. SINBIOX retains all copyright and other intellectual-property rights in the artwork and its image. You may not reproduce, scan, print, distribute, sell copies of, commercially use or publicly display the work, or make derivative works from it.",
+  },
 ]
 
 const faqJsonLd = {

@@ -49,6 +49,19 @@ export default function ReturnsJpPage() {
       </section>
 
       <section>
+        <h2 className="text-white font-bold text-base mb-2">アート</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          本ページのポリシーは、アート（<a href="/jp/art" className="text-[#ff2d78] hover:opacity-80 transition-opacity">アートセクション</a>）にも以下の補足とともに適用されます：
+        </p>
+        <ul className="text-white/60 text-sm leading-relaxed list-disc pl-5 space-y-1 mt-2">
+          <li>アートはアーティストから直接お届けする新品です。返品は、配送中の破損または製造上の欠陥がある場合に限り、受け取りから14日以内に、本ページの要件を満たす開封動画を添えて承ります。</li>
+          <li>以下は不良品ではなく、返品の対象外です：印刷物における色・裁断・仕上げのわずかな違い、画面上の画像と印刷された作品とのわずかな差異。</li>
+          <li>お客様都合の返品および交換はお受けできません。</li>
+          <li>承認された返品については、返送料は当社が負担します。返金はご購入時のお支払い方法に対して、5〜10営業日以内に処理されます。</li>
+        </ul>
+      </section>
+
+      <section>
         <h2 className="text-white font-bold text-base mb-2">返品の申請方法</h2>
         <p className="text-white/60 text-sm leading-relaxed">
           注文番号、破損箇所が明確にわかる写真、簡単な説明を添えて{" "}
