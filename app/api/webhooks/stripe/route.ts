@@ -66,6 +66,25 @@ export async function POST(req: Request) {
         hasShippingFromStripe: !!shippingFromStripe,
       })
 
+      // Defence-in-depth: metadata is server-set + Stripe-signed so a buyer
+      // can't tamper it, but assert it agrees with what Stripe actually
+      // charged — catches a future drift bug between the metadata and the
+      // Stripe line items before it ships a mis-priced order. Non-blocking:
+      // the payment already happened.
+      if (session.amount_total != null && listingPrices.length > 0) {
+        const expected =
+          listingPrices.reduce((s, p, i) => s + (p ?? 0) * qtyAt(i), 0) +
+          shippingCents -
+          promoDiscountCents
+        if (Math.abs(session.amount_total - expected) > 1) {
+          console.error(
+            `[ALERT] [stripe webhook] amount mismatch session=${session.id} ` +
+              `expected=${expected} charged=${session.amount_total} ` +
+              `diff=${session.amount_total - expected}`
+          )
+        }
+      }
+
       // A missing buyerId is now normal — guest checkouts never had a
       // site session. Only the legacy pre-metadata fallback path needs
       // listingIds; buyerId (if absent) gets resolved/created below.
@@ -271,31 +290,29 @@ export async function POST(req: Request) {
 }
 
 async function decrementStock(listingId: string, quantity: number) {
-  const { data: listing, error: fetchError } = await supabaseAdmin
-    .from("listings")
-    .select("stock, art_id")
-    .eq("id", listingId)
-    .single()
-  if (fetchError || !listing) {
-    console.error(`[stripe webhook] decrementStock fetch failed for ${listingId}:`, fetchError)
+  // Atomic: `decrement_stock` (migration 011) does the whole thing in one
+  // statement with a `stock >= qty` guard, so two concurrent webhooks for the
+  // same listing can't both read the old value and oversell. It de-lists a
+  // sold-out figure and leaves sold-out art active (same rule as before).
+  const { data, error } = await supabaseAdmin.rpc("decrement_stock", {
+    p_listing_id: listingId,
+    p_qty: quantity,
+  })
+  if (error) {
+    console.error(`[stripe webhook] decrement_stock RPC failed for ${listingId}:`, error)
     return
   }
-  const newStock = Math.max(0, listing.stock - quantity)
-  const update: Record<string, any> = { stock: newStock }
-  // Figures are 1-of-1: sold out ⇒ delist. Art can be reprinted, so a
-  // sold-out art listing stays active and shows a "Sold out" badge on /art.
-  if (newStock <= 0 && !listing.art_id) update.active = false
-  const { error: updateError } = await supabaseAdmin
-    .from("listings")
-    .update(update)
-    .eq("id", listingId)
-  if (updateError) {
-    console.error(`[stripe webhook] decrementStock update failed for ${listingId}:`, updateError)
+  if (data === null) {
+    // The `stock >= qty` guard didn't match — not enough stock at the moment
+    // the payment settled. The payment already succeeded, so the order stands;
+    // flag it for a manual refund / restock.
+    console.error(
+      `[ALERT] [stripe webhook] OVERSOLD: listing ${listingId} could not be decremented by ` +
+        `${quantity} (insufficient stock at settlement). Order was paid — refund or restock.`
+    )
     return
   }
-  console.log(
-    `[stripe webhook] listing ${listingId} stock=${newStock}${newStock <= 0 ? " active=false" : ""}`
-  )
+  console.log(`[stripe webhook] listing ${listingId} stock=${data}`)
 }
 
 /**
