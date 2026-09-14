@@ -69,7 +69,7 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
       <div className="relative">
         <ScrollReveal>
           <div>
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
               <span className="inline-block w-8 h-px bg-[#ff2d78] mb-4" />
               <h1
                 className="font-black lowercase leading-tight tracking-tighter text-white"
@@ -81,7 +81,7 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
           </div>
         </ScrollReveal>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
           <ScrollReveal>
             {/* Search */}
             <div className="relative mb-5">

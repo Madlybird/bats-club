@@ -91,7 +91,7 @@ export default async function ArchivePageJp() {
       <div className="relative">
         <ScrollReveal>
           <div>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
               <span className="inline-block w-8 h-px bg-[#ff2d78] mb-4" />
               <h1 className="font-black lowercase leading-tight tracking-tighter text-white" style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)" }}>
                 {dict.archive_page_title}
@@ -103,7 +103,7 @@ export default async function ArchivePageJp() {
           </div>
         </ScrollReveal>
         <ScrollReveal>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
             <Suspense fallback={<ArchiveSkeleton />}>
               <ArchiveClient
                 figures={figures}
