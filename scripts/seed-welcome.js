@@ -71,7 +71,7 @@ async function main() {
 
   // 2. Build payload, trying the full shape first
   const fullPayload = {
-    title: "Welcome to Bats Club",
+    title: "Welcome to Bats Club Archive",
     slug: SLUG,
     body: BODY,
     excerpt: META,

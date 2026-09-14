@@ -16,7 +16,7 @@ function withLocale(locale: "en" | "ru" | "jp", bare: string): string {
 
 const footerDict = {
   en: {
-    tagline: "Private anime figure archive & shop.",
+    tagline: "Public anime archive & studio.",
     about: "About",
     archive: "Archive",
     shop: "Shop",
@@ -28,7 +28,7 @@ const footerDict = {
     rights: "All rights reserved.",
   },
   ru: {
-    tagline: "Частный архив и магазин аниме фигурок.",
+    tagline: "Публичный аниме-архив и студия.",
     about: "О нас",
     archive: "Архив",
     shop: "Магазин",
@@ -40,7 +40,7 @@ const footerDict = {
     rights: "Все права защищены.",
   },
   jp: {
-    tagline: "プライベートアニメフィギュアアーカイブ＆ショップ",
+    tagline: "パブリックアニメアーカイブ＆スタジオ",
     about: "私たちについて",
     archive: "アーカイブ",
     shop: "ショップ",

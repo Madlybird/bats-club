@@ -14,11 +14,11 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 export const metadata: Metadata = {
   metadataBase: new URL("https://batsclub.com"),
   title: {
-    default: "Bats Club — Rare Anime Figure Archive & Shop",
+    default: "Bats Club: Rare Anime Archive & Studio",
     template: "%s | Bats Club",
   },
   description:
-    "Authentic rare anime figures from a private collector. 1990s–2000s Japanese originals. Di Gi Charat, Evangelion, and more. Ships worldwide.",
+    "Public archive & art studio of one collector. Rare anime figures, original art, books and cards. Ships worldwide.",
   keywords: ["anime figures", "figure collecting", "figure shop", "archive"],
   alternates: {
     canonical: "https://batsclub.com/",

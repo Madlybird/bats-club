@@ -4,9 +4,9 @@ import { getHomeCollections } from "@/lib/collections"
 import { ru } from "@/lib/dict"
 
 export const metadata: Metadata = {
-  title: "Bats Club — Архив и магазин редких аниме-фигурок",
+  title: "Bats Club: архив и студия редкого аниме",
   description:
-    "Подлинные редкие аниме-фигурки из частной коллекции. Японские оригиналы 1990-х — 2000-х: Di Gi Charat, Evangelion и другие. Доставка по миру.",
+    "Публичный архив и арт-студия одного коллекционера. Редкие аниме-фигурки, оригинальный арт, книги и карточки. Доставка по всему миру.",
 }
 
 export const revalidate = 3600

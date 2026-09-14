@@ -284,10 +284,10 @@ export interface Dict {
 // ENGLISH
 // ─────────────────────────────────────────
 export const en: Dict = {
-  hero_eyebrow: "private collector archive",
+  hero_eyebrow: "public anime archive & studio",
   hero_title: "Bats Club.",
-  hero_subtitle: ["rare anime", "figures"],
-  hero_body: "10000+ authentic anime figures from a private collection",
+  hero_subtitle: ["archive &", "studio"],
+  hero_body: "Collecting collectors, all around the world.",
   hero_cta: "enter the archive",
   hero_join: "join the club",
   tags: [
@@ -583,10 +583,10 @@ export const en: Dict = {
 // RUSSIAN
 // ─────────────────────────────────────────
 export const ru: Dict = {
-  hero_eyebrow: "архив частного коллекционера",
+  hero_eyebrow: "публичный архив и студия аниме",
   hero_title: "Bats Club.",
-  hero_subtitle: ["редкие аниме", "фигурки"],
-  hero_body: "10000+ подлинных аниме фигурок из частной коллекции",
+  hero_subtitle: ["архив и", "студия"],
+  hero_body: "Собираем коллекционеров со всего мира.",
   hero_cta: "войти в архив",
   hero_join: "присоединиться",
   tags: [
@@ -882,10 +882,10 @@ export const ru: Dict = {
 // JAPANESE
 // ─────────────────────────────────────────
 export const jp: Dict = {
-  hero_eyebrow: "プライベートコレクターアーカイブ",
+  hero_eyebrow: "パブリックアニメアーカイブ＆スタジオ",
   hero_title: "Bats Club.",
-  hero_subtitle: ["レアアニメ", "フィギュア"],
-  hero_body: "プライベートコレクションから10,000点以上の本物のアニメフィギュア",
+  hero_subtitle: ["アーカイブ", "＆スタジオ"],
+  hero_body: "コレクターを、世界中から集めています。",
   hero_cta: "アーカイブへ",
   hero_join: "クラブに参加",
   tags: [
