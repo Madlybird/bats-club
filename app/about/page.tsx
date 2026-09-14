@@ -4,7 +4,7 @@ import InfoPageShell from "@/components/InfoPageShell"
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Bats Club is a private archive of vintage anime figures, sold directly by the collector who built it. Not an open marketplace.",
+    "Bats Club is a public archive and studio run by SINBIOX, an artist and collector. Not an open marketplace.",
   alternates: {
     canonical: "https://batsclub.com/about",
     languages: {
@@ -21,21 +21,28 @@ export default function AboutPage() {
     <InfoPageShell title="About Bats Club">
       <section>
         <p className="text-white/70 text-sm leading-relaxed">
-          Bats Club is a private archive of vintage anime figures: over 10,000 authentic Japanese originals from the 1990s–2000s, built over five years by a single collector. Every figure in the archive was hand-selected for rarity, era, and condition. All of it comes from that one collection.
+          Bats Club is a public archive and studio, run by SINBIOX, an artist and collector. What started as a private collection of rare anime figures now includes original art, artbooks, and collectible cards: everything found, kept, or made by the same person.
         </p>
       </section>
 
       <section>
         <h2 className="text-white font-bold text-base mb-2">What is the Archive</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          The Archive is the full catalog: every figure the collection has documented, currently for sale or kept for reference. It includes photos, condition notes, series and character details for pieces that are genuinely rare, many discontinued 15 to 25 years ago. Browsing the Archive means browsing collecting history.
+          The Archive is the full catalog: every figure the collection has documented, currently for sale or kept for reference, with books and cards from the same collection joining soon. It includes photos, condition notes, series and character details for pieces that are genuinely rare, many discontinued 15 to 25 years ago. Browsing the Archive means browsing collecting history.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="text-white font-bold text-base mb-2">What is the Studio</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          The Studio is original art by SINBIOX: posters, prints, postcards, and zines, made rather than collected. It sits next to the Archive, not inside it. One person, two ways of adding to the world.
         </p>
       </section>
 
       <section>
         <h2 className="text-white font-bold text-base mb-2">Not a marketplace</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          Bats Club is not an open marketplace. Every figure in the Shop is sold directly by the collector who built the archive, under the terms set out in our{" "}
+          Bats Club is not an open marketplace. Every figure in the Shop is sold directly by SINBIOX, who built the archive, under the terms set out in our{" "}
           <a href="/terms" className="text-[#ff2d78] hover:opacity-80 transition-opacity">
             Terms of Service
           </a>
@@ -46,7 +53,7 @@ export default function AboutPage() {
       <section>
         <h2 className="text-white font-bold text-base mb-2">How the Shop works</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          When a figure from the collection is ready to sell, it gets listed with its condition graded (Mint, Near Mint, Good, Fair, or Poor) and its own original photos, taken by the collector. Each listing is a single, unique piece. Once it sells, it moves into the Archive as sold and stays there as a record. If a package arrives damaged, our{" "}
+          When a figure from the collection is ready to sell, it gets listed with its condition graded (Mint, Near Mint, Good, Fair, or Poor) and its own original photos, taken by SINBIOX. Each listing is a single, unique piece. Once it sells, it moves into the Archive as sold and stays there as a record. Art, books, and cards each have their own condition and shipping terms, covered in their own sections. If a package arrives damaged, our{" "}
           <a href="/returns" className="text-[#ff2d78] hover:opacity-80 transition-opacity">
             Returns Policy
           </a>{" "}

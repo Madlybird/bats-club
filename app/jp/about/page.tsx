@@ -4,7 +4,7 @@ import InfoPageShell from "@/components/InfoPageShell"
 export const metadata: Metadata = {
   title: "私たちについて",
   description:
-    "Bats Clubは、コレクター自身が直接販売するヴィンテージアニメフィギュアの私設アーカイブです。オープンなマーケットプレイスではありません。",
+    "Bats Clubは、アーティスト兼コレクターのSINBIOXが運営する公開アーカイブ&スタジオです。オープンなマーケットプレイスではありません。",
   alternates: {
     canonical: "https://batsclub.com/jp/about",
     languages: {
@@ -21,21 +21,28 @@ export default function AboutJpPage() {
     <InfoPageShell title="Bats Clubについて">
       <section>
         <p className="text-white/70 text-sm leading-relaxed">
-          Bats Clubは、ヴィンテージアニメフィギュアの私設アーカイブです。1990〜2000年代の日本正規版オリジナル品10,000点以上を、1人のコレクターが5年かけて集めました。アーカイブ内のすべてのフィギュアは、希少性・時代・状態を基準に一点一点選び抜かれています。すべてこの1つのコレクションから生まれたものです。
+          Bats Clubは、アーティスト兼コレクターのSINBIOXが運営する公開アーカイブ&スタジオです。もともとは希少なアニメフィギュアの個人コレクションとして始まりましたが、現在はオリジナルアート、アートブック、コレクションカードも含まれています。すべて同じ人物が見つけ、保管し、あるいは制作したものです。
         </p>
       </section>
 
       <section>
         <h2 className="text-white font-bold text-base mb-2">アーカイブとは</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          アーカイブは完全なカタログです。現在販売中かどうかにかかわらず、コレクションが記録してきたすべてのフィギュアが含まれます。写真、状態のメモ、シリーズやキャラクターの詳細が、15〜25年前に生産終了となったような本当に希少な品々について記録されています。アーカイブを見ることは、コレクションの歴史をたどることでもあります。
+          アーカイブは完全なカタログです。現在販売中かどうかにかかわらず、コレクションが記録してきたすべてのフィギュアが含まれ、同じコレクションから書籍とカードも近日追加されます。写真、状態のメモ、シリーズやキャラクターの詳細が、15〜25年前に生産終了となったような本当に希少な品々について記録されています。アーカイブを見ることは、コレクションの歴史をたどることでもあります。
+        </p>
+      </section>
+
+      <section>
+        <h2 className="text-white font-bold text-base mb-2">スタジオとは</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          スタジオはSINBIOXによるオリジナルアートです。ポスター、プリント、ポストカード、zineなど、集めたものではなく作られたもの。アーカイブの中ではなく、その隣にあります。一人の人間が、二つの方法で何かを生み出している場所です。
         </p>
       </section>
 
       <section>
         <h2 className="text-white font-bold text-base mb-2">マーケットプレイスではありません</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          Bats Clubはオープンなマーケットプレイスではありません。ショップ内のすべてのフィギュアは、アーカイブを築いたコレクター本人が、当社の{" "}
+          Bats Clubはオープンなマーケットプレイスではありません。ショップ内のすべてのフィギュアは、アーカイブを築いたSINBIOX本人が、当社の{" "}
           <a href="/jp/terms" className="text-[#ff2d78] hover:opacity-80 transition-opacity">
             利用規約
           </a>
@@ -46,7 +53,7 @@ export default function AboutJpPage() {
       <section>
         <h2 className="text-white font-bold text-base mb-2">ショップの仕組み</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          コレクションの中のフィギュアが販売できる状態になると、状態の評価（Mint、Near Mint、Good、Fair、Poor）とコレクター自身が撮影したオリジナル写真とともに出品されます。各出品は一点物です。販売後はアーカイブに「販売済み」として記録され、そのまま記録として残ります。配送中に破損があった場合の対応は{" "}
+          コレクションの中のフィギュアが販売できる状態になると、状態の評価（Mint、Near Mint、Good、Fair、Poor）とSINBIOX自身が撮影したオリジナル写真とともに出品されます。各出品は一点物です。販売後はアーカイブに「販売済み」として記録され、そのまま記録として残ります。アート・書籍・カードにはそれぞれ独自のコンディション基準と配送ルールがあり、各セクションに記載しています。配送中に破損があった場合の対応は{" "}
           <a href="/jp/returns" className="text-[#ff2d78] hover:opacity-80 transition-opacity">
             返品ポリシー
           </a>
