@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     if (error) throw error
 
     const slugForPath = (figure as any)?.slug || (figure as any)?.id
-    revalidateTag("figures")
+    revalidateTag("figures", { expire: 0 })
     revalidatePath("/")
     revalidatePath("/jp")
     revalidatePath("/ru")

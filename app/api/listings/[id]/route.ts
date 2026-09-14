@@ -74,7 +74,7 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
   // Invalidate caches so the change is visible immediately on the site.
   const figureId = (listing as any)?.figureId
   try {
-    revalidateTag("figures")
+    revalidateTag("figures", { expire: 0 })
     revalidatePath(`/shop/${params.id}`)
     revalidatePath(`/ru/shop/${params.id}`)
     revalidatePath(`/jp/shop/${params.id}`)
@@ -115,7 +115,7 @@ export async function DELETE(_req: Request, props: { params: Promise<{ id: strin
   }
 
   try {
-    revalidateTag("figures")
+    revalidateTag("figures", { expire: 0 })
     revalidatePath(`/shop/${params.id}`)
     revalidatePath(`/ru/shop/${params.id}`)
     revalidatePath(`/jp/shop/${params.id}`)

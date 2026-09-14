@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     try {
       // listings change the "for sale" badge and cheapest-price on
       // archive cards, so the shared figures cache needs busting too.
-      revalidateTag("figures")
+      revalidateTag("figures", { expire: 0 })
       revalidatePath("/feed.xml")
       if (figureId) {
         const slugForPath = (await lookupSlugById(figureId)) || figureId

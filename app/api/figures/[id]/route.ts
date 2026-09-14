@@ -79,7 +79,7 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     .eq("id", params.id)
     .maybeSingle()
   const slugForPath = slugRow?.slug || params.id
-  revalidateTag("figures")
+  revalidateTag("figures", { expire: 0 })
   revalidatePath("/")
   revalidatePath("/jp")
   revalidatePath("/ru")
@@ -122,7 +122,7 @@ export async function DELETE(_req: Request, props: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 
-  revalidateTag("figures")
+  revalidateTag("figures", { expire: 0 })
   revalidatePath(`/figures/${slugForPath}`)
   revalidatePath(`/jp/figures/${slugForPath}`)
   revalidatePath(`/ru/figures/${slugForPath}`)

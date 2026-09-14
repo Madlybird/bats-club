@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     revalidated.push(p)
   }
 
-  revalidateTag("figures")
+  revalidateTag("figures", { expire: 0 })
   revalidated.push("tag:figures")
 
   push("/")

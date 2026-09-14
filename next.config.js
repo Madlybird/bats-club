@@ -25,6 +25,21 @@ const nextConfig = {
     dangerouslyAllowSVG: false,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Next.js 16 requires an explicit allowlist for every local image
+    // path passed to next/image once localPatterns is set at all — plain
+    // paths (logo.png, bat.png) need their own entry, and the 4 static
+    // homepage figures under public/figures/ additionally need their
+    // cache-busting ?v=3 query string allowlisted (prevents enumeration
+    // attacks via arbitrary query strings).
+    localPatterns: [
+      {
+        pathname: "/**",
+      },
+      {
+        pathname: "/figures/**",
+        search: "?v=3",
+      },
+    ],
   },
   experimental: {
     serverActions: {

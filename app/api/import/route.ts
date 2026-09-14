@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     }
 
     if (imported > 0) {
-      revalidateTag("figures")
+      revalidateTag("figures", { expire: 0 })
       revalidatePath("/")
       revalidatePath("/jp")
       revalidatePath("/ru")
