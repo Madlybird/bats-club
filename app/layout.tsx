@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
 import "./globals.css"
 import Navbar from "@/components/Navbar"
 import Providers from "@/components/Providers"
@@ -66,11 +68,12 @@ const websiteJsonLd = {
   url: "https://batsclub.com",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await getServerSession(authOptions)
   return (
     <html lang="en" className={`dark ${inter.variable}`}>
       <head>
@@ -115,7 +118,7 @@ export default function RootLayout({
       <body
         className="min-h-screen text-slate-200 antialiased font-inter overflow-x-clip"
       >
-        <Providers>
+        <Providers session={session}>
           <HtmlLangSync />
           <Navbar />
           <Toaster />

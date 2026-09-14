@@ -27,7 +27,7 @@ function withLocale(locale: "en" | "ru" | "jp", bare: string): string {
 }
 
 export default function Navbar() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
   const locale = getLocale(pathname)
@@ -115,7 +115,7 @@ export default function Navbar() {
               )}
             </Link>
 
-            {session ? (
+            {status === "loading" ? null : session ? (
               <>
                 {session.user.isAdmin && (
                   <Link
@@ -207,7 +207,7 @@ export default function Navbar() {
               ))}
             </div>
             <div className="pt-2 border-t border-white/5">
-              {session ? (
+              {status === "loading" ? null : session ? (
                 <>
                   {session.user.isAdmin && (
                     <MobileNavLink href="/admin" onClick={() => setMobileOpen(false)}>
