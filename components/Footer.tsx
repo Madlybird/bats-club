@@ -59,7 +59,7 @@ export default function Footer() {
   const t = footerDict[locale]
 
   return (
-    <footer className="border-t border-black/10 py-14">
+    <footer className="py-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Trustpilot widget removed 2026-08-13 (only 1 review — an empty
             badge reads worse than no badge). Restore once a handful of
