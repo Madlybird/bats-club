@@ -32,7 +32,7 @@ export default function InfoPageShell({
       <div className="relative">
         <ScrollReveal>
           <div>
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-14">
               <span className="inline-block w-8 h-px bg-[#ff2d78] mb-6" />
               <h1
                 className="font-black lowercase leading-tight tracking-tighter text-white"
@@ -47,7 +47,7 @@ export default function InfoPageShell({
           </div>
         </ScrollReveal>
         <ScrollReveal>
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-10 text-white/70 leading-relaxed">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 mt-4 space-y-10 text-white/70 leading-relaxed">
             {children}
           </div>
         </ScrollReveal>
