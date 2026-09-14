@@ -194,7 +194,7 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
           </div>
         </ScrollReveal>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 mt-6">
           <ScrollReveal>
             <PopularBar topSeries={topSeries} topCollections={topCollections || []} current={currentFilters} dict={dict} />
 

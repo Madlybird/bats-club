@@ -103,7 +103,7 @@ export default async function ArchivePageJp() {
           </div>
         </ScrollReveal>
         <ScrollReveal>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 mt-6">
             <Suspense fallback={<ArchiveSkeleton />}>
               <ArchiveClient
                 figures={figures}

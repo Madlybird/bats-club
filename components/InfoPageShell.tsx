@@ -47,7 +47,7 @@ export default function InfoPageShell({
           </div>
         </ScrollReveal>
         <ScrollReveal>
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 mt-4 space-y-10 text-white/70 leading-relaxed">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 mt-6 space-y-10 text-white/70 leading-relaxed">
             {children}
           </div>
         </ScrollReveal>

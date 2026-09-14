@@ -56,7 +56,7 @@ export default function ArticlesPageContent({ articles, dict, articlesHref = "/a
           </div>
         </ScrollReveal>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 mt-6">
           {articles.length > 0 ? (
             <ScrollReveal>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
