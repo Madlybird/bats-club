@@ -10,6 +10,7 @@ import Footer from "@/components/Footer"
 import RegisterPrompt from "@/components/RegisterPrompt"
 import CookieConsentBanner from "@/components/CookieConsentBanner"
 import HtmlLangSync from "@/components/HtmlLangSync"
+import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -127,6 +128,7 @@ export default async function RootLayout({
           <RegisterPrompt />
           <CookieConsentBanner />
         </Providers>
+        <Analytics />
       </body>
     </html>
   )
