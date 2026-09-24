@@ -75,10 +75,12 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              // GA4 sends hits to regional endpoints (region1.google-analytics.com,
-              // region1.analytics.google.com), not just www — allowing only www
+              // GA4 hit endpoints, per Google's CSP guide for GA4 + Google signals
+              // (developers.google.com/tag-platform/security/guides/csp): gtag
+              // sends to region1.*, analytics.google.com, www.google.com and
+              // stats.g.doubleclick.net. Allowing only www.google-analytics.com
               // silently dropped nearly all GA4 traffic from 2026-08-11 to 2026-09-24.
-              "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://api.stripe.com https://apis.google.com",
+              "connect-src 'self' https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.googletagmanager.com https://api.stripe.com",
               "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://www.google.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
