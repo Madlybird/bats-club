@@ -38,7 +38,7 @@ export default function PromoBar({ initialActive }: { initialActive: boolean }) 
   }
 
   return (
-    <div className="relative z-[51] bg-[#ff2d78] text-white text-xs sm:text-sm font-bold">
+    <div className="relative bg-[#ff2d78] text-white text-xs sm:text-sm font-bold">
       <div className="max-w-7xl mx-auto px-10 py-2 text-center">
         <Link href={`${locale === "en" ? "" : `/${locale}`}/shop`} className="hover:underline underline-offset-2">
           {PROMO_TEXT[locale].bar}

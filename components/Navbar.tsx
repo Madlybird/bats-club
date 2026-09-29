@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useCart } from "@/lib/cart-context"
+import PromoBar from "@/components/PromoBar"
 import { en, ru, jp } from "@/lib/dict"
 
 const DICTS = { en, ru, jp }
@@ -26,7 +27,7 @@ function withLocale(locale: "en" | "ru" | "jp", bare: string): string {
   return `/${locale}${bare}`
 }
 
-export default function Navbar() {
+export default function Navbar({ promoInitialActive = false }: { promoInitialActive?: boolean }) {
   const { data: session, status } = useSession()
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
@@ -55,6 +56,8 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-md">
+      {/* Inside the sticky header so the promo strip stays pinned with the nav. */}
+      <PromoBar initialActive={promoInitialActive} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
