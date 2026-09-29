@@ -3,7 +3,7 @@ import HowItWorksTour from "@/components/HowItWorksTour"
 import CollectionSlider from "@/components/CollectionSlider"
 import JoinCta from "@/components/JoinCta"
 import Link from "next/link"
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 import type { Dict } from "@/lib/dict"
 
 // /public/figures/ images — ?v=3 busts browser cache
@@ -163,7 +163,10 @@ export default function HomePageContent({
                       src={LOCAL_FIGURES[i]}
                       alt={`figure ${i + 1}`}
                       fill
-                      unoptimized
+                      // Above the fold — the first tile is the page's LCP
+                      // element, so never lazy-load the top row.
+                      loading={i < 2 ? "eager" : "lazy"}
+                      fetchPriority={i === 0 ? "high" : "auto"}
                       className="object-cover object-top"
                       sizes="(max-width: 640px) 80vw, 180px"
                     />

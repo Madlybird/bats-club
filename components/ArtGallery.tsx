@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 import { AgeGateReveal, type AgeGateLabels } from "@/components/AgeGate"
 
 interface Props {
@@ -68,7 +68,6 @@ export default function ArtGallery({ photos, alt, isMature, ageGateLabels, backH
               src={safePhotos[current]}
               alt={alt}
               fill
-              unoptimized
               priority
               className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
               sizes="(max-width: 1024px) 100vw, 50vw"
@@ -101,7 +100,7 @@ export default function ArtGallery({ photos, alt, isMature, ageGateLabels, backH
               style={{ aspectRatio: "3 / 4", background: "#0a0a0a" }}
               aria-label={`Photo ${i + 1}`}
             >
-              <Image src={p} alt="" fill unoptimized className={`object-cover object-top ${isMature ? "blur-md" : ""}`} sizes="64px" />
+              <Image src={p} alt="" fill className={`object-cover object-top ${isMature ? "blur-md" : ""}`} sizes="64px" />
             </button>
           ))}
         </div>
@@ -127,7 +126,6 @@ export default function ArtGallery({ photos, alt, isMature, ageGateLabels, backH
               src={safePhotos[current]}
               alt={alt}
               fill
-              unoptimized
               className="object-contain"
               sizes="100vw"
             />

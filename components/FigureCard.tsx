@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 import StatusButton from "./StatusButton"
 import { MatureBlur, type AgeGateLabels } from "@/components/AgeGate"
 
@@ -56,11 +56,6 @@ export default function FigureCard({ figure, labels, ageGateLabels, priority = f
               src={figure.imageUrl}
               alt={`${figure.name} — ${figure.character} figure, ${figure.series}`}
               fill
-              // Bypass Vercel's image optimizer and fetch the JPG
-              // straight from Supabase Storage. The optimizer was
-              // intermittently returning blank/broken images on some
-              // mobile clients (Option A from the debug session).
-              unoptimized
               className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
               sizes="(max-width: 768px) 50vw, 25vw"
               {...(priority ? { priority: true } : { loading: "lazy" })}

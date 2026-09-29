@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
 import { getShippingInfo, getArtShippingInfo, artCategoryMax, MAX_ORDER_QUANTITY } from "@/lib/shipping"
@@ -384,9 +384,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                             src={item.figureImageUrl}
                             alt={item.figureName}
                             fill
-                            // Bypass Vercel image optimizer; same fix
-                            // as FigureCard / ListingCard.
-                            unoptimized
                             className="object-cover object-top"
                             sizes="80px"
                           />

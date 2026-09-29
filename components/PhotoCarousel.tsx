@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 
 interface Props {
   images: string[]
@@ -27,10 +27,6 @@ export default function PhotoCarousel({ images, alt, sizes = "(max-width: 1024px
         src={images[0]}
         alt={alt}
         fill
-        // Bypass Vercel image optimizer; load JPG straight from
-        // Supabase. Every PhotoCarousel call site shows figure
-        // photos, so this is always the right call here.
-        unoptimized
         className="object-cover object-top"
         sizes={sizes}
         priority={priority}
@@ -44,7 +40,6 @@ export default function PhotoCarousel({ images, alt, sizes = "(max-width: 1024px
         src={images[current]}
         alt={`${alt} — photo ${current + 1}`}
         fill
-        unoptimized
         className="object-cover object-top transition-opacity duration-300"
         sizes={sizes}
         priority={priority && current === 0}

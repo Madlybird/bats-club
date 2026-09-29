@@ -1,4 +1,4 @@
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 import Link from "next/link"
 import StatusButton from "@/components/StatusButton"
 import ArticleCard from "@/components/ArticleCard"
@@ -287,7 +287,7 @@ export default function FigureDetailContent({
                               }}
                             >
                               {thumb ? (
-                                <Image src={thumb} alt={`${rel.name} — ${rel.series}`} fill unoptimized className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
+                                <Image src={thumb} alt={`${rel.name} — ${rel.series}`} fill className="object-cover object-top group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 50vw, 25vw" />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center text-4xl">🦇</div>
                               )}

@@ -1,6 +1,6 @@
 "use client"
 
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 import Link from "next/link"
 import { useState } from "react"
 import BatsOverlay from "@/components/BatsOverlay"
@@ -96,7 +96,6 @@ export default function ProfilePageContent({
                 alt={user.name}
                 width={72}
                 height={72}
-                unoptimized
                 className="rounded-full"
                 style={{ border: "2px solid #ff2d78" }}
               />
@@ -258,7 +257,6 @@ export default function ProfilePageContent({
                         src={item.figure.imageUrl}
                         alt={item.figure.name}
                         fill
-                        unoptimized
                         className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
                         sizes="200px"
                       />
@@ -327,7 +325,6 @@ export default function ProfilePageContent({
                             alt={item.figure.name}
                             width={40}
                             height={40}
-                            unoptimized
                             className="w-full h-full object-cover object-top"
                           />
                         ) : (

@@ -22,6 +22,17 @@ const nextConfig = {
         hostname: "i.postimg.cc",
       },
     ],
+    // Cost/latency tuning per Vercel's "reduce image optimization costs"
+    // guide. Uploaded photo filenames carry a timestamp and are never
+    // overwritten in place, so a 31-day optimizer cache is safe; Supabase
+    // serves them with Cache-Control: no-cache, which would otherwise cap
+    // the cache at the 4h default.
+    minimumCacheTTL: 2678400,
+    formats: ["image/webp"],
+    qualities: [75],
+    // Largest rendered photo is the ~50vw detail carousel; 2048/3840
+    // variants were never needed.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     dangerouslyAllowSVG: false,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 import AddToCartButton from "@/components/AddToCartButton"
 import { MatureBlur, type AgeGateLabels } from "@/components/AgeGate"
 import type { ArtListRow } from "@/lib/art"
@@ -48,9 +48,6 @@ export default function ArtCard({ item, labels, ageGateLabels, basePath = "/art"
               src={item.coverImage}
               alt={item.title}
               fill
-              // Bypass the Vercel optimizer, pull the JPG straight from
-              // Supabase Storage — same as FigureCard / ListingCard.
-              unoptimized
               className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               {...(priority ? { priority: true } : { loading: "lazy" })}

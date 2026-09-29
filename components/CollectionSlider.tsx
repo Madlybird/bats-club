@@ -2,7 +2,7 @@
 
 import { useRef } from "react"
 import Link from "next/link"
-import Image from "next/image"
+import Image from "@/components/SiteImage"
 
 interface SliderFigure {
   id: string
@@ -79,7 +79,6 @@ export default function CollectionSlider({
                 src={fig.imageUrl || fallbackImages[i % fallbackImages.length]}
                 alt={fig.name}
                 fill
-                unoptimized
                 className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 640px) 53vw, 264px"
               />
