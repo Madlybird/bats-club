@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
@@ -141,6 +141,8 @@ export async function POST(req: Request) {
       if (linkError) return errorResponse(stage, linkError)
     }
 
+    // /shop collection pills come from the tagged shop catalog.
+    revalidateTag("figures", { expire: 0 })
     revalidatePath("/")
     revalidatePath("/ru")
     revalidatePath("/jp")

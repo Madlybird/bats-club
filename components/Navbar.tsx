@@ -115,7 +115,11 @@ export default function Navbar() {
               )}
             </Link>
 
-            {status === "loading" ? null : session ? (
+            {status === "loading" ? (
+              // Session resolves client-side after the cached page lands —
+              // hold the slot so the signed-in/out controls don't shift the bar.
+              <div className="w-[150px] h-8" aria-hidden />
+            ) : session ? (
               <>
                 {session.user.isAdmin && (
                   <Link

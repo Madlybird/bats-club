@@ -15,10 +15,14 @@ export default function JoinCta({
 }) {
   const { status } = useSession()
   if (status === "authenticated") return null
+  // While the session loads, keep the button's space but hide it so
+  // signed-in users never see a Join flash.
   return (
     <Link
       href={href}
-      className="px-8 py-3.5 border border-white/10 hover:border-white/25 text-white/50 hover:text-white text-sm font-bold lowercase tracking-wide rounded-full transition-all"
+      aria-hidden={status === "loading" || undefined}
+      tabIndex={status === "loading" ? -1 : undefined}
+      className={`${status === "loading" ? "invisible " : ""}px-8 py-3.5 border border-white/10 hover:border-white/25 text-white/50 hover:text-white text-sm font-bold lowercase tracking-wide rounded-full transition-all`}
     >
       {label}
     </Link>

@@ -39,11 +39,10 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-// Figure count must always be accurate, not up to an hour stale.
-export const dynamic = "force-dynamic"
-// See app/shop/page.tsx — force-dynamic alone doesn't stop a
-// fixed-shape query from sticking in the Data Cache.
-export const fetchCache = "force-no-store"
+// Static + ISR. Freshness comes from the "figures" cache tag, which every
+// figure/listing write path purges (see lib/figures-cache.ts); the hour
+// is only a fallback for direct DB edits.
+export const revalidate = 3600
 
 export default async function ArchivePage() {
   // searchParams intentionally not read here — ArchiveClient picks up

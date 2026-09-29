@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { stripe } from "@/lib/stripe"
 import { supabaseAdmin } from "@/lib/supabase"
 import { sendOrderConfirmationEmail } from "@/lib/email"
@@ -270,10 +270,11 @@ export async function POST(req: Request) {
         )
 
         // Force the sold listing's own detail page to refetch immediately
-        // so it stops showing as in-stock. /shop and /archive are already
-        // force-dynamic (no ISR cache), so revalidating them here is a
-        // no-op — they always read live on every request.
+        // so it stops showing as in-stock, and drop the cached /shop and
+        // /archive catalogs (tag "figures", lib/shop-catalog.ts +
+        // lib/figures-cache.ts) so stock/sold-out state is live there too.
         try {
+          revalidateTag("figures", { expire: 0 })
           for (const listingId of listingIds) {
             revalidatePath(`/shop/${listingId}`)
             revalidatePath(`/ru/shop/${listingId}`)
