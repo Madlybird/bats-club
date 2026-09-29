@@ -1,10 +1,24 @@
 import { MetadataRoute } from "next"
+import { unstable_cache } from "next/cache"
 import { supabaseAdmin } from "@/lib/supabase"
 
 const BASE = "https://batsclub.com"
 const LOCALES = ["", "/ru", "/jp"]
 
+// Was built once at deploy time and never refreshed, so deleted figures
+// stayed listed and new ones were missing until the next deploy. Now the
+// entries are cached under the "figures" tag (purged by every figure /
+// listing write path and /api/admin/revalidate) with a 1h fallback, which
+// also picks up article changes.
+export const revalidate = 3600
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  return buildEntries()
+}
+
+// lastModified is stored as an ISO string: unstable_cache JSON-serializes
+// its result, and the sitemap accepts either form.
+const buildEntries = unstable_cache(async (): Promise<MetadataRoute.Sitemap> => {
   const entries: MetadataRoute.Sitemap = []
 
   // Static pages
@@ -146,4 +160,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   return entries
-}
+}, ["sitemap-entries-v1"], { tags: ["figures"], revalidate: 3600 })
