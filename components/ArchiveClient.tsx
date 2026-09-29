@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { useSearchParams } from "next/navigation"
 import { useIncrementalList } from "@/lib/use-incremental-list"
 import FigureCard from "./FigureCard"
 
@@ -78,18 +77,20 @@ export default function ArchiveClient({
   defaultSeries = null,
   labels,
 }: ArchiveClientProps) {
-  const searchParams = useSearchParams()
   const [search, setSearch] = useState("")
   // defaultSeries comes from the parent (used to be derived from
   // searchParams on the server). It's null now in static-page mode —
   // we read ?series= on the client so the page can stay cached.
+  // window.location, not useSearchParams(): in a statically prerendered
+  // route useSearchParams bails the whole grid out to client-only
+  // rendering, leaving just the Suspense skeleton in the HTML.
   const [selectedSeries, setSelectedSeries] = useState<string | null>(
     defaultSeries
   )
 
   useEffect(() => {
     if (defaultSeries) return
-    const s = searchParams?.get("series")
+    const s = new URLSearchParams(window.location.search).get("series")
     if (s) setSelectedSeries(s)
     // Intentionally run once on mount; subsequent navigations update via
     // the pill buttons directly.
