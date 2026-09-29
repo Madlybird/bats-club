@@ -9,6 +9,7 @@ import RegisterPrompt from "@/components/RegisterPrompt"
 import CookieConsentBanner from "@/components/CookieConsentBanner"
 import HtmlLangSync from "@/components/HtmlLangSync"
 import { Analytics } from '@vercel/analytics/next'
+import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -75,7 +76,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${inter.variable}`}>
       <head>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-V3EEKGR3QM" />
         <script dangerouslySetInnerHTML={{ __html: `
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -126,6 +126,14 @@ export default function RootLayout({
           <CookieConsentBanner />
         </Providers>
         <Analytics />
+        {/* gtag.js loads after hydration instead of competing with it
+            (~0.8s of main-thread work on mobile). Consent defaults and
+            the config call stay inline in <head>: they queue into
+            dataLayer and are replayed once this script arrives. */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-V3EEKGR3QM"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )
