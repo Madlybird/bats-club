@@ -5,18 +5,24 @@ import { supabaseAdmin } from "@/lib/supabase"
  * "Purchases" stat on the profile and the stamp-card progress.
  * Pending and cancelled orders are excluded so partial checkouts
  * don't show up in someone's history or award stamps.
+ * users.bonus_stamps (migration 013) adds purchases made off-site
+ * that were credited by hand.
  */
 export async function getUserPurchaseCount(userId: string): Promise<number> {
-  const { count, error } = await supabaseAdmin
-    .from("orders")
-    .select("id", { count: "exact", head: true })
-    .eq("buyer_id", userId)
-    .eq("status", "PAID")
-  if (error) {
-    console.error("[profile] getUserPurchaseCount failed:", error)
-    return 0
+  const [orders, user] = await Promise.all([
+    supabaseAdmin
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("buyer_id", userId)
+      .eq("status", "PAID"),
+    supabaseAdmin.from("users").select("bonus_stamps").eq("id", userId).maybeSingle(),
+  ])
+  if (orders.error) {
+    console.error("[profile] getUserPurchaseCount failed:", orders.error)
   }
-  return count ?? 0
+  // A missing column (migration not applied) just means no bonus.
+  const bonus = user.error ? 0 : ((user.data as any)?.bonus_stamps ?? 0)
+  return (orders.error ? 0 : orders.count ?? 0) + bonus
 }
 
 /**
