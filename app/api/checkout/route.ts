@@ -12,17 +12,17 @@ import {
   ALLOWED_COUNTRIES,
   MAX_ORDER_QUANTITY,
 } from "@/lib/shipping"
+import {
+  SHIPPING_PROMO,
+  isValidPromoCode,
+  normalizePromoCode,
+  promoDiscountCents as computePromoDiscount,
+} from "@/lib/promo"
 
 // Loose abuse cap on distinct cart lines (real per-kind caps applied after the
 // listings are fetched: max 3 figures, per-type max on art).
 const MAX_CART_LINES = 60
 
-// In-app promo codes (server-side, applied as a Stripe coupon).
-// Stripe-managed promo codes can be applied via the Checkout UI when
-// the request doesn't include one of these.
-const PROMO_CODES: Record<string, number> = {
-  // No active promo codes. Add new ones here as needed.
-}
 
 interface CartItem {
   listingId: string
@@ -230,16 +230,14 @@ export async function POST(req: Request) {
       0
     )
 
-    // In-app promo (kept for backwards compat with the old cart UI).
-    let promoDiscountCents = 0
-    let promoRate = 0
-    if (promoCode) {
-      const code = String(promoCode).toUpperCase().trim()
-      promoRate = PROMO_CODES[code] ?? 0
-      if (promoRate > 0) {
-        promoDiscountCents = Math.round((itemsSubtotal + shippingCents) * (promoRate / 100))
-      }
+    // In-app promo (lib/promo.ts): recomputed here from the server-side
+    // shipping quote — the client only sends the code. An unknown or
+    // expired code is rejected rather than silently dropped, so a cart
+    // that was open past the deadline doesn't quietly charge more.
+    if (promoCode && !isValidPromoCode(promoCode)) {
+      return NextResponse.json({ error: "This promo code has expired or is invalid" }, { status: 400 })
     }
+    const promoDiscountCents = computePromoDiscount(promoCode, shippingCents)
 
     // Always use the canonical production domain for Stripe redirect
     // URLs. Preview deployment URLs (e.g. bats-club-xxx.vercel.app)
@@ -306,7 +304,7 @@ export async function POST(req: Request) {
         amount_off: promoDiscountCents,
         currency: "usd",
         duration: "once",
-        name: `Promo: ${String(promoCode).toUpperCase().trim()} (${promoRate}% off)`,
+        name: `Promo: ${normalizePromoCode(promoCode)} (${SHIPPING_PROMO.shippingPercentOff}% off shipping)`,
       })
       params.discounts = [{ coupon: coupon.id }]
     } else {

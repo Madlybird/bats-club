@@ -8,6 +8,16 @@ import { getShippingInfo, getArtShippingInfo, artCategoryMax, MAX_ORDER_QUANTITY
 import { trackProceedToCheckout, trackBeginCheckout } from "@/lib/analytics"
 import BatsOverlay from "@/components/BatsOverlay"
 import type { Dict } from "@/lib/dict"
+import { usePathname } from "next/navigation"
+import {
+  SHIPPING_PROMO,
+  PROMO_TEXT,
+  isPromoActive,
+  isValidPromoCode,
+  localeFromPath,
+  normalizePromoCode,
+  promoDiscountCents as promoDiscountCentsFor,
+} from "@/lib/promo"
 
 const COUNTRIES = [
   { code: "AR", name: "Argentina" }, { code: "AU", name: "Australia" }, { code: "AT", name: "Austria" },
@@ -51,6 +61,11 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const [promoInput, setPromoInput] = useState("")
   const [appliedPromo, setAppliedPromo] = useState("")
   const [promoError, setPromoError] = useState("")
+  const promoText = PROMO_TEXT[localeFromPath(usePathname())]
+  // Evaluated after mount: the cart page is statically cached, so the
+  // promo window must be checked in the visitor's browser, not at build.
+  const [promoActive, setPromoActive] = useState(false)
+  useEffect(() => { setPromoActive(isPromoActive()) }, [])
 
   const [showAddress, setShowAddress] = useState(false)
   const [address, setAddress] = useState<AddressForm>(emptyAddress)
@@ -154,20 +169,17 @@ export default function CartPageContent({ dict, shopHref }: Props) {
       ? `Figures ${figShip.priceDisplay} + Art ${artShip!.priceDisplay} — ship separately`
       : ""
 
-  const PROMO_RATES: Record<string, number> = {}
-  const promoRate = appliedPromo ? (PROMO_RATES[appliedPromo] ?? 0) : 0
-  const promoDiscountCents = promoRate > 0
-    ? Math.round((itemsSubtotal + shippingCents) * (promoRate / 100))
-    : 0
+  // Display only — /api/checkout recomputes the discount server-side.
+  const promoDiscountCents = promoDiscountCentsFor(appliedPromo, shippingCents)
   const totalCents = itemsSubtotal + shippingCents - promoDiscountCents
 
-  const applyPromo = () => {
-    const code = promoInput.trim().toUpperCase()
-    if (PROMO_RATES[code] !== undefined) {
+  const applyPromo = (raw: string = promoInput) => {
+    const code = normalizePromoCode(raw)
+    if (isValidPromoCode(code)) {
       setAppliedPromo(code)
       setPromoError("")
     } else {
-      setPromoError("Invalid promo code")
+      setPromoError(code === SHIPPING_PROMO.code ? promoText.expired : "Invalid promo code")
       setAppliedPromo("")
     }
   }
@@ -506,6 +518,19 @@ export default function CartPageContent({ dict, shopHref }: Props) {
 
               {/* Promo code */}
               <div className="rounded-2xl border border-white/[0.06] p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
+                {promoActive && !appliedPromo && hasPhysical && (
+                  // Current promo (lib/promo.ts), one click instead of typing the code.
+                  <div className="mb-4 rounded-xl border border-[#ff2d78]/40 bg-[#ff2d78]/10 p-3 flex items-center justify-between gap-3">
+                    <span className="text-sm font-bold text-white">{promoText.cartBanner}</span>
+                    <button
+                      onClick={() => applyPromo(SHIPPING_PROMO.code)}
+                      className="shrink-0 px-3 py-1.5 rounded-lg text-white text-xs font-bold"
+                      style={{ backgroundColor: "#ff2d78" }}
+                    >
+                      {promoText.cartApply}
+                    </button>
+                  </div>
+                )}
                 <h3 className="font-bold text-white text-sm mb-3">{dict.cart_promo_heading}</h3>
                 {appliedPromo ? (
                   <div className="flex items-center justify-between">
@@ -513,7 +538,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      {appliedPromo} ({PROMO_RATES[appliedPromo]}% off)
+                      {promoText.cartApplied}
                     </span>
                     <button
                       onClick={() => { setAppliedPromo(""); setPromoInput("") }}
@@ -530,10 +555,10 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                       onChange={(e) => { setPromoInput(e.target.value); setPromoError("") }}
                       placeholder={dict.cart_promo_ph}
                       className="input text-base sm:text-sm flex-1"
-                      onKeyDown={(e) => e.key === "Enter" && applyPromo()}
+                      onKeyDown={(e) => { if (e.key === "Enter") applyPromo() }}
                     />
                     <button
-                      onClick={applyPromo}
+                      onClick={() => applyPromo()}
                       className="px-3 py-2 rounded-lg text-white text-sm font-bold transition-opacity"
                       style={{ backgroundColor: "#ff2d78" }}
                     >
@@ -559,7 +584,14 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                       <span>
                         {dict.cart_shipping} ({selectedCountry?.name})
                       </span>
-                      <span>{shippingDisplay}</span>
+                      {promoDiscountCents > 0 ? (
+                        <span>
+                          <span className="line-through text-white/30 mr-1.5">{shippingDisplay}</span>
+                          ${((shippingCents - promoDiscountCents) / 100).toFixed(2)}
+                        </span>
+                      ) : (
+                        <span>{shippingDisplay}</span>
+                      )}
                     </div>
                   )}
                   {shippingBreakdown && (
@@ -573,10 +605,11 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   )}
 
                   {promoDiscountCents > 0 && (
-                    <div className="flex justify-between text-emerald-400 text-xs">
-                      <span>Promo ({appliedPromo})</span>
-                      <span>−${(promoDiscountCents / 100).toFixed(2)}</span>
-                    </div>
+                    // The discount is already shown as the struck-through
+                    // shipping price above — this is just the label for it.
+                    <p className="text-emerald-400 text-xs -mt-1">
+                      {promoText.cartLine} ({appliedPromo})
+                    </p>
                   )}
                 </div>
 

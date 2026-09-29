@@ -10,6 +10,8 @@ import CookieConsentBanner from "@/components/CookieConsentBanner"
 import HtmlLangSync from "@/components/HtmlLangSync"
 import { Analytics } from '@vercel/analytics/next'
 import Script from "next/script"
+import PromoBar from "@/components/PromoBar"
+import { isPromoActive } from "@/lib/promo"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -118,6 +120,7 @@ export default function RootLayout({
       >
         <Providers>
           <HtmlLangSync />
+          <PromoBar initialActive={isPromoActive()} />
           <Navbar />
           <Toaster />
           <main className="overflow-x-clip">{children}</main>
