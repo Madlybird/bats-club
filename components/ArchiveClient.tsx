@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
+import { useIncrementalList } from "@/lib/use-incremental-list"
 import FigureCard from "./FigureCard"
 
 interface CheapestListing {
@@ -114,6 +115,8 @@ export default function ArchiveClient({
     })
   }, [figures, search, selectedSeries])
 
+  const { visible, hasMore, sentinelRef } = useIncrementalList(filtered)
+
   const clearFilters = () => {
     setSearch("")
     setSelectedSeries(null)
@@ -199,33 +202,36 @@ export default function ArchiveClient({
 
       {/* Grid */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {filtered.map((figure, index) => (
-            <FigureCard
-              key={figure.id}
-              figure={figure}
-              priority={index < 4}
-              labels={{
-                figurePath: labels.figurePath ?? "",
-                forSale: labels.forSale ?? "",
-                wishlisting: labels.wishlisting ?? "",
-                noImage: labels.noImage ?? "",
-                statusHave: labels.statusHave ?? "",
-                statusWishlist: labels.statusWishlist ?? "",
-                statusBuy: labels.statusBuy ?? "",
-                toastAddedWishlist: labels.toastAddedWishlist ?? "",
-                toastAddedWishlistCart: labels.toastAddedWishlistCart ?? "",
-              }}
-              ageGateLabels={{
-                badge: labels.ageGateBadge ?? "18+",
-                title: labels.ageGateTitle ?? "",
-                body: labels.ageGateBody ?? "",
-                confirm: labels.ageGateConfirm ?? "",
-                deny: labels.ageGateDeny ?? "",
-              }}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {visible.map((figure, index) => (
+              <FigureCard
+                key={figure.id}
+                figure={figure}
+                priority={index < 4}
+                labels={{
+                  figurePath: labels.figurePath ?? "",
+                  forSale: labels.forSale ?? "",
+                  wishlisting: labels.wishlisting ?? "",
+                  noImage: labels.noImage ?? "",
+                  statusHave: labels.statusHave ?? "",
+                  statusWishlist: labels.statusWishlist ?? "",
+                  statusBuy: labels.statusBuy ?? "",
+                  toastAddedWishlist: labels.toastAddedWishlist ?? "",
+                  toastAddedWishlistCart: labels.toastAddedWishlistCart ?? "",
+                }}
+                ageGateLabels={{
+                  badge: labels.ageGateBadge ?? "18+",
+                  title: labels.ageGateTitle ?? "",
+                  body: labels.ageGateBody ?? "",
+                  confirm: labels.ageGateConfirm ?? "",
+                  deny: labels.ageGateDeny ?? "",
+                }}
+              />
+            ))}
+          </div>
+          {hasMore && <div ref={sentinelRef} className="h-px" aria-hidden />}
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <span className="text-5xl mb-4 opacity-30">🦇</span>

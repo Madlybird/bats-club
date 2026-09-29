@@ -7,6 +7,7 @@ import ShopFilters from "@/components/ShopFilters"
 import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import type { Dict } from "@/lib/dict"
+import { useIncrementalList } from "@/lib/use-incremental-list"
 
 interface Listing {
   id: string
@@ -162,6 +163,8 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
     )
   }, [listings, search])
 
+  const { visible, hasMore, sentinelRef } = useIncrementalList(filteredListings)
+
   return (
     <div className="relative min-h-screen">
       <BatsOverlay />
@@ -245,7 +248,7 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
           {filteredListings.length > 0 ? (
             <ScrollReveal>
               <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-stretch">
-                {filteredListings.map((listing, index) => (
+                {visible.map((listing, index) => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}
@@ -256,6 +259,7 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
                   />
                 ))}
               </div>
+              {hasMore && <div ref={sentinelRef} className="h-px" aria-hidden />}
             </ScrollReveal>
           ) : (
             <ScrollReveal>
