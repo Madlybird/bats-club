@@ -1157,10 +1157,12 @@ bot.on("message", async (msg) => {
     if (upper === "NO") {
       try {
         const figure = await finalize(chatId, userId, state)
+        const revalidated = await revalidateSite({ figureId: figure.id })
         resetState(userId)
         return bot.sendMessage(
           chatId,
-          `✅ *Figure added!*\n\n📎 batsclub.com/figures/${figure.slug || figure.id}`,
+          `✅ *Figure added!*\n\n📎 batsclub.com/figures/${figure.slug || figure.id}` +
+            (revalidated ? "" : REVALIDATE_WARNING),
           { parse_mode: "Markdown" }
         )
       } catch (err) {
@@ -1199,12 +1201,14 @@ bot.on("message", async (msg) => {
     try {
       const figure = await finalize(chatId, userId, state)
       await createListing(figure.id, state.price, condition)
+      const revalidated = await revalidateSite({ figureId: figure.id })
       resetState(userId)
 
       const priceDisplay = `$${(state.price / 100).toFixed(2)}`
       return bot.sendMessage(
         chatId,
-        `✅ *Figure added to shop!*\n\n🏷️ ${figure.name}\n💰 ${priceDisplay} · ${condition}\n\n📎 batsclub.com/figures/${figure.slug || figure.id}`,
+        `✅ *Figure added to shop!*\n\n🏷️ ${figure.name}\n💰 ${priceDisplay} · ${condition}\n\n📎 batsclub.com/figures/${figure.slug || figure.id}` +
+          (revalidated ? "" : REVALIDATE_WARNING),
         { parse_mode: "Markdown" }
       )
     } catch (err) {
