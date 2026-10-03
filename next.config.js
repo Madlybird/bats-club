@@ -74,15 +74,19 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // unsafe-inline for scripts: gtag.js + the small inline
-              // config snippet in app/layout.tsx. unsafe-eval is required
-              // by Next.js dev/HMR and some framework internals.
+              // unsafe-inline for scripts: Next's inline flight/bootstrap
+              // scripts + the gtag config snippet in app/layout.tsx. Removing
+              // it needs per-request nonces, which would make every page
+              // dynamic and undo the static/ISR caching.
+              // unsafe-eval only in dev (Next HMR). Production was checked
+              // without it on 2026-10-03: gtag.js and the GCR opt-in widget
+              // load and send with zero CSP violations.
               // apis.google.com + gstatic: Google Customer Reviews opt-in
               // widget on /order/success (GoogleCustomerReviewsOptIn.tsx) —
               // platform.js loads from apis.google.com and pulls further
               // resources from gstatic.com; the survey modal itself renders
               // in an iframe from google.com.
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com",
+              `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"} https://www.googletagmanager.com https://apis.google.com https://www.gstatic.com`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
@@ -94,6 +98,7 @@ const nextConfig = {
               "connect-src 'self' https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.googletagmanager.com https://api.stripe.com",
               "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://www.google.com",
               "frame-ancestors 'none'",
+              "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
             ].join("; "),
