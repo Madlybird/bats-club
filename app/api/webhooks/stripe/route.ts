@@ -68,6 +68,11 @@ export async function POST(req: Request) {
         promoDiscountCents,
         hasShippingFromStripe: !!shippingFromStripe,
       })
+      // The cart no longer asks for a phone — Stripe collects it. Flag a
+      // physical order that somehow arrives without one.
+      if (shippingFromStripe && !shippingFromStripe.phone) {
+        console.warn(`[stripe webhook] no phone on shipped order, session=${session.id}`)
+      }
 
       // Defence-in-depth: metadata is server-set + Stripe-signed so a buyer
       // can't tamper it, but assert it agrees with what Stripe actually

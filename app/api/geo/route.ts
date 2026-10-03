@@ -11,8 +11,13 @@ const CONSENT_REQUIRED_COUNTRIES = new Set([
   "SI", "ES", "SE", "IS", "LI", "NO", "GB",
 ])
 
+// `country` is the visitor's IP country (Vercel edge geo), used by the cart
+// to pre-select the shipping destination. Per-visitor, so never cached.
 export async function GET(req: Request) {
   const country = req.headers.get("x-vercel-ip-country")
   const consentRequired = country ? CONSENT_REQUIRED_COUNTRIES.has(country) : false
-  return NextResponse.json({ consentRequired })
+  return NextResponse.json(
+    { consentRequired, country: country || null },
+    { headers: { "Cache-Control": "private, no-store" } }
+  )
 }

@@ -245,9 +245,7 @@ export interface Dict {
   cart_shipping: string
   cart_shipping_select: string
   cart_total: string
-  cart_proceed: string
-  cart_address_heading: string
-  cart_field_phone: string
+  cart_country_auto: string
   cart_pay: string
   cart_paying: string
   cart_stripe_note: string
@@ -545,12 +543,10 @@ export const en: Dict = {
   cart_shipping: "Shipping",
   cart_shipping_select: "Select country",
   cart_total: "Total",
-  cart_proceed: "Proceed to Checkout",
-  cart_address_heading: "Contact Info",
-  cart_field_phone: "Phone Number *",
+  cart_country_auto: "Detected from your location. Not right? Type your country.",
   cart_pay: "Pay with Stripe",
   cart_paying: "Redirecting to Stripe...",
-  cart_stripe_note: "Your shipping address is collected securely on the next step (Stripe)",
+  cart_stripe_note: "Your shipping address and phone are collected securely on the next step (Stripe)",
   cart_empty_heading: "Your cart is empty",
   cart_empty_sub: "Browse the shop to find rare figures.",
   cart_go_shop: "Go to Shop",
@@ -844,12 +840,10 @@ export const ru: Dict = {
   cart_shipping: "Доставка",
   cart_shipping_select: "Выберите страну",
   cart_total: "Итого",
-  cart_proceed: "Перейти к оплате",
-  cart_address_heading: "Контактные данные",
-  cart_field_phone: "Номер телефона *",
+  cart_country_auto: "Определено по вашему местоположению. Не так? Введите свою страну.",
   cart_pay: "Оплатить через Stripe",
   cart_paying: "Переход к Stripe...",
-  cart_stripe_note: "Адрес доставки собирается безопасно на следующем шаге (Stripe)",
+  cart_stripe_note: "Адрес доставки и телефон собираются безопасно на следующем шаге (Stripe)",
   cart_empty_heading: "Корзина пуста",
   cart_empty_sub: "Загляните в магазин за редкими фигурками.",
   cart_go_shop: "В магазин",
@@ -1143,12 +1137,10 @@ export const jp: Dict = {
   cart_shipping: "送料",
   cart_shipping_select: "国を選択",
   cart_total: "合計",
-  cart_proceed: "チェックアウトへ",
-  cart_address_heading: "連絡先情報",
-  cart_field_phone: "電話番号 *",
+  cart_country_auto: "現在地から自動で選択しました。違う場合は国名を入力してください。",
   cart_pay: "Stripeで支払う",
   cart_paying: "Stripeへ移動中...",
-  cart_stripe_note: "配送先住所は次のステップ（Stripe）で安全に収集されます",
+  cart_stripe_note: "配送先住所と電話番号は次のステップ（Stripe）で安全に収集されます",
   cart_empty_heading: "カートは空です",
   cart_empty_sub: "ショップでレアフィギュアを探してみましょう。",
   cart_go_shop: "ショップへ",

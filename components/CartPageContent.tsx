@@ -37,12 +37,29 @@ const COUNTRIES = [
   { code: "GB", name: "United Kingdom" }, { code: "US", name: "United States" },
 ]
 
-interface AddressForm {
-  phone: string
+// IP country is only a suggestion: a VPN can put the visitor somewhere else,
+// and Stripe locks the address to the cart's country. So we only pre-select
+// when the browser's time zone is on the same continent as the IP country,
+// and the visitor can always change it.
+const AMERICAS = new Set(["US", "CA", "MX", "BR", "AR", "CL", "CO", "PE"])
+const TZ_PREFIXES: Record<string, string[]> = {
+  JP: ["Asia/Tokyo"],
+  AU: ["Australia/"],
+  NZ: ["Pacific/Auckland", "Pacific/Chatham"],
+  RU: ["Europe/", "Asia/"],
+  ES: ["Europe/", "Atlantic/"],
+  PT: ["Europe/", "Atlantic/"],
 }
 
-const emptyAddress: AddressForm = {
-  phone: "",
+function timeZoneFitsCountry(code: string): boolean {
+  let tz = ""
+  try {
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+  } catch {}
+  // Privacy browsers report UTC — no signal either way.
+  if (!tz || tz === "UTC" || tz.startsWith("Etc/")) return true
+  const prefixes = TZ_PREFIXES[code] ?? (AMERICAS.has(code) ? ["America/"] : ["Europe/"])
+  return prefixes.some((p) => tz.startsWith(p))
 }
 
 interface Props {
@@ -57,6 +74,23 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const [countrySearch, setCountrySearch] = useState("")
   const [showDrop, setShowDrop] = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
+  const [countryAuto, setCountryAuto] = useState(false)
+  const countryTouched = useRef(false)
+
+  // Pre-select the shipping country from the visitor's IP so the total
+  // (with shipping) shows right away instead of after a manual pick.
+  useEffect(() => {
+    fetch("/api/geo")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { country?: string | null } | null) => {
+        const match = COUNTRIES.find((c) => c.code === data?.country)
+        if (!match || countryTouched.current || !timeZoneFitsCountry(match.code)) return
+        setCountryCode(match.code)
+        setCountrySearch(match.name)
+        setCountryAuto(true)
+      })
+      .catch(() => {})
+  }, [])
 
   const [promoInput, setPromoInput] = useState("")
   const [appliedPromo, setAppliedPromo] = useState("")
@@ -67,8 +101,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const [promoActive, setPromoActive] = useState(false)
   useEffect(() => { setPromoActive(isPromoActive()) }, [])
 
-  const [showAddress, setShowAddress] = useState(false)
-  const [address, setAddress] = useState<AddressForm>(emptyAddress)
   const [loading, setLoading] = useState(false)
   // Keep loading UI mounted until the browser actually navigates to
   // Stripe — stops the empty-cart flash between clearCart() and
@@ -192,10 +224,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     effectiveItems.length >= 1 && figureSelectionValid && !artLineOverCap && !shippingBlocked
 
   const handlePay = async () => {
-    if (hasPhysical && !address.phone) {
-      setError("Please fill in all required fields")
-      return
-    }
     if (!selectionValid) {
       setError(dict.cart_max_warning)
       return
@@ -211,7 +239,9 @@ export default function CartPageContent({ dict, shopHref }: Props) {
           items: effectiveItems.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
           country: countryCode,
           promoCode: appliedPromo || undefined,
-          shippingAddress: { ...address, country: countryCode },
+          // Name, address and phone are collected by Stripe Checkout
+          // (phone_number_collection) and read back in the webhook.
+          shippingAddress: { country: countryCode },
         }),
       })
       const data = await res.json()
@@ -262,10 +292,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
       </div>
     )
   }
-
-  const addressFields = [
-    { key: "phone", label: dict.cart_field_phone, placeholder: "+1 555 000 0000", type: "tel" },
-  ] as const
 
   const selectedCount = figureOverLimit ? selectedIds.size : figureItems.length
   const selectedCountLabel = dict.cart_selected_count.replace("{X}", String(selectedCount))
@@ -489,8 +515,14 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   <input
                     type="text"
                     value={countrySearch}
-                    onChange={(e) => { setCountrySearch(e.target.value); setCountryCode(""); setShowDrop(true) }}
-                    onFocus={() => setShowDrop(true)}
+                    onChange={(e) => {
+                      countryTouched.current = true
+                      setCountryAuto(false)
+                      setCountrySearch(e.target.value)
+                      setCountryCode("")
+                      setShowDrop(true)
+                    }}
+                    onFocus={(e) => { e.target.select(); setShowDrop(true) }}
                     placeholder={dict.cart_country_ph}
                     autoComplete="off"
                     className="input text-base sm:text-sm"
@@ -501,7 +533,13 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                         <button
                           key={c.code}
                           type="button"
-                          onMouseDown={() => { setCountryCode(c.code); setCountrySearch(c.name); setShowDrop(false) }}
+                          onMouseDown={() => {
+                            countryTouched.current = true
+                            setCountryAuto(false)
+                            setCountryCode(c.code)
+                            setCountrySearch(c.name)
+                            setShowDrop(false)
+                          }}
                           className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/[0.05] hover:text-white transition-colors"
                         >
                           {c.name}
@@ -510,6 +548,9 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                     </div>
                   )}
                 </div>
+                {countryAuto && countryCode && (
+                  <p className="mt-2 text-xs text-white/35">{dict.cart_country_auto}</p>
+                )}
                 {countryCode && shippingBlocked && (
                   <p className="mt-3 text-sm text-amber-400 leading-relaxed">{shippingBlockedMsg}</p>
                 )}
@@ -630,81 +671,36 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   <p className="text-xs text-white/40 text-center">{selectedCountLabel}</p>
                 )}
 
-                {!showAddress && (
-                  <button
-                    onClick={() => {
-                      trackProceedToCheckout(totalCents, effectiveUnits)
-                      if (hasPhysical) setShowAddress(true)
-                      else handlePay()
-                    }}
-                    disabled={!shippingReady || shippingBlocked || !selectionValid || loading || redirecting}
-                    className="w-full py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed mt-1"
-                    style={{ backgroundColor: "#ff2d78" }}
-                  >
-                    {loading || redirecting ? dict.cart_paying : hasPhysical ? dict.cart_proceed : dict.cart_pay}
-                  </button>
-                )}
-                {!showAddress && !hasPhysical && error && (
+                <button
+                  onClick={() => {
+                    trackProceedToCheckout(totalCents, effectiveUnits)
+                    handlePay()
+                  }}
+                  disabled={!shippingReady || shippingBlocked || !selectionValid || loading || redirecting}
+                  className="w-full py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed mt-1"
+                  style={{ backgroundColor: "#ff2d78" }}
+                >
+                  {loading || redirecting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      {dict.cart_paying}
+                    </span>
+                  ) : (
+                    dict.cart_pay
+                  )}
+                </button>
+                {error && (
                   <p className="text-red-400 text-sm bg-red-900/20 border border-red-900/50 rounded-lg px-3 py-2">
                     {error}
                   </p>
                 )}
-              </div>
-
-              {/* Address form */}
-              {showAddress && (
-                <div className="rounded-2xl border border-white/[0.06] p-5 space-y-4" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <h3 className="font-bold text-white text-sm">{dict.cart_address_heading}</h3>
-
-                  {addressFields.map(({ key, label, placeholder, type }) => (
-                    <div key={key}>
-                      <label className="block text-xs text-white/40 mb-1.5 font-medium">{label}</label>
-                      <input
-                        type={type}
-                        value={address[key]}
-                        onChange={(e) => setAddress((prev) => ({ ...prev, [key]: e.target.value }))}
-                        placeholder={placeholder}
-                        className="input text-base sm:text-sm"
-                      />
-                    </div>
-                  ))}
-
-                  {error && (
-                    <p className="text-red-400 text-sm bg-red-900/20 border border-red-900/50 rounded-lg px-3 py-2">
-                      {error}
-                    </p>
-                  )}
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handlePay}
-                      disabled={loading || redirecting || !selectionValid}
-                      className="flex-1 py-3 font-bold rounded-lg text-white transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ backgroundColor: "#ff2d78" }}
-                    >
-                      {loading || redirecting ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                          {dict.cart_paying}
-                        </span>
-                      ) : (
-                        dict.cart_pay
-                      )}
-                    </button>
-                    <button
-                      onClick={() => setShowAddress(false)}
-                      disabled={loading}
-                      className="btn-ghost px-3 text-sm"
-                    >
-                      Back
-                    </button>
-                  </div>
+                {hasPhysical && (
                   <p className="text-xs text-white/20 text-center">{dict.cart_stripe_note}</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
