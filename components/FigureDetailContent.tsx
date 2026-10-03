@@ -6,7 +6,6 @@ import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
 import ShareButtons from "@/components/ShareButtons"
 import PhotoCarousel from "@/components/PhotoCarousel"
-import FigureViewTracker from "@/components/FigureViewTracker"
 import { AgeGateReveal, MatureBlur } from "@/components/AgeGate"
 import { buildBreadcrumbJsonLd } from "@/lib/breadcrumb-jsonld"
 import type { Dict } from "@/lib/dict"
@@ -122,7 +121,6 @@ export default function FigureDetailContent({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
 
-      <FigureViewTracker series={figure.series} />
       <div className="relative min-h-screen">
         <BatsOverlay />
 

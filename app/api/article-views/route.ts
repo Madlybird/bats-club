@@ -3,8 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase"
 import { checkRateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: Request) {
-  // Unauthenticated DB write — throttle to curb view-count inflation/spam,
-  // same reasoning as series-views.
+  // Unauthenticated DB write — throttle to curb view-count inflation/spam.
   const limited = checkRateLimit(req, "article-views", 60, 60 * 1000)
   if (limited) return limited
 

@@ -36,7 +36,6 @@ export interface ShopListing {
 
 interface ShopCatalog {
   listings: ShopListing[]
-  seriesViews: Record<string, number>
   collections: {
     slug: string
     nameEn: string | null
@@ -58,7 +57,7 @@ function firstPhoto(raw: unknown): string[] {
 
 const getShopCatalog = unstable_cache(
   async (): Promise<ShopCatalog> => {
-    const [listingsRes, viewsRes, collectionsRes] = await Promise.all([
+    const [listingsRes, collectionsRes] = await Promise.all([
       supabaseAdmin
         .from("listings")
         .select(`
@@ -69,7 +68,6 @@ const getShopCatalog = unstable_cache(
         // Art listings (art_id set, figure_id null) live on /art only.
         .not("figure_id", "is", null)
         .order("created_at", { ascending: false }),
-      supabaseAdmin.from("series_views").select("series, views"),
       supabaseAdmin
         .from("collections")
         .select("slug, nameEn:name_en, nameRu:name_ru, nameJp:name_jp, position, collection_figures(figure_id)")
@@ -90,9 +88,6 @@ const getShopCatalog = unstable_cache(
       }))
       .filter((l: ShopListing) => !!l.figure)
 
-    const seriesViews: Record<string, number> = {}
-    ;(viewsRes.data || []).forEach((r: any) => { seriesViews[r.series] = r.views })
-
     const collections = (collectionsRes.data || []).map((c: any) => ({
       slug: c.slug,
       nameEn: c.nameEn,
@@ -101,7 +96,7 @@ const getShopCatalog = unstable_cache(
       figureIds: (c.collection_figures || []).map((cf: any) => cf.figure_id),
     }))
 
-    return { listings, seriesViews, collections }
+    return { listings, collections }
   },
   ["shop-catalog-v1"],
   { tags: ["figures"], revalidate: 3600 },
@@ -118,15 +113,14 @@ export async function getShopPageData(
   locale: "en" | "ru" | "jp",
   { price, sort, series, collection }: ShopFilters,
 ) {
-  const { listings: all, seriesViews, collections } = await getShopCatalog()
+  const { listings: all, collections } = await getShopCatalog()
 
-  // Popular series pills: real active-listing count per series, ordered by
-  // page views when known (same rule as before).
+  // Popular series pills: the 5 series with the most active listings.
   const counts: Record<string, number> = {}
   for (const l of all) counts[l.figure.series] = (counts[l.figure.series] || 0) + 1
   const topSeries = Object.entries(counts)
-    .map(([s, count]) => ({ series: s, count, views: seriesViews[s] ?? 0 }))
-    .sort((a, b) => b.views - a.views || b.count - a.count)
+    .map(([s, count]) => ({ series: s, count }))
+    .sort((a, b) => b.count - a.count)
     .slice(0, 5)
 
   // Collection pills only count figures that currently have an active
