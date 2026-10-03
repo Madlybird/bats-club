@@ -8,7 +8,7 @@ import { en, ru, jp } from "@/lib/dict"
 import { PROMO_TEXT, SHIPPING_PROMO, isPromoActive } from "@/lib/promo"
 
 const DELAY_MS = 15_000 // 15 seconds after entry
-const SHOWN_KEY = "batsclub_regprompt_shown" // once per browser session
+const SHOWN_KEY = "batsclub_regprompt_shown" // once per browser (localStorage), not per tab
 // While a promo (lib/promo.ts) is running this modal announces it instead
 // of asking for sign-up: shown sooner, to everyone incl. logged-in users,
 // and tracked under its own key so it isn't suppressed by an earlier
@@ -41,14 +41,14 @@ export default function RegisterPrompt() {
     const key = promoNow ? PROMO_SHOWN_KEY : SHOWN_KEY
     let shown = false
     try {
-      shown = window.sessionStorage.getItem(key) === "1"
+      shown = window.localStorage.getItem(key) === "1"
     } catch {
       shown = false
     }
     if (shown) return
     const t = setTimeout(() => {
       try {
-        window.sessionStorage.setItem(key, "1")
+        window.localStorage.setItem(key, "1")
       } catch {
         /* ignore */
       }
