@@ -39,8 +39,6 @@ export async function POST(req: Request) {
       amountTotal: session.amount_total,
       hasMetadata: !!session.metadata && Object.keys(session.metadata).length > 0,
       metadataKeys: Object.keys(session.metadata || {}),
-      // Set when the buyer paid through an abandoned-checkout reminder link.
-      recoveredFrom: session.recovered_from ?? null,
     })
 
     try {

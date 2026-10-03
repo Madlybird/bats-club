@@ -300,11 +300,12 @@ export async function POST(req: Request) {
       customer_email: session?.user?.email || undefined,
       // Abandoned checkout: the session expires after an hour (Stripe's
       // default is 24h) and the webhook's checkout.session.expired handler
-      // emails logged-in buyers the recovery link (lib/checkout-reminder.ts).
+      // emails logged-in buyers a link back to the item page
+      // (lib/checkout-reminder.ts). Stripe's after_expiration.recovery is
+      // deliberately NOT used: its link stays payable for 30 days without
+      // re-checking stock, so a 1-of-1 figure sold meanwhile could be paid
+      // for twice.
       expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
-      after_expiration: {
-        recovery: { enabled: true, allow_promotion_codes: promoDiscountCents === 0 },
-      },
     }
     if (hasPhysical) {
       params.shipping_address_collection = {
@@ -342,6 +343,9 @@ export async function POST(req: Request) {
       shipping_address: JSON.stringify(shippingAddress || {}),
       // Site locale the buyer checked out from, for the reminder email.
       locale: localeFromReferer(req.headers.get("referer")),
+      // "1" = an abandoned-checkout reminder may be sent for this session
+      // (logged-in buyer); also how the reminder's 7-day cap finds earlier ones.
+      reminder: session?.user?.id ? "1" : "",
     }
 
     stage = "create-session"

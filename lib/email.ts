@@ -185,7 +185,7 @@ const REMINDER_TEXT: Record<ReminderLocale, {
     intro: "You started checking out on Bats Club but didn't finish. No pressure, everything is just as you left it:",
     introPartlySold: "You started checking out on Bats Club but didn't finish. Part of your order has since been picked up by someone else, but these are still here:",
     completeBtn: "Complete my order",
-    viewBtn: "See it in the archive",
+    viewBtn: "Open in the shop",
     condition: "Condition",
     shippingTo: (c) => `Shipping to ${c}`,
     discount: "Shipping discount",
@@ -201,7 +201,7 @@ const REMINDER_TEXT: Record<ReminderLocale, {
     intro: "Вы начали оформлять заказ на Bats Club, но не завершили. Ничего страшного, всё осталось как было:",
     introPartlySold: "Вы начали оформлять заказ на Bats Club, но не завершили. Часть позиций уже купили, но эти ещё здесь:",
     completeBtn: "Завершить заказ",
-    viewBtn: "Посмотреть в архиве",
+    viewBtn: "Открыть в магазине",
     condition: "Состояние",
     shippingTo: (c) => `Доставка: ${c}`,
     discount: "Скидка на доставку",
@@ -217,7 +217,7 @@ const REMINDER_TEXT: Record<ReminderLocale, {
     intro: "Bats Clubでご注文の手続きを始められましたが、まだ完了していません。ご安心ください、そのまま保存されています：",
     introPartlySold: "Bats Clubでご注文の手続きを始められましたが、まだ完了していません。一部の商品はすでに売れてしまいましたが、こちらはまだ在庫があります：",
     completeBtn: "注文を完了する",
-    viewBtn: "アーカイブで見る",
+    viewBtn: "ショップで見る",
     condition: "状態",
     shippingTo: (c) => `配送先：${c}`,
     discount: "送料割引",
@@ -233,10 +233,9 @@ const esc = (s: string) =>
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`
 
 /**
- * One reminder for an expired, unpaid Checkout Session. `ctaUrl` is the
- * Stripe recovery link when every item is still available; when part of
- * the cart sold meanwhile, items link to their pages and totals are omitted
- * (the recovery link would re-create the full original cart).
+ * One reminder for an expired, unpaid Checkout Session. `ctaUrl` and every
+ * item link point at the item pages on the site. When part of the cart sold
+ * meanwhile, the original totals are omitted since they no longer apply.
  */
 export async function sendCheckoutReminderEmail(opts: {
   email: string
@@ -277,7 +276,7 @@ export async function sendCheckoutReminderEmail(opts: {
       ${itemBlocks}
       ${totals}
     </div>
-    ${btn(opts.ctaUrl, opts.partlySold ? t.viewBtn : t.completeBtn)}
+    ${btn(opts.ctaUrl, opts.items.length === 1 && !opts.partlySold ? t.completeBtn : t.viewBtn)}
     ${opts.allOneOfAKind ? `<p style="color:rgba(240,224,224,0.5);font-size:14px;line-height:1.6;margin:24px 0 0">${t.oneOfAKind}</p>` : ""}
     <p style="color:rgba(240,224,224,0.5);font-size:14px;line-height:1.6;margin:16px 0 0">${t.questions}</p>
     <p style="color:rgba(240,224,224,0.3);font-size:12px;margin:24px 0 0">${t.unsubscribe}</p>

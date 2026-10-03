@@ -38,18 +38,18 @@ function parseJson<T>(raw: string | undefined, fallback: T): T {
  *
  * Only for logged-in buyers (we have their account email). Stripe doesn't
  * hand out guest emails on expired sessions for this (HK) account, since
- * promotional-consent collection is US-only. Skips when:
- *  - the session has no recovery link (created before recovery was enabled)
+ * promotional-consent collection is US-only. The email links to the item
+ * pages, so stock and price are re-checked by a fresh checkout. Skips when:
+ *  - the session wasn't marked reminder-eligible at checkout
+ *  - the buyer has placed an order since starting this checkout
  *  - the buyer already got a reminder in the past 7 days
  *  - nothing from the cart is still for sale
  * Resend's idempotency key keeps webhook retries from double-sending.
  */
 export async function sendCheckoutReminder(session: Stripe.Checkout.Session): Promise<string> {
   const meta = session.metadata || {}
-  const recoveryUrl = session.after_expiration?.recovery?.url
   const buyerId = meta.buyer_id
-  if (!recoveryUrl) return "skip: no recovery url"
-  if (!buyerId) return "skip: guest checkout"
+  if (meta.reminder !== "1" || !buyerId) return "skip: not reminder-eligible"
 
   const { data: user } = await supabaseAdmin
     .from("users")
@@ -58,8 +58,16 @@ export async function sendCheckoutReminder(session: Stripe.Checkout.Session): Pr
     .maybeSingle()
   if (!user?.email) return "skip: buyer has no email"
 
-  // At most one reminder per buyer per week: every earlier expired session of
-  // theirs with a recovery link in that window already produced one.
+  // They may have abandoned this session and paid through a newer one.
+  const { count: ordersSince } = await supabaseAdmin
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("buyer_id", buyerId)
+    .gte("created_at", new Date(session.created * 1000).toISOString())
+  if ((ordersSince ?? 0) > 0) return "skip: buyer ordered since"
+
+  // At most one reminder per buyer per week: every earlier expired,
+  // reminder-eligible session of theirs in that window already produced one.
   const since = session.created - WEEK_SECONDS
   const recent = await stripe.checkout.sessions.list({ created: { gte: since }, limit: 100 })
   const remindedRecently = recent.data.some(
@@ -68,7 +76,7 @@ export async function sendCheckoutReminder(session: Stripe.Checkout.Session): Pr
       s.created < session.created &&
       s.status === "expired" &&
       s.metadata?.buyer_id === buyerId &&
-      !!s.after_expiration?.recovery?.enabled,
+      s.metadata?.reminder === "1",
   )
   if (remindedRecently) return "skip: reminded in the last 7 days"
 
@@ -119,9 +127,9 @@ export async function sendCheckoutReminder(session: Stripe.Checkout.Session): Pr
     locale,
     items,
     partlySold,
-    // The recovery link rebuilds the whole original cart, so only use it when
-    // everything is still available; otherwise send them to the item page.
-    ctaUrl: partlySold ? items[0].href : recoveryUrl,
+    // Item page, not a Stripe link: a fresh checkout re-checks stock.
+    // Every item in the email links to its own page as well.
+    ctaUrl: items[0].href,
     countryName,
     shippingCents: Number(meta.shipping_cents || "0"),
     discountCents: Number(meta.promo_discount_cents || "0"),
