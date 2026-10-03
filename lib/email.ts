@@ -148,3 +148,151 @@ export async function sendOrderConfirmationEmail(
     html,
   })
 }
+
+// ── Abandoned-checkout reminder ─────────────────────────────────────────
+
+export type ReminderLocale = "en" | "ru" | "jp"
+
+export interface ReminderItem {
+  name: string
+  imageUrl: string | null
+  priceCents: number
+  quantity: number
+  condition: string | null
+  href: string
+}
+
+const REMINDER_TEXT: Record<ReminderLocale, {
+  subjectOne: (name: string) => string
+  subjectMany: string
+  heading: (first: string | null) => string
+  intro: string
+  introPartlySold: string
+  completeBtn: string
+  viewBtn: string
+  condition: string
+  shippingTo: (country: string) => string
+  discount: string
+  total: string
+  oneOfAKind: string
+  questions: string
+  unsubscribe: string
+}> = {
+  en: {
+    subjectOne: (name) => `${name} is still waiting for you 🦇`,
+    subjectMany: "Your order is still waiting for you 🦇",
+    heading: (first) => (first ? `Hi ${first}, your order is saved 🦇` : "Your order is saved 🦇"),
+    intro: "You started checking out on Bats Club but didn't finish. No pressure, everything is just as you left it:",
+    introPartlySold: "You started checking out on Bats Club but didn't finish. Part of your order has since been picked up by someone else, but these are still here:",
+    completeBtn: "Complete my order",
+    viewBtn: "See it in the archive",
+    condition: "Condition",
+    shippingTo: (c) => `Shipping to ${c}`,
+    discount: "Shipping discount",
+    total: "Total",
+    oneOfAKind: "Just so you know: every piece in the archive is a single item. It's still here today, but once someone else picks it up, it's gone.",
+    questions: "Questions about condition, photos or shipping? Just reply to this email, I read every one.",
+    unsubscribe: "Don't want reminders like this? Reply \"unsubscribe\".",
+  },
+  ru: {
+    subjectOne: (name) => `${name} всё ещё ждёт вас 🦇`,
+    subjectMany: "Ваш заказ всё ещё ждёт вас 🦇",
+    heading: (first) => (first ? `${first}, ваш заказ сохранён 🦇` : "Ваш заказ сохранён 🦇"),
+    intro: "Вы начали оформлять заказ на Bats Club, но не завершили. Ничего страшного, всё осталось как было:",
+    introPartlySold: "Вы начали оформлять заказ на Bats Club, но не завершили. Часть позиций уже купили, но эти ещё здесь:",
+    completeBtn: "Завершить заказ",
+    viewBtn: "Посмотреть в архиве",
+    condition: "Состояние",
+    shippingTo: (c) => `Доставка: ${c}`,
+    discount: "Скидка на доставку",
+    total: "Итого",
+    oneOfAKind: "На всякий случай: каждая вещь в архиве в единственном экземпляре. Сегодня она ещё здесь, но если её купит кто-то другой, её больше не будет.",
+    questions: "Вопросы про состояние, фото или доставку? Просто ответьте на это письмо, я читаю каждое.",
+    unsubscribe: "Не хотите получать такие напоминания? Ответьте «unsubscribe».",
+  },
+  jp: {
+    subjectOne: (name) => `${name}がまだお待ちしています 🦇`,
+    subjectMany: "ご注文の商品がまだお待ちしています 🦇",
+    heading: (first) => (first ? `${first}さん、ご注文は保存されています 🦇` : "ご注文は保存されています 🦇"),
+    intro: "Bats Clubでご注文の手続きを始められましたが、まだ完了していません。ご安心ください、そのまま保存されています：",
+    introPartlySold: "Bats Clubでご注文の手続きを始められましたが、まだ完了していません。一部の商品はすでに売れてしまいましたが、こちらはまだ在庫があります：",
+    completeBtn: "注文を完了する",
+    viewBtn: "アーカイブで見る",
+    condition: "状態",
+    shippingTo: (c) => `配送先：${c}`,
+    discount: "送料割引",
+    total: "合計",
+    oneOfAKind: "ご参考までに：アーカイブの商品はすべて一点ものです。今日はまだありますが、他の方が購入されると無くなってしまいます。",
+    questions: "状態、写真、配送についてご質問があれば、このメールにご返信ください。すべて目を通しています。",
+    unsubscribe: "このようなリマインダーが不要な場合は「unsubscribe」とご返信ください。",
+  },
+}
+
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`
+
+/**
+ * One reminder for an expired, unpaid Checkout Session. `ctaUrl` is the
+ * Stripe recovery link when every item is still available; when part of
+ * the cart sold meanwhile, items link to their pages and totals are omitted
+ * (the recovery link would re-create the full original cart).
+ */
+export async function sendCheckoutReminderEmail(opts: {
+  email: string
+  firstName: string | null
+  locale: ReminderLocale
+  items: ReminderItem[]
+  partlySold: boolean
+  ctaUrl: string
+  countryName: string | null
+  shippingCents: number
+  discountCents: number
+  allOneOfAKind: boolean
+  idempotencyKey: string
+}) {
+  const t = REMINDER_TEXT[opts.locale]
+  const showTotals = !opts.partlySold
+  const itemsTotal = opts.items.reduce((n, i) => n + i.priceCents * i.quantity, 0)
+
+  const itemBlocks = opts.items
+    .map((i) => `
+      ${i.imageUrl ? `<a href="${i.href}"><img src="${i.imageUrl}" alt="${esc(i.name)}" width="416" style="display:block;width:100%;height:auto;border-radius:6px;margin:0 0 12px" /></a>` : ""}
+      <p style="margin:0 0 6px;font-size:15px;font-weight:700"><a href="${i.href}" style="color:#fff;text-decoration:none">${esc(i.name)}</a></p>
+      ${i.condition ? `<p style="margin:0 0 6px;font-size:13px;color:rgba(240,224,224,0.5)">${t.condition}: ${esc(i.condition)}</p>` : ""}
+      <p style="margin:0 0 16px;font-size:14px;color:rgba(240,224,224,0.6)">${usd(i.priceCents)}${i.quantity > 1 ? ` × ${i.quantity}` : ""}</p>`)
+    .join("")
+
+  const totals = showTotals
+    ? `
+      ${opts.countryName && opts.shippingCents > 0 ? `<p style="margin:0 0 6px;font-size:14px;color:rgba(240,224,224,0.6)">${t.shippingTo(esc(opts.countryName))}: ${usd(opts.shippingCents)}</p>` : ""}
+      ${opts.discountCents > 0 ? `<p style="margin:0 0 6px;font-size:14px;color:#34d399">${t.discount}: −${usd(opts.discountCents)}</p>` : ""}
+      <p style="margin:8px 0 0;font-size:15px;color:#ff2d78;font-weight:700">${t.total}: ${usd(itemsTotal + opts.shippingCents - opts.discountCents)}</p>`
+    : ""
+
+  const html = wrap(`
+    <h1 style="font-size:20px;font-weight:900;color:#fff;margin:0 0 8px">${esc(t.heading(opts.firstName))}</h1>
+    <p style="color:rgba(240,224,224,0.5);font-size:15px;line-height:1.6;margin:0 0 24px">${opts.partlySold ? t.introPartlySold : t.intro}</p>
+    <div style="background:rgba(255,45,120,0.08);border:1px solid rgba(255,45,120,0.25);border-radius:8px;padding:16px;margin:0 0 24px">
+      ${itemBlocks}
+      ${totals}
+    </div>
+    ${btn(opts.ctaUrl, opts.partlySold ? t.viewBtn : t.completeBtn)}
+    ${opts.allOneOfAKind ? `<p style="color:rgba(240,224,224,0.5);font-size:14px;line-height:1.6;margin:24px 0 0">${t.oneOfAKind}</p>` : ""}
+    <p style="color:rgba(240,224,224,0.5);font-size:14px;line-height:1.6;margin:16px 0 0">${t.questions}</p>
+    <p style="color:rgba(240,224,224,0.3);font-size:12px;margin:24px 0 0">${t.unsubscribe}</p>
+  `)
+
+  const subject = opts.items.length === 1 ? t.subjectOne(opts.items[0].name) : t.subjectMany
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[email:checkout-reminder] to=${opts.email} items=${opts.items.length} partlySold=${opts.partlySold}`)
+    return
+  }
+
+  const { error } = await getResend().emails.send(
+    { from: FROM, replyTo: "support@batsclub.com", to: opts.email, subject, html },
+    { idempotencyKey: opts.idempotencyKey },
+  )
+  if (error) throw new Error(`Resend: ${error.message}`)
+}

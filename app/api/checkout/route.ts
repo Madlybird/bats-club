@@ -23,6 +23,15 @@ import {
 // listings are fetched: max 3 figures, per-type max on art).
 const MAX_CART_LINES = 60
 
+function localeFromReferer(referer: string | null): "en" | "ru" | "jp" {
+  try {
+    const path = referer ? new URL(referer).pathname : ""
+    if (path.startsWith("/ru/") || path === "/ru") return "ru"
+    if (path.startsWith("/jp/") || path === "/jp") return "jp"
+  } catch {}
+  return "en"
+}
+
 
 interface CartItem {
   listingId: string
@@ -289,6 +298,13 @@ export async function POST(req: Request) {
       success_url: `${baseUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cart`,
       customer_email: session?.user?.email || undefined,
+      // Abandoned checkout: the session expires after an hour (Stripe's
+      // default is 24h) and the webhook's checkout.session.expired handler
+      // emails logged-in buyers the recovery link (lib/checkout-reminder.ts).
+      expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+      after_expiration: {
+        recovery: { enabled: true, allow_promotion_codes: promoDiscountCents === 0 },
+      },
     }
     if (hasPhysical) {
       params.shipping_address_collection = {
@@ -324,6 +340,8 @@ export async function POST(req: Request) {
       shipping_cents: String(shippingCents),
       promo_discount_cents: String(promoDiscountCents),
       shipping_address: JSON.stringify(shippingAddress || {}),
+      // Site locale the buyer checked out from, for the reminder email.
+      locale: localeFromReferer(req.headers.get("referer")),
     }
 
     stage = "create-session"

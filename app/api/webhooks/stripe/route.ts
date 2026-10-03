@@ -3,6 +3,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { stripe } from "@/lib/stripe"
 import { supabaseAdmin } from "@/lib/supabase"
 import { sendOrderConfirmationEmail } from "@/lib/email"
+import { sendCheckoutReminder } from "@/lib/checkout-reminder"
 import Stripe from "stripe"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
@@ -38,6 +39,8 @@ export async function POST(req: Request) {
       amountTotal: session.amount_total,
       hasMetadata: !!session.metadata && Object.keys(session.metadata).length > 0,
       metadataKeys: Object.keys(session.metadata || {}),
+      // Set when the buyer paid through an abandoned-checkout reminder link.
+      recoveredFrom: session.recovered_from ?? null,
     })
 
     try {
@@ -343,6 +346,15 @@ export async function POST(req: Request) {
         .then(({ error }) => {
           if (error) console.error("Error cancelling order by metadata:", error)
         })
+    }
+
+    if (session.payment_status !== "paid") {
+      try {
+        const result = await sendCheckoutReminder(session)
+        console.log(`[stripe webhook] checkout reminder ${session.id}: ${result}`)
+      } catch (err) {
+        console.error(`[stripe webhook] checkout reminder failed for ${session.id}:`, err)
+      }
     }
   }
 
