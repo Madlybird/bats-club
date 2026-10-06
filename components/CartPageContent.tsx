@@ -8,16 +8,6 @@ import { getShippingInfo, getArtShippingInfo, artCategoryMax, MAX_ORDER_QUANTITY
 import { trackProceedToCheckout, trackBeginCheckout } from "@/lib/analytics"
 import BatsOverlay from "@/components/BatsOverlay"
 import type { Dict } from "@/lib/dict"
-import { usePathname } from "next/navigation"
-import {
-  SHIPPING_PROMO,
-  PROMO_TEXT,
-  isPromoActive,
-  isValidPromoCode,
-  localeFromPath,
-  normalizePromoCode,
-  promoDiscountCents as promoDiscountCentsFor,
-} from "@/lib/promo"
 
 const COUNTRIES = [
   { code: "AR", name: "Argentina" }, { code: "AU", name: "Australia" }, { code: "AT", name: "Austria" },
@@ -91,15 +81,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
       })
       .catch(() => {})
   }, [])
-
-  const [promoInput, setPromoInput] = useState("")
-  const [appliedPromo, setAppliedPromo] = useState("")
-  const [promoError, setPromoError] = useState("")
-  const promoText = PROMO_TEXT[localeFromPath(usePathname())]
-  // Evaluated after mount: the cart page is statically cached, so the
-  // promo window must be checked in the visitor's browser, not at build.
-  const [promoActive, setPromoActive] = useState(false)
-  useEffect(() => { setPromoActive(isPromoActive()) }, [])
 
   const [loading, setLoading] = useState(false)
   // Keep loading UI mounted until the browser actually navigates to
@@ -201,20 +182,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
       ? `Figures ${figShip.priceDisplay} + Art ${artShip!.priceDisplay} — ship separately`
       : ""
 
-  // Display only — /api/checkout recomputes the discount server-side.
-  const promoDiscountCents = promoDiscountCentsFor(appliedPromo, shippingCents)
-  const totalCents = itemsSubtotal + shippingCents - promoDiscountCents
-
-  const applyPromo = (raw: string = promoInput) => {
-    const code = normalizePromoCode(raw)
-    if (isValidPromoCode(code)) {
-      setAppliedPromo(code)
-      setPromoError("")
-    } else {
-      setPromoError(code === SHIPPING_PROMO.code ? promoText.expired : "Invalid promo code")
-      setAppliedPromo("")
-    }
-  }
+  const totalCents = itemsSubtotal + shippingCents
 
   // Can the user move past the selection step?
   const figureSelectionValid = figureOverLimit
@@ -238,7 +206,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
         body: JSON.stringify({
           items: effectiveItems.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
           country: countryCode,
-          promoCode: appliedPromo || undefined,
           // Name, address and phone are collected by Stripe Checkout
           // (phone_number_collection) and read back in the webhook.
           shippingAddress: { country: countryCode },
@@ -557,59 +524,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
               </div>
               )}
 
-              {/* Promo code */}
-              <div className="rounded-2xl border border-white/[0.06] p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
-                {promoActive && !appliedPromo && hasPhysical && (
-                  // Current promo (lib/promo.ts), one click instead of typing the code.
-                  <div className="mb-4 rounded-xl border border-[#ff2d78]/40 bg-[#ff2d78]/10 p-3 flex items-center justify-between gap-3">
-                    <span className="text-sm font-bold text-white">{promoText.cartBanner}</span>
-                    <button
-                      onClick={() => applyPromo(SHIPPING_PROMO.code)}
-                      className="shrink-0 px-3 py-1.5 rounded-lg text-white text-xs font-bold"
-                      style={{ backgroundColor: "#ff2d78" }}
-                    >
-                      {promoText.cartApply}
-                    </button>
-                  </div>
-                )}
-                <h3 className="font-bold text-white text-sm mb-3">{dict.cart_promo_heading}</h3>
-                {appliedPromo ? (
-                  <div className="flex items-center justify-between">
-                    <span className="text-emerald-400 text-sm font-medium flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      {promoText.cartApplied}
-                    </span>
-                    <button
-                      onClick={() => { setAppliedPromo(""); setPromoInput("") }}
-                      className="text-white/25 hover:text-red-400 text-xs transition-colors"
-                    >
-                      {dict.cart_promo_remove}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={promoInput}
-                      onChange={(e) => { setPromoInput(e.target.value); setPromoError("") }}
-                      placeholder={dict.cart_promo_ph}
-                      className="input text-base sm:text-sm flex-1"
-                      onKeyDown={(e) => { if (e.key === "Enter") applyPromo() }}
-                    />
-                    <button
-                      onClick={() => applyPromo()}
-                      className="px-3 py-2 rounded-lg text-white text-sm font-bold transition-opacity"
-                      style={{ backgroundColor: "#ff2d78" }}
-                    >
-                      {dict.cart_promo_apply}
-                    </button>
-                  </div>
-                )}
-                {promoError && <p className="text-red-400 text-xs mt-1">{promoError}</p>}
-              </div>
-
               {/* Price summary */}
               <div className="rounded-2xl border border-white/[0.06] p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
                 <h3 className="font-bold text-white text-sm">{dict.cart_order_summary}</h3>
@@ -625,14 +539,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                       <span>
                         {dict.cart_shipping} ({selectedCountry?.name})
                       </span>
-                      {promoDiscountCents > 0 ? (
-                        <span>
-                          <span className="line-through text-white/30 mr-1.5">{shippingDisplay}</span>
-                          ${((shippingCents - promoDiscountCents) / 100).toFixed(2)}
-                        </span>
-                      ) : (
-                        <span>{shippingDisplay}</span>
-                      )}
+                      <span>{shippingDisplay}</span>
                     </div>
                   )}
                   {shippingBreakdown && (
@@ -645,13 +552,6 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                     </div>
                   )}
 
-                  {promoDiscountCents > 0 && (
-                    // The discount is already shown as the struck-through
-                    // shipping price above — this is just the label for it.
-                    <p className="text-emerald-400 text-xs -mt-1">
-                      {promoText.cartLine} ({appliedPromo})
-                    </p>
-                  )}
                 </div>
 
                 {shippingReady && !shippingBlocked && effectiveItems.length > 0 ? (

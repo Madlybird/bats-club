@@ -12,12 +12,6 @@ import {
   ALLOWED_COUNTRIES,
   MAX_ORDER_QUANTITY,
 } from "@/lib/shipping"
-import {
-  SHIPPING_PROMO,
-  isValidPromoCode,
-  normalizePromoCode,
-  promoDiscountCents as computePromoDiscount,
-} from "@/lib/promo"
 
 // Loose abuse cap on distinct cart lines (real per-kind caps applied after the
 // listings are fetched: max 3 figures, per-type max on art).
@@ -45,9 +39,8 @@ interface CartItem {
  * `card` is in `payment_method_types` and the domain is verified —
  * no extra config needed here.
  *
- * If the request supplies an in-app `promoCode`, it's applied as a
- * server-created coupon. Otherwise we set `allow_promotion_codes:
- * true` so the customer can enter Stripe-managed promos in Checkout.
+ * `allow_promotion_codes: true` lets the customer enter
+ * Stripe-managed promo codes in Checkout.
  * (Stripe rejects both options at once.)
  */
 export async function POST(req: Request) {
@@ -78,16 +71,14 @@ export async function POST(req: Request) {
   let stage: string = "parse-body"
 
   try {
-    const { items, country, promoCode, shippingAddress } = (await req.json()) as {
+    const { items, country, shippingAddress } = (await req.json()) as {
       items?: CartItem[]
       country?: string
-      promoCode?: string
       shippingAddress?: Record<string, string>
     }
     console.log("[checkout] payload", {
       items: items?.length ?? 0,
       country,
-      hasPromo: !!promoCode,
       hasAddress: !!shippingAddress,
       buyer: session?.user?.id ?? "guest",
     })
@@ -239,15 +230,6 @@ export async function POST(req: Request) {
       0
     )
 
-    // In-app promo (lib/promo.ts): recomputed here from the server-side
-    // shipping quote — the client only sends the code. An unknown or
-    // expired code is rejected rather than silently dropped, so a cart
-    // that was open past the deadline doesn't quietly charge more.
-    if (promoCode && !isValidPromoCode(promoCode)) {
-      return NextResponse.json({ error: "This promo code has expired or is invalid" }, { status: 400 })
-    }
-    const promoDiscountCents = computePromoDiscount(promoCode, shippingCents)
-
     // Always use the canonical production domain for Stripe redirect
     // URLs. Preview deployment URLs (e.g. bats-club-xxx.vercel.app)
     // aren't stable and cause errors when Stripe redirects back.
@@ -314,19 +296,7 @@ export async function POST(req: Request) {
       params.phone_number_collection = { enabled: true }
     }
 
-    if (promoDiscountCents > 0) {
-      stage = "create-coupon"
-      // In-app coupon path (mutually exclusive with allow_promotion_codes)
-      const coupon = await stripe.coupons.create({
-        amount_off: promoDiscountCents,
-        currency: "usd",
-        duration: "once",
-        name: `Promo: ${normalizePromoCode(promoCode)} (${SHIPPING_PROMO.shippingPercentOff}% off shipping)`,
-      })
-      params.discounts = [{ coupon: coupon.id }]
-    } else {
-      params.allow_promotion_codes = true
-    }
+    params.allow_promotion_codes = true
 
     // Pack everything the webhook needs into Stripe metadata so we
     // can create order rows AFTER payment is confirmed — not before.
@@ -339,7 +309,6 @@ export async function POST(req: Request) {
       listing_quantities: JSON.stringify(listings.map((l) => qtyOf(l))),
       listing_is_digital: JSON.stringify(listings.map((l) => isDigital(l))),
       shipping_cents: String(shippingCents),
-      promo_discount_cents: String(promoDiscountCents),
       shipping_address: JSON.stringify(shippingAddress || {}),
       // Site locale the buyer checked out from, for the reminder email.
       locale: localeFromReferer(req.headers.get("referer")),
@@ -351,7 +320,6 @@ export async function POST(req: Request) {
     stage = "create-session"
     console.log("[checkout] creating Stripe session", {
       lineItems: params.line_items?.length,
-      hasDiscount: !!params.discounts,
       allowPromo: !!params.allow_promotion_codes,
       successUrl: params.success_url,
     })
