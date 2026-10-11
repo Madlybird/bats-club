@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useSession } from "next-auth/react"
+import { isDropActive } from "@/lib/drop"
 
 const SEEN_KEY = "batsclub_tour_seen_session"
 
@@ -44,6 +45,9 @@ export default function HowItWorksTour({
     if (typeof window === "undefined") return
     if (status === "loading") return
     if (status === "authenticated") return
+    // While an art drop runs, its entry modal is the one first-visit
+    // overlay; the tour comes back on its own when the drop ends.
+    if (isDropActive()) return
     const reduce = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)"
     )?.matches
