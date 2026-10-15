@@ -47,9 +47,16 @@ export default function FigureCard({ figure, labels, ageGateLabels, priority = f
   const figureHref = `${labels.figurePath}/${figure.slug || figure.id}`
   const isMature = !!figure.isMature
   return (
-    <div className="card-cv card-hover group flex flex-col overflow-hidden h-full">
+    <div
+      className="card-cv card-hover group flex flex-col overflow-hidden h-full"
+      data-item-id={figure.id}
+      data-item-name={figure.name}
+      data-item-cat="figure_archive"
+      data-item-variant={figure.series}
+      data-item-price={figure.cheapestListing?.price}
+    >
       {/* Image */}
-      <Link href={figureHref} className="block relative aspect-square overflow-hidden flex-shrink-0" style={{ background: "#0a0a0a" }}>
+      <Link href={figureHref} data-track="card_image" className="block relative aspect-square overflow-hidden flex-shrink-0" style={{ background: "#0a0a0a" }}>
         <MatureBlur isMature={isMature} labels={ageGateLabels}>
           {figure.imageUrl ? (
             <Image
@@ -81,7 +88,7 @@ export default function FigureCard({ figure, labels, ageGateLabels, priority = f
 
       {/* Content */}
       <div className="p-3 flex flex-col gap-2 flex-1">
-        <Link href={figureHref} className="block">
+        <Link href={figureHref} data-track="card_title" className="block">
           <h3 className="font-semibold text-slate-100 text-sm leading-tight group-hover:text-violet-400 transition-colors line-clamp-2">
             {figure.name}
           </h3>

@@ -37,7 +37,7 @@ function useAgeVerified() {
 
 function AgeGateModal({ labels, onConfirm, onDeny }: { labels: AgeGateLabels; onConfirm: () => void; onDeny: () => void }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+    <div data-area="age_gate" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
       <div className="max-w-sm w-full rounded-2xl border border-white/10 p-6 text-center" style={{ background: "#0a0a12" }}>
         <p className="text-2xl mb-2">🔞</p>
         <h3 className="text-lg font-bold text-white mb-2">{labels.title}</h3>
@@ -45,6 +45,7 @@ function AgeGateModal({ labels, onConfirm, onDeny }: { labels: AgeGateLabels; on
         <div className="flex flex-col gap-2">
           <button
             onClick={onConfirm}
+            data-track="age_confirm"
             className="w-full py-2.5 rounded-lg font-bold text-white transition-colors"
             style={{ backgroundColor: "#ff2d78" }}
           >
@@ -52,6 +53,7 @@ function AgeGateModal({ labels, onConfirm, onDeny }: { labels: AgeGateLabels; on
           </button>
           <button
             onClick={onDeny}
+            data-track="age_deny"
             className="w-full py-2.5 rounded-lg font-medium text-white/60 border border-white/10 hover:text-white transition-colors"
           >
             {labels.deny}

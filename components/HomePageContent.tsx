@@ -76,7 +76,7 @@ export default function HomePageContent({
       {/* ────────────────────────────────────────
           1. HERO
       ──────────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section data-area="home_hero" className="relative min-h-screen flex items-center overflow-hidden">
         {/* dot grid texture */}
         <div
           className="absolute inset-0 opacity-[0.025] pointer-events-none"
@@ -133,6 +133,7 @@ export default function HomePageContent({
               <div className="flex flex-wrap gap-3 mt-10">
                 <Link
                   href={archivePath}
+                  data-track="hero_cta"
                   className="px-8 py-3.5 text-sm font-bold lowercase tracking-wide text-white rounded-full transition-all"
                   style={{ background: "#ff2d78", boxShadow: "0 0 30px rgba(255,45,120,0.3)" }}
                 >

@@ -21,7 +21,7 @@ export default function ArtBuyNowButton({
   const router = useRouter()
 
   const handleClick = () => {
-    if (!items.some((i) => i.listingId === item.listingId)) addItem(item)
+    if (!items.some((i) => i.listingId === item.listingId)) addItem(item, "buy_now")
     router.push(cartHref)
   }
 

@@ -159,6 +159,7 @@ export default function ArtGallery({ photos, alt, isMature, ageGateLabels, backH
         <button
           type="button"
           onClick={open}
+          data-track="lightbox_open"
           className="group relative block w-full cursor-zoom-in"
           style={{ aspectRatio: "3 / 4", background: "#0a0a0a" }}
           aria-label={zoomHint}

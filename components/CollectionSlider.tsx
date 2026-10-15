@@ -35,7 +35,7 @@ export default function CollectionSlider({
   if (!figures.length) return null
 
   return (
-    <div className="mb-14 last:mb-0">
+    <div className="mb-14 last:mb-0" data-area={`collection:${title}`.slice(0, 80)}>
       <div className="flex items-end justify-between mb-5 gap-4">
         <h3
           className="font-black lowercase leading-tight tracking-tighter text-white"
@@ -72,6 +72,10 @@ export default function CollectionSlider({
           <Link
             key={fig.id}
             href={`${figurePath}/${fig.id}`}
+            data-item-id={fig.id}
+            data-item-name={fig.name}
+            data-item-cat="figure_archive"
+            data-item-variant={fig.series}
             className="group snap-start flex-shrink-0 w-[53vw] sm:w-[264px]"
           >
             <div className="figure-grid-item relative aspect-square overflow-hidden rounded-xl">

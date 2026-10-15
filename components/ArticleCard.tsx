@@ -29,11 +29,14 @@ export default function ArticleCard({ article, readMoreLabel = "Read More", arti
 
   return (
     <article
+      data-item-id={article.slug}
+      data-item-name={article.title}
+      data-item-cat="article"
       className="group overflow-hidden flex flex-col rounded-xl border border-white/[0.06] hover:border-[#ff2d78]/30 transition-all duration-200"
       style={{ background: "#0a0a0a" }}
     >
       {/* Cover Image */}
-      <Link href={href} className="block relative aspect-video overflow-hidden" style={{ background: "#0a0a0a" }}>
+      <Link href={href} data-track="card_image" className="block relative aspect-video overflow-hidden" style={{ background: "#0a0a0a" }}>
         {article.coverImage ? (
           <Image
             src={article.coverImage}
@@ -52,7 +55,7 @@ export default function ArticleCard({ article, readMoreLabel = "Read More", arti
 
       {/* Content */}
       <div className="p-4 flex flex-col gap-3 flex-1">
-        <Link href={href} className="block">
+        <Link href={href} data-track="card_title" className="block">
           <h3 className="font-bold text-white text-base leading-tight group-hover:text-[#ff2d78] transition-colors line-clamp-2">
             {article.title}
           </h3>
@@ -71,6 +74,7 @@ export default function ArticleCard({ article, readMoreLabel = "Read More", arti
 
         <Link
           href={href}
+          data-track="read_more"
           className="text-sm font-medium transition-colors flex items-center gap-1"
           style={{ color: "#ff2d78" }}
         >

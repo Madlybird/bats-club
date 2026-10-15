@@ -8,6 +8,7 @@ import Footer from "@/components/Footer"
 import RegisterPrompt from "@/components/RegisterPrompt"
 import CookieConsentBanner from "@/components/CookieConsentBanner"
 import HtmlLangSync from "@/components/HtmlLangSync"
+import AnalyticsTracker from "@/components/AnalyticsTracker"
 import { Analytics } from '@vercel/analytics/next'
 import Script from "next/script"
 
@@ -124,6 +125,7 @@ export default function RootLayout({
           <Footer />
           <RegisterPrompt />
           <CookieConsentBanner />
+          <AnalyticsTracker />
         </Providers>
         <Analytics />
         {/* gtag.js loads after hydration instead of competing with it

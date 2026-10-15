@@ -48,10 +48,15 @@ export default function BatNudge({
 
   return (
     <div className="fixed z-[80] bottom-4 inset-x-4 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:max-w-sm">
-      <div className="relative flex items-start gap-3 rounded-2xl border border-[#ff2d78]/30 bg-[#0b0b14]/95 backdrop-blur px-5 py-4 shadow-[0_0_40px_rgba(255,45,120,0.25)]">
+      <div
+        data-area="bat_nudge"
+        data-promo-id={storageKey}
+        data-promo-name="bat_nudge"
+        className="relative flex items-start gap-3 rounded-2xl border border-[#ff2d78]/30 bg-[#0b0b14]/95 backdrop-blur px-5 py-4 shadow-[0_0_40px_rgba(255,45,120,0.25)]">
         <button
           type="button"
           aria-label="close"
+          data-promo-action="dismiss"
           onClick={() => setOpen(false)}
           className="absolute top-2.5 right-3 text-white/30 hover:text-white text-lg leading-none"
         >
@@ -71,6 +76,7 @@ export default function BatNudge({
           {ctaLabel && ctaHref && (
             <Link
               href={ctaHref}
+              data-track="nudge_cta"
               onClick={() => setOpen(false)}
               className="inline-block mt-3 px-4 py-2 text-xs font-bold lowercase tracking-wide text-white rounded-full transition-all"
               style={{

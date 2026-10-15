@@ -67,6 +67,7 @@ export async function GET(req: Request) {
   const items = orders.map((o: any) => ({
     item_id: o.listing_id,
     item_name: o.listing?.figure?.name || o.listing?.art?.title || o.listing_id,
+    item_category: o.listing?.art ? "art" : "figure",
     price: (o.unit_price ?? 0) / 100,
     quantity: o.quantity ?? 1,
   }))

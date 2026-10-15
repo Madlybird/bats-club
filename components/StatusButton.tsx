@@ -110,7 +110,7 @@ export default function StatusButton({ figureId, initialStatus, labels = DEFAULT
                   figureSeries: buyAddsToCart.figureSeries,
                   price: listing.price,
                   condition: listing.condition,
-                })
+                }, "status_buy")
               }
               showToast(buyAddsToCart.toastAddedWithCart)
             } else {

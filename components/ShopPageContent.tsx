@@ -116,6 +116,8 @@ function PopularBar({
             <button
               key={`${p.kind}:${p.key}`}
               onClick={() => select(p)}
+              data-track={`popular_${p.kind}`}
+              data-track-value={p.label}
               className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
                 active
                   ? "bg-[#ff2d78] border-[#ff2d78] text-white"
@@ -199,6 +201,7 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 mt-6">
           <ScrollReveal>
+            <div data-area="shop_filters">
             <PopularBar topSeries={topSeries} topCollections={topCollections || []} current={currentFilters} dict={dict} />
 
             {/* Search */}
@@ -220,6 +223,7 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
                 type="text"
                 placeholder={dict.shop_search_ph}
                 value={search}
+                data-track="search"
                 onChange={(e) => setSearch(e.target.value)}
                 className="input pl-10 text-base sm:text-sm"
               />
@@ -237,17 +241,19 @@ export default function ShopPageContent({ listings, priceRange, sort, series, to
                 </p>
                 <button
                   onClick={() => setSearch("")}
+                  data-track="clear_search"
                   className="text-xs text-slate-500 hover:text-[#ff2d78] transition-colors"
                 >
                   {dict.shop_clear_search}
                 </button>
               </div>
             )}
+            </div>
           </ScrollReveal>
 
           {filteredListings.length > 0 ? (
             <ScrollReveal>
-              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-stretch">
+              <div data-area="shop_grid" className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-stretch">
                 {visible.map((listing, index) => (
                   <ListingCard
                     key={listing.id}

@@ -60,13 +60,13 @@ export default function ArtDetail({ item, strings: s, description, basePath, car
       <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
       <div className="absolute inset-0 opacity-[0.025] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
 
-      <TrackViewItemOnMount listingId={item.id} figureName={item.title} price={item.price} series={item.series ?? item.type} />
+      <TrackViewItemOnMount listingId={item.id} figureName={item.title} price={item.price} series={item.type} category="art" />
 
       <div className="relative">
         <ScrollReveal>
           <div>
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <nav className="flex items-center gap-2 text-sm text-white/30">
+              <nav data-area="breadcrumb" className="flex items-center gap-2 text-sm text-white/30">
                 <Link href={basePath} className="hover:text-[#ff2d78] transition-colors">{s.breadcrumb}</Link>
                 <span>/</span>
                 <span className="text-white/60">{item.title}</span>
@@ -78,6 +78,7 @@ export default function ArtDetail({ item, strings: s, description, basePath, car
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <ScrollReveal>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div data-area="art_gallery">
               <ArtGallery
                 photos={item.photos}
                 alt={item.title}
@@ -86,8 +87,9 @@ export default function ArtDetail({ item, strings: s, description, basePath, car
                 backHref={basePath}
                 zoomHint={s.zoom_hint}
               />
+              </div>
 
-              <div className="space-y-6">
+              <div className="space-y-6" data-area="art_buybox">
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="badge bg-[#080810]/80 text-white/70 border border-white/15 text-[11px] font-semibold uppercase tracking-wide">
@@ -118,6 +120,7 @@ export default function ArtDetail({ item, strings: s, description, basePath, car
                   ) : (
                     <>
                       <AddToCartButton
+                        source="detail"
                         item={cartItem}
                         label={s.add_to_cart}
                         toastAlreadyInCart={s.already_in_cart}

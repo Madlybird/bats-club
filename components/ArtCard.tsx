@@ -35,10 +35,18 @@ export default function ArtCard({ item, labels, ageGateLabels, basePath = "/art"
   const subtitle = item.series || item.type
 
   return (
-    <div className="card-hover group flex flex-col overflow-hidden h-full">
+    <div
+      className="card-hover group flex flex-col overflow-hidden h-full"
+      data-item-id={item.id}
+      data-item-name={item.title}
+      data-item-cat="art"
+      data-item-variant={item.type}
+      data-item-price={item.price}
+    >
       {/* Poster image — 3:4, object-cover (crop) per design decision */}
       <Link
         href={href}
+        data-track="card_image"
         className="block relative overflow-hidden flex-shrink-0"
         style={{ aspectRatio: "3 / 4", background: "#0a0a0a" }}
       >
@@ -93,7 +101,7 @@ export default function ArtCard({ item, labels, ageGateLabels, basePath = "/art"
       {/* Content */}
       <div className="p-3 flex flex-col flex-1">
         <div className="min-h-[46px]">
-          <Link href={href} className="block">
+          <Link href={href} data-track="card_title" className="block">
             <h3 className="font-semibold text-white/90 text-sm leading-tight line-clamp-1 group-hover:text-[#ff2d78] transition-colors">
               {item.title}
             </h3>

@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useCart, CartItem } from "@/lib/cart-context"
-import { trackAddToCart } from "@/lib/analytics"
 
 interface AddToCartButtonProps {
   item: Omit<CartItem, "quantity">
@@ -11,6 +10,8 @@ interface AddToCartButtonProps {
   label?: string
   /** Localized toast shown when the listing is already in the cart. */
   toastAlreadyInCart?: string
+  /** Analytics: where the add happened ("card" | "detail"). */
+  source?: string
 }
 
 function showToast(message: string) {
@@ -24,17 +25,17 @@ export default function AddToCartButton({
   style,
   label = "Add to Cart",
   toastAlreadyInCart = "Already in cart",
+  source = "card",
 }: AddToCartButtonProps) {
   const { addItem } = useCart()
   const [added, setAdded] = useState(false)
 
   const handleAdd = () => {
-    const result = addItem(item)
+    const result = addItem(item, source)
     if (result === "already") {
       showToast(toastAlreadyInCart)
       return
     }
-    trackAddToCart(item)
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
   }

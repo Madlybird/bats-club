@@ -55,9 +55,16 @@ export default function ListingCard({ listing, labels, ageGateLabels, basePath =
   const isMature = !!listing.figure.isMature
 
   return (
-    <div className="card-hover group flex flex-col overflow-hidden h-full">
+    <div
+      className="card-hover group flex flex-col overflow-hidden h-full"
+      data-item-id={listing.id}
+      data-item-name={listing.figure.name}
+      data-item-cat="figure"
+      data-item-variant={listing.figure.series}
+      data-item-price={listing.price}
+    >
       {/* Image */}
-      <Link href={listingHref} className="block relative aspect-square overflow-hidden flex-shrink-0" style={{ background: "#0a0a0a" }}>
+      <Link href={listingHref} data-track="card_image" className="block relative aspect-square overflow-hidden flex-shrink-0" style={{ background: "#0a0a0a" }}>
         <MatureBlur isMature={isMature} labels={ageGateLabels}>
           {displayImage ? (
             <Image
@@ -85,7 +92,7 @@ export default function ListingCard({ listing, labels, ageGateLabels, basePath =
       {/* Content */}
       <div className="p-3 flex flex-col flex-1">
         <div className="h-[52px] overflow-hidden">
-          <Link href={listingHref} className="block">
+          <Link href={listingHref} data-track="card_title" className="block">
             <h3 className="font-semibold text-white/90 text-sm leading-tight group-hover:text-[#ff2d78] transition-colors line-clamp-2">
               {listing.figure.name}
             </h3>

@@ -5,9 +5,21 @@ import Image from "@/components/SiteImage"
 import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
 import { getShippingInfo, getArtShippingInfo, artCategoryMax, MAX_ORDER_QUANTITY } from "@/lib/shipping"
-import { trackProceedToCheckout, trackBeginCheckout } from "@/lib/analytics"
+import { trackProceedToCheckout, trackBeginCheckout, trackViewCart, type TrackItem } from "@/lib/analytics"
 import BatsOverlay from "@/components/BatsOverlay"
 import type { Dict } from "@/lib/dict"
+import type { CartItem } from "@/lib/cart-context"
+
+function toTrackItem(i: CartItem): TrackItem {
+  return {
+    id: i.listingId,
+    name: i.figureName,
+    price: i.price,
+    category: i.kind ?? "figure",
+    variant: i.kind === "art" ? i.artType : i.figureSeries,
+    quantity: i.quantity,
+  }
+}
 
 const COUNTRIES = [
   { code: "AR", name: "Argentina" }, { code: "AU", name: "Australia" }, { code: "AT", name: "Austria" },
@@ -59,6 +71,14 @@ interface Props {
 
 export default function CartPageContent({ dict, shopHref }: Props) {
   const { items, removeItem, setQuantity } = useCart()
+
+  // view_cart once per visit, after the cart hydrates from localStorage.
+  const viewCartSent = useRef(false)
+  useEffect(() => {
+    if (viewCartSent.current || items.length === 0) return
+    viewCartSent.current = true
+    trackViewCart(items.map(toTrackItem))
+  }, [items])
 
   const [countryCode, setCountryCode] = useState("")
   const [countrySearch, setCountrySearch] = useState("")
@@ -198,7 +218,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     }
     setLoading(true)
     setError("")
-    trackBeginCheckout(totalCents, effectiveUnits)
+    trackBeginCheckout(totalCents, effectiveItems.map(toTrackItem))
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -267,7 +287,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   )
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen" data-area="cart">
       <BatsOverlay />
       <div className="absolute top-1/4 right-1/3 w-[600px] h-[600px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
       <div className="absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
@@ -453,6 +473,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                           </span>
                           <button
                             onClick={() => removeItem(item.listingId)}
+                            data-track="remove_item"
                             className="text-white/20 hover:text-red-400 transition-colors"
                             title={dict.cart_promo_remove}
                           >

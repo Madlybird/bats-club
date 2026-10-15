@@ -55,6 +55,8 @@ export default function ShopFilters({ currentPriceRange, currentSort, currentSer
             <button
               key={r.value}
               onClick={() => updateFilter("price", currentPriceRange === r.value ? null : r.value)}
+              data-track="filter_price"
+              data-track-value={r.value}
               className={`flex-shrink-0 text-xs px-2.5 py-1.5 rounded-lg border transition-all font-medium ${
                 currentPriceRange === r.value
                   ? "bg-violet-700 border-violet-600 text-white"
@@ -71,6 +73,7 @@ export default function ShopFilters({ currentPriceRange, currentSort, currentSer
       <div className="flex items-center gap-2">
         <select
           value={currentSort || "newest"}
+          data-track="sort"
           onChange={(e) => updateFilter("sort", e.target.value === "newest" ? null : e.target.value)}
           className="input text-base sm:text-xs py-1.5 w-full md:w-auto"
         >

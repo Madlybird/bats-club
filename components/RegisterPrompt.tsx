@@ -73,15 +73,22 @@ export default function RegisterPrompt() {
       role="dialog"
       aria-modal="true"
       aria-label={drop ? dt.title : dict.register_modal_title}
+      data-area={drop ? "drop_modal" : "register_modal"}
+      data-promo-id={drop ? ART_DROP.id : "register_prompt"}
+      data-promo-name={drop ? "art_drop_modal" : "register_modal"}
+      data-promo-creative={locale}
     >
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        data-track="backdrop"
+        data-promo-action="dismiss"
         onClick={() => setOpen(false)}
       />
       <div className="relative w-full max-w-md rounded-2xl border border-[#ff2d78]/30 bg-[#0b0b14] p-7 shadow-[0_0_60px_rgba(255,45,120,0.25)]">
         <button
           type="button"
           aria-label="close"
+          data-promo-action="dismiss"
           onClick={() => setOpen(false)}
           className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center text-white/30 hover:text-white text-xl leading-none"
         >
@@ -110,6 +117,7 @@ export default function RegisterPrompt() {
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href={`${base}/art`}
+                data-track="drop_cta"
                 onClick={() => setOpen(false)}
                 className="px-6 py-3 text-sm font-bold lowercase tracking-wide text-white rounded-full transition-all"
                 style={{
@@ -138,6 +146,7 @@ export default function RegisterPrompt() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={`${base}/register`}
+                data-track="register_cta"
                 onClick={() => setOpen(false)}
                 className="px-6 py-3 text-sm font-bold lowercase tracking-wide text-white rounded-full transition-all"
                 style={{
@@ -149,6 +158,8 @@ export default function RegisterPrompt() {
               </Link>
               <button
                 type="button"
+                data-track="maybe_later"
+                data-promo-action="dismiss"
                 onClick={() => setOpen(false)}
                 className="px-6 py-3 border border-white/10 hover:border-white/25 text-white/50 hover:text-white text-sm font-bold lowercase tracking-wide rounded-full transition-all"
               >

@@ -81,7 +81,7 @@ export default function BuyToCartButton({
             figureSeries,
             price: cheapestListing.price,
             condition: cheapestListing.condition,
-          })
+          }, "quick_buy")
         }
         showToast(toastAddedWithCart)
       } else {

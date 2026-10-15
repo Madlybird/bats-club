@@ -25,7 +25,7 @@ interface Props {
 
 export default function ArticlesPageContent({ articles, dict, articlesHref = "/articles" }: Props) {
   return (
-    <div className="relative min-h-screen">
+    <div data-area="articles" className="relative min-h-screen">
       <BatsOverlay />
 
       <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />

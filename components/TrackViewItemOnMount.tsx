@@ -14,15 +14,18 @@ export default function TrackViewItemOnMount({
   figureName,
   price,
   series,
+  category = "figure",
 }: {
   listingId: string
   figureName?: string
   price: number
   series?: string
+  /** "figure" (shop listings) | "art" */
+  category?: string
 }) {
   useEffect(() => {
     if (!figureName) return
-    trackViewItem({ listingId, figureName, price, series })
+    trackViewItem({ id: listingId, name: figureName, price, variant: series, category })
     // Fire once on mount only — not on every re-render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listingId])

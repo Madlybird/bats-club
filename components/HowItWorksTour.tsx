@@ -119,7 +119,12 @@ export default function HowItWorksTour({
       {/* Bat companion bubble */}
       {phase === "active" && (
         <div className="fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-5 pointer-events-none">
-          <div className="pointer-events-auto flex items-center gap-4 max-w-md w-full rounded-2xl border border-[#ff2d78]/30 bg-[#0b0b14]/95 backdrop-blur px-5 py-4 shadow-[0_0_40px_rgba(255,45,120,0.25)]">
+          <div
+            data-area="how_it_works_tour"
+            data-promo-id="how_it_works_tour"
+            data-promo-name="how_it_works_tour"
+            data-promo-creative={`step_${active + 1}`}
+            className="pointer-events-auto flex items-center gap-4 max-w-md w-full rounded-2xl border border-[#ff2d78]/30 bg-[#0b0b14]/95 backdrop-blur px-5 py-4 shadow-[0_0_40px_rgba(255,45,120,0.25)]">
             <img
               src="/bat.png"
               alt=""
@@ -135,6 +140,9 @@ export default function HowItWorksTour({
               </p>
               <button
                 type="button"
+                data-track="tour_skip"
+                data-track-value={`step_${active + 1}`}
+                data-promo-action="dismiss"
                 onClick={finish}
                 className="mt-1.5 text-[11px] font-bold text-white/30 hover:text-[#ff2d78] transition-colors lowercase tracking-wide"
               >
@@ -143,6 +151,8 @@ export default function HowItWorksTour({
             </div>
             <button
               type="button"
+              data-track={active >= steps.length - 1 ? "tour_finish" : "tour_next"}
+              data-track-value={`step_${active + 1}`}
               onClick={next}
               className="flex-shrink-0 px-4 py-2 text-xs font-bold lowercase tracking-wide text-white rounded-full transition-all"
               style={{

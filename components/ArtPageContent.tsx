@@ -83,6 +83,7 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 mt-6">
           <ScrollReveal>
+            <div data-area="art_filters">
             {/* Search */}
             <div className="relative mb-5">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,6 +93,7 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
                 type="text"
                 placeholder={s.search_ph}
                 value={search}
+                data-track="search"
                 onChange={(e) => setSearch(e.target.value)}
                 className="input pl-10 text-base sm:text-sm"
               />
@@ -103,6 +105,8 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
                 <>
                   <button
                     type="button"
+                    data-track="filter_type"
+                    data-track-value="all"
                     onClick={() => setType("__all")}
                     className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                       type === "__all"
@@ -116,6 +120,8 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
                     <button
                       key={t}
                       type="button"
+                      data-track="filter_type"
+                      data-track-value={t}
                       onClick={() => setType(t)}
                       className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                         type === t
@@ -131,6 +137,7 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
               <div className="ml-auto">
                 <select
                   value={sort}
+                  data-track="sort"
                   onChange={(e) => setSort(e.target.value as Sort)}
                   className="text-xs bg-[#0a0a12] border border-white/10 text-white/50 rounded-lg px-2 py-1.5 focus:outline-none focus:border-violet-700"
                 >
@@ -146,16 +153,17 @@ export default function ArtPageContent({ items, strings: s, basePath, ageGateLab
                 <p className="text-sm text-slate-500">
                   <span className="font-semibold" style={{ color: "#ff2d78" }}>{shown.length}</span> {s.results}
                 </p>
-                <button onClick={() => setSearch("")} className="text-xs text-slate-500 hover:text-[#ff2d78] transition-colors">
+                <button onClick={() => setSearch("")} data-track="clear_search" className="text-xs text-slate-500 hover:text-[#ff2d78] transition-colors">
                   {s.clear_search}
                 </button>
               </div>
             )}
+            </div>
           </ScrollReveal>
 
           {shown.length > 0 ? (
             <ScrollReveal>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
+              <div data-area="art_grid" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
                 {shown.map((item, i) => (
                   <ArtCard
                     key={item.id}

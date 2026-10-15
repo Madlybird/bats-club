@@ -127,7 +127,7 @@ export default function ArchiveClient({
 
   return (
     <div>
-      <div className="mb-8 space-y-5">
+      <div className="mb-8 space-y-5" data-area="archive_filters">
         {/* Search */}
         <div className="relative">
           <svg
@@ -147,6 +147,7 @@ export default function ArchiveClient({
             type="text"
             placeholder={labels.searchPh}
             value={search}
+            data-track="search"
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-10 text-base sm:text-sm"
           />
@@ -165,6 +166,8 @@ export default function ArchiveClient({
               {popularSeries.map((s) => (
                 <button
                   key={s.name}
+                  data-track="popular_series"
+                  data-track-value={s.name}
                   onClick={() =>
                     setSelectedSeries(
                       selectedSeries === s.name ? null : s.name
@@ -204,7 +207,7 @@ export default function ArchiveClient({
       {/* Grid */}
       {filtered.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div data-area="archive_grid" className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {visible.map((figure, index) => (
               <FigureCard
                 key={figure.id}

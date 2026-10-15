@@ -192,8 +192,9 @@ export default async function ListingDetailPage(props: Props) {
                     {dict.shop_view_figure}
                   </Link>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2" data-area="shop_buybox">
                   <AddToCartButton
+                    source="detail"
                     item={{
                       listingId: listing.id,
                       figureName: figure?.name,

@@ -141,7 +141,7 @@ export default function FigureDetailContent({
               IntersectionObserver to fire post-hydration. */}
           <div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <nav className="flex items-center gap-2 text-sm text-white/30">
+              <nav data-area="breadcrumb" className="flex items-center gap-2 text-sm text-white/30">
                 <Link href={archiveHref} className="hover:text-[#ff2d78] transition-colors">
                   {dict.fig_breadcrumb}
                 </Link>
@@ -261,7 +261,7 @@ export default function FigureDetailContent({
             {/* You may also like */}
             {relatedFigures.length > 0 && (
               <ScrollReveal>
-                <section className="mt-16">
+                <section className="mt-16" data-area="you_may_like">
                   <div className="mb-6">
                     <span className="inline-block w-8 h-px bg-[#ff2d78] mb-3" />
                     <h2 className="font-black lowercase text-white text-xl tracking-tight">{dict.fig_you_may_like}</h2>
@@ -272,7 +272,15 @@ export default function FigureDetailContent({
                       const thumb = relImgs[0] || rel.imageUrl || null
                       const relHref = `${archiveHref.replace("/archive", "/figures")}/${rel.slug || rel.id}`
                       return (
-                        <Link key={rel.id} href={relHref} className="group block">
+                        <Link
+                          key={rel.id}
+                          href={relHref}
+                          className="group block"
+                          data-item-id={rel.id}
+                          data-item-name={rel.name}
+                          data-item-cat="figure_archive"
+                          data-item-variant={rel.series}
+                        >
                           <div className="relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] mb-2" style={{ background: "rgba(15,15,26,0.8)" }}>
                             <MatureBlur
                               isMature={!!rel.isMature}
@@ -304,7 +312,7 @@ export default function FigureDetailContent({
             {/* Related Articles */}
             {publishedArticles.length > 0 && (
               <ScrollReveal>
-                <section className="mt-16">
+                <section className="mt-16" data-area="related_articles">
                   <div className="mb-6">
                     <span className="inline-block w-8 h-px bg-[#ff2d78] mb-3" />
                     <h2 className="font-black lowercase text-white text-xl tracking-tight">{dict.fig_related}</h2>

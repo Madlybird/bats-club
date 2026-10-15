@@ -96,6 +96,7 @@ export default function CookieConsentBanner() {
       role="dialog"
       aria-modal="false"
       aria-label="Cookie consent"
+      data-area="cookie_banner"
     >
       <div className="mx-auto max-w-3xl rounded-2xl border border-[#ff2d78]/30 bg-[#0b0b14] p-5 shadow-[0_0_60px_rgba(255,45,120,0.2)] flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <p className="text-sm text-white/60 leading-relaxed flex-1">
@@ -107,6 +108,7 @@ export default function CookieConsentBanner() {
         <div className="flex gap-3 shrink-0">
           <button
             type="button"
+            data-track="consent_reject"
             onClick={() => handle(false)}
             className="px-5 py-2.5 border border-white/10 hover:border-white/25 text-white/50 hover:text-white text-sm font-bold lowercase tracking-wide rounded-full transition-all"
           >
@@ -114,6 +116,7 @@ export default function CookieConsentBanner() {
           </button>
           <button
             type="button"
+            data-track="consent_accept"
             onClick={() => handle(true)}
             className="px-5 py-2.5 text-sm font-bold lowercase tracking-wide text-white rounded-full transition-all"
             style={{ background: "#ff2d78", boxShadow: "0 0 30px rgba(255,45,120,0.3)" }}
