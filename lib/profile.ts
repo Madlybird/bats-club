@@ -1,10 +1,14 @@
 import { supabaseAdmin } from "@/lib/supabase"
 
+// Orders that count as a completed purchase: paid orders move on to
+// SHIPPED / DELIVERED and must keep counting (stamps, first-order offer).
+export const PURCHASED_STATUSES = ["PAID", "SHIPPED", "DELIVERED"]
+
 /**
- * Counts a user's completed (paid) purchases. Drives both the
- * "Purchases" stat on the profile and the stamp-card progress.
- * Pending and cancelled orders are excluded so partial checkouts
- * don't show up in someone's history or award stamps.
+ * Counts a user's completed purchases (paid, shipped or delivered).
+ * Drives both the "Purchases" stat on the profile and the stamp-card
+ * progress. Pending and cancelled orders are excluded so partial
+ * checkouts don't show up in someone's history or award stamps.
  * users.bonus_stamps (migration 013) adds purchases made off-site
  * that were credited by hand.
  */
@@ -14,7 +18,7 @@ export async function getUserPurchaseCount(userId: string): Promise<number> {
       .from("orders")
       .select("id", { count: "exact", head: true })
       .eq("buyer_id", userId)
-      .eq("status", "PAID"),
+      .in("status", PURCHASED_STATUSES),
     supabaseAdmin.from("users").select("bonus_stamps").eq("id", userId).maybeSingle(),
   ])
   if (orders.error) {

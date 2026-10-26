@@ -1,9 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase"
-
-// Orders that count as a completed purchase. Paid orders move on to
-// SHIPPED / DELIVERED, so counting PAID alone would re-offer the
-// first-order discount to past buyers.
-const PURCHASED_STATUSES = ["PAID", "SHIPPED", "DELIVERED"]
+import { PURCHASED_STATUSES } from "@/lib/profile"
 
 /**
  * True when a logged-in member has never completed a purchase — no paid
