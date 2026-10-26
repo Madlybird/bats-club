@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart-context"
 import { getShippingInfo, getArtShippingInfo, artCategoryMax, MAX_ORDER_QUANTITY } from "@/lib/shipping"
 import { trackProceedToCheckout, trackBeginCheckout, trackViewCart, type TrackItem } from "@/lib/analytics"
 import BatsOverlay from "@/components/BatsOverlay"
+import { MEMBER_OFFER_ID, memberShipDiscountCents } from "@/lib/member-offer"
 import type { Dict } from "@/lib/dict"
 import type { CartItem } from "@/lib/cart-context"
 
@@ -99,6 +100,16 @@ export default function CartPageContent({ dict, shopHref }: Props) {
         setCountrySearch(match.name)
         setCountryAuto(true)
       })
+      .catch(() => {})
+  }, [])
+
+  // Member first-order shipping discount — display only; /api/checkout
+  // re-checks eligibility and computes what is actually charged.
+  const [memberOffer, setMemberOffer] = useState(false)
+  useEffect(() => {
+    fetch("/api/member-offer", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { eligible?: boolean } | null) => setMemberOffer(!!d?.eligible))
       .catch(() => {})
   }, [])
 
@@ -202,7 +213,8 @@ export default function CartPageContent({ dict, shopHref }: Props) {
       ? `Figures ${figShip.priceDisplay} + Art ${artShip!.priceDisplay} — ship separately`
       : ""
 
-  const totalCents = itemsSubtotal + shippingCents
+  const memberDiscountCents = memberOffer ? memberShipDiscountCents(shippingCents) : 0
+  const totalCents = itemsSubtotal + shippingCents - memberDiscountCents
 
   // Can the user move past the selection step?
   const figureSelectionValid = figureOverLimit
@@ -218,7 +230,11 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     }
     setLoading(true)
     setError("")
-    trackBeginCheckout(totalCents, effectiveItems.map(toTrackItem))
+    trackBeginCheckout(
+      totalCents,
+      effectiveItems.map(toTrackItem),
+      memberDiscountCents > 0 ? MEMBER_OFFER_ID : undefined
+    )
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -565,6 +581,12 @@ export default function CartPageContent({ dict, shopHref }: Props) {
                   )}
                   {shippingBreakdown && (
                     <p className="text-[11px] text-white/30 -mt-1">{shippingBreakdown}</p>
+                  )}
+                  {memberDiscountCents > 0 && hasPhysical && countryCode && !shippingBlocked && (
+                    <div className="flex justify-between" style={{ color: "#ff2d78" }}>
+                      <span>{dict.cart_member_ship_discount}</span>
+                      <span>−${(memberDiscountCents / 100).toFixed(2)}</span>
+                    </div>
                   )}
                   {!hasPhysical && effectiveItems.length > 0 && (
                     <div className="flex justify-between text-white/50">

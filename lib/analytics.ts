@@ -184,13 +184,14 @@ export function trackProceedToCheckout(valueCents: number, itemCount: number) {
   trackEvent("proceed_to_checkout", { currency: "USD", value: valueCents / 100, items_count: itemCount })
 }
 
-export function trackBeginCheckout(valueCents: number, items: TrackItem[]) {
+export function trackBeginCheckout(valueCents: number, items: TrackItem[], coupon?: string) {
   trackEvent("begin_checkout", {
     currency: "USD",
     value: valueCents / 100,
     items_count: items.length,
+    coupon,
     items: items.map(gaItem),
-  }, { vercel: { items_count: items.length, value: valueCents / 100 } })
+  }, { vercel: { value: valueCents / 100, coupon: coupon ?? "none" } })
 }
 
 export function trackPurchase(order: {
@@ -271,8 +272,9 @@ export function trackExperimentImpression(experimentId: string, variantId: strin
 
 // ── Auth ────────────────────────────────────────────────────────────────
 
-export function trackSignUp(method: string = "email") {
-  trackEvent("sign_up", { method })
+/** `source` = which prompt sent the visitor to /register (e.g. "join_panel"). */
+export function trackSignUp(method: string = "email", source: string = "direct") {
+  trackEvent("sign_up", { method, source }, { vercel: { method, source } })
 }
 
 export function trackLogin(method: string = "email") {

@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase"
 import { stripe } from "@/lib/stripe"
 import { checkRateLimit } from "@/lib/rate-limit"
+import { isFirstOrderOfferEligible } from "@/lib/member-offer.server"
+import { MEMBER_OFFER_ID, MEMBER_SHIP_PERCENT_OFF, memberShipDiscountCents } from "@/lib/member-offer"
 import {
   getShippingInfo,
   getArtShippingInfo,
@@ -225,6 +227,13 @@ export async function POST(req: Request) {
     }
     const shippingCents = (figureShip?.priceCents ?? 0) + (artShip?.priceCents ?? 0)
 
+    // Member welcome offer (lib/member-offer.ts): a logged-in member's first
+    // paid order ships at 50% off. Decided here, never trusted from the client.
+    stage = "member-offer"
+    const memberOfferApplied =
+      shippingCents > 0 && (await isFirstOrderOfferEligible(session?.user?.id))
+    const memberShipDiscount = memberOfferApplied ? memberShipDiscountCents(shippingCents) : 0
+
     const itemsSubtotal = listings.reduce(
       (sum, l) => sum + l.price * (requestedQty.get(l.id) ?? 1),
       0
@@ -262,9 +271,11 @@ export async function POST(req: Request) {
         price_data: {
           currency: "usd",
           product_data: {
-            name: `Shipping to ${country} (${totalUnits} ${totalUnits === 1 ? "item" : "items"})`,
+            name:
+              `Shipping to ${country} (${totalUnits} ${totalUnits === 1 ? "item" : "items"})` +
+              (memberShipDiscount > 0 ? ` · ${MEMBER_SHIP_PERCENT_OFF}% off, member first order` : ""),
           },
-          unit_amount: shippingCents,
+          unit_amount: shippingCents - memberShipDiscount,
         },
         quantity: 1,
       })
@@ -309,6 +320,10 @@ export async function POST(req: Request) {
       listing_quantities: JSON.stringify(listings.map((l) => qtyOf(l))),
       listing_is_digital: JSON.stringify(listings.map((l) => isDigital(l))),
       shipping_cents: String(shippingCents),
+      // The webhook subtracts this from shipping_cents (amount check and
+      // orders.shipping_price), same field the old SHIP50 promo used.
+      promo_discount_cents: String(memberShipDiscount),
+      member_offer: memberShipDiscount > 0 ? MEMBER_OFFER_ID : "",
       shipping_address: JSON.stringify(shippingAddress || {}),
       // Site locale the buyer checked out from, for the reminder email.
       locale: localeFromReferer(req.headers.get("referer")),

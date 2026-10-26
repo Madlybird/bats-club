@@ -1,7 +1,7 @@
 "use client"
 
 import { signIn } from "next-auth/react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -29,6 +29,27 @@ export default function RegisterForm({ labels }: { labels: RegisterFormLabels })
   const [formData, setFormData] = useState({ name: "", username: "", email: "", password: "" })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  // Which prompt sent the visitor here (?src=join_panel), for sign_up
+  // attribution, plus the email typed into that prompt (sessionStorage,
+  // kept out of the URL so it never reaches analytics).
+  const signupSource = useRef("direct")
+  useEffect(() => {
+    let src = new URLSearchParams(window.location.search).get("src")
+    let email: string | null = null
+    try {
+      if (src) sessionStorage.setItem("batsclub_signup_src", src)
+      else src = sessionStorage.getItem("batsclub_signup_src")
+      email = sessionStorage.getItem("batsclub_signup_email")
+      sessionStorage.removeItem("batsclub_signup_email")
+    } catch {
+      /* ignore */
+    }
+    if (src && /^[a-z0-9_]{1,40}$/.test(src)) signupSource.current = src
+    if (email) {
+      const prefill = email.slice(0, 254)
+      setFormData((prev) => (prev.email ? prev : { ...prev, email: prefill }))
+    }
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -49,7 +70,12 @@ export default function RegisterForm({ labels }: { labels: RegisterFormLabels })
         setError(data.error || "Registration failed")
         return
       }
-      trackSignUp("email")
+      trackSignUp("email", signupSource.current)
+      try {
+        sessionStorage.removeItem("batsclub_signup_src")
+      } catch {
+        /* ignore */
+      }
       if (data.needsVerification) {
         // Stash password for auto-login after verification
         sessionStorage.setItem("_bats_pw", formData.password)

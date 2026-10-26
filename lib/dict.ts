@@ -257,6 +257,7 @@ export interface Dict {
   cart_digital_badge: string
   cart_digital_note: string
   cart_digital_free_ship: string
+  cart_member_ship_discount: string
 
   // ── Register page ──
   register_heading: string
@@ -550,6 +551,7 @@ export const en: Dict = {
   cart_digital_badge: "Digital",
   cart_digital_note: "Digital download (PDF)",
   cart_digital_free_ship: "None (digital)",
+  cart_member_ship_discount: "Member first order: 50% off shipping",
 
   register_heading: "Create Account",
   register_subtitle: "Join the collector community",
@@ -842,6 +844,7 @@ export const ru: Dict = {
   cart_digital_badge: "Цифровой",
   cart_digital_note: "Цифровой файл (PDF)",
   cart_digital_free_ship: "Нет (цифровой)",
+  cart_member_ship_discount: "Первый заказ участника: −50% на доставку",
 
   register_heading: "Создать аккаунт",
   register_subtitle: "Присоединяйся к сообществу коллекционеров",
@@ -1134,6 +1137,7 @@ export const jp: Dict = {
   cart_digital_badge: "デジタル",
   cart_digital_note: "デジタルダウンロード（PDF）",
   cart_digital_free_ship: "なし（デジタル）",
+  cart_member_ship_discount: "メンバー初回注文：送料50%オフ",
 
   register_heading: "アカウント作成",
   register_subtitle: "コレクターコミュニティに参加",

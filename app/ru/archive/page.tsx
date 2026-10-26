@@ -3,7 +3,6 @@ import { getFiguresForList } from "@/lib/figures-cache"
 import ArchiveClient from "@/components/ArchiveClient"
 import BatsOverlay from "@/components/BatsOverlay"
 import ScrollReveal from "@/components/ScrollReveal"
-import BatNudge from "@/components/BatNudge"
 import { ru } from "@/lib/dict"
 import { buildCollectionPageJsonLd } from "@/lib/collection-jsonld"
 import { Metadata } from "next"
@@ -69,13 +68,6 @@ export default async function ArchivePageRu() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd).replace(/</g, "\\u003c") }}
       />
       <BatsOverlay />
-      <BatNudge
-        title={dict.nudge_collection_title}
-        body={dict.nudge_collection_body}
-        ctaLabel={dict.nudge_collection_cta}
-        ctaHref="/ru/register"
-        storageKey="batsclub_nudge_collection"
-      />
       <div className="scroll-layer absolute top-1/4 right-1/3 w-[700px] h-[700px] rounded-full bg-[#ff2d78]/5 blur-[180px] pointer-events-none" />
       <div className="scroll-layer absolute bottom-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-900/6 blur-[120px] pointer-events-none" />
       <div
