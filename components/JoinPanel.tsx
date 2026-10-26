@@ -9,7 +9,7 @@ import { MEMBER_OFFER_ID } from "@/lib/member-offer"
 // Replaces the centered RegisterPrompt modal and the /archive bat nudge.
 // Guests only, shown after a sign of interest instead of on entry: 25s on
 // site, a 2nd page view, or 3 "Next photo" taps. Never on auth/cart/order
-// pages, never on top of the unanswered cookie banner. Dismiss or CTA =
+// pages, never on top of the cookie banner (EEA/UK only). Dismiss or CTA =
 // silent for 30 days. The CTA opens /register?src=join_panel (sign_up
 // attribution) with the typed email pre-filled; the offer itself
 // (lib/member-offer.ts) is applied by /api/checkout on the first paid order.
@@ -19,7 +19,6 @@ const PHOTO_TAPS = 3
 const SNOOZE_DAYS = 30
 const SNOOZE_KEY = "batsclub_join_snoozed_at"
 const PAGES_KEY = "batsclub_join_pages"
-const COOKIE_KEY = "bats_cookie_consent"
 const SOURCE = "join_panel"
 const PREFILL_KEY = "batsclub_signup_email" // read once by RegisterForm
 
@@ -91,8 +90,10 @@ export default function JoinPanel() {
     let fired = false
     const show = () => {
       if (fired) return
-      // Wait for the cookie banner to be answered so the two never stack.
-      if (!force && readStore(COOKIE_KEY, "local") === null) return
+      // Never stack on the cookie banner. It is only rendered for EEA/UK
+      // visitors, so wait on the banner itself, not on a stored choice
+      // (everyone else never makes one). The 25s interval retries.
+      if (!force && document.querySelector("[data-cookie-banner]")) return
       fired = true
       setOpen(true)
     }

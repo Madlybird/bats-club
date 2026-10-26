@@ -93,6 +93,7 @@ export default function CookieConsentBanner() {
   return (
     <div
       className="fixed inset-x-0 bottom-0 z-[100] p-4"
+      data-cookie-banner=""
       role="dialog"
       aria-modal="false"
       aria-label="Cookie consent"
