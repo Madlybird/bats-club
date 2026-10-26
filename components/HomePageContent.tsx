@@ -1,5 +1,4 @@
 import ScrollReveal from "@/components/ScrollReveal"
-import HowItWorksTour from "@/components/HowItWorksTour"
 import CollectionSlider from "@/components/CollectionSlider"
 import JoinCta from "@/components/JoinCta"
 import Link from "next/link"
@@ -179,14 +178,6 @@ export default function HomePageContent({
           </div>
         </div>
       </section>
-
-      {/* Floating bat tour — explains the steps once per visitor.
-          Renders only as a fixed overlay (no on-page section). */}
-      <HowItWorksTour
-        steps={dict.how_steps}
-        gotItLabel={dict.tour_got_it}
-        skipLabel={dict.tour_skip}
-      />
 
       {/* ────────────────────────────────────────
           2. COLLECTIONS  (curated album sliders)
