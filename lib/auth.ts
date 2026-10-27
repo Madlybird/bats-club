@@ -81,18 +81,35 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.username = (user as any).username
         token.isAdmin = (user as any).isAdmin
-      } else if (token.isAdmin && token.id) {
-        // Re-verify admin status against the DB on every request so a
-        // revoked admin loses access on their next request instead of
-        // keeping it until the JWT expires (up to maxAge). Only sessions
-        // that currently claim admin pay this query — regular users skip
-        // it entirely.
-        const { data } = await supabaseAdmin
+      } else if (token.id) {
+        // Re-check the account on every request:
+        //  - a password change (reset) revokes every session issued before
+        //    it, so a hijacked session dies on its next request instead of
+        //    living until the JWT expires (up to maxAge);
+        //  - a deleted account loses its sessions;
+        //  - a revoked admin loses admin immediately.
+        // Throwing makes NextAuth clear the session cookie and treat the
+        // request as signed out (getServerSession → null).
+        const { data, error } = await supabaseAdmin
           .from("users")
-          .select("is_admin")
+          .select("is_admin, password_changed_at")
           .eq("id", token.id as string)
           .maybeSingle()
-        token.isAdmin = !!data?.is_admin
+        if (error) {
+          // Transient DB error: keep the session (don't sign everyone out)
+          // but never keep admin rights we couldn't confirm.
+          console.error("[auth] session re-check failed:", error.message)
+          token.isAdmin = false
+          return token
+        }
+        if (!data) throw new Error("SessionRevoked: account no longer exists")
+        const changedAt = (data as any).password_changed_at
+          ? Math.floor(new Date((data as any).password_changed_at).getTime() / 1000)
+          : 0
+        const issuedAt = typeof token.iat === "number" ? token.iat : 0
+        if (changedAt > issuedAt) throw new Error("SessionRevoked: password changed")
+        // Only ever demote: admin is granted at sign-in, not mid-session.
+        token.isAdmin = !!token.isAdmin && !!data.is_admin
       }
       return token
     },
