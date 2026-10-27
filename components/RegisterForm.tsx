@@ -66,7 +66,24 @@ export default function RegisterForm({ labels }: { labels: RegisterFormLabels })
         body: JSON.stringify(formData),
       })
       const data = await res.json()
+      // Email + password go to /verify via sessionStorage (never the URL,
+      // which analytics records); /api/auth/verify needs the password too.
+      const handOffToVerify = () => {
+        try {
+          sessionStorage.setItem("_bats_pw", formData.password)
+          sessionStorage.setItem("_bats_verify_email", formData.email)
+        } catch {
+          /* ignore */
+        }
+        router.push("/verify")
+      }
       if (!res.ok) {
+        // A sign-up for this email is already waiting for its code: send
+        // them to verification, where they can also request a new code.
+        if (res.status === 409 && data.pendingVerification) {
+          handOffToVerify()
+          return
+        }
         setError(data.error || "Registration failed")
         return
       }
@@ -77,9 +94,7 @@ export default function RegisterForm({ labels }: { labels: RegisterFormLabels })
         /* ignore */
       }
       if (data.needsVerification) {
-        // Stash password for auto-login after verification
-        sessionStorage.setItem("_bats_pw", formData.password)
-        router.push(`/verify?email=${encodeURIComponent(formData.email)}`)
+        handOffToVerify()
         return
       }
       const result = await signIn("credentials", {

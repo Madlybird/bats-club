@@ -2,6 +2,11 @@ import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { sendWelcomeEmail } from "@/lib/email"
 import { checkRateLimit, rateLimit } from "@/lib/rate-limit"
+import bcrypt from "bcryptjs"
+
+// Compared against when the email is unknown, so the response time doesn't
+// reveal whether an account exists (same constant as lib/auth.ts).
+const DUMMY_HASH = "$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW"
 
 export async function POST(req: Request) {
   // Cap brute force of the 6-digit code on two axes:
@@ -25,44 +30,56 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { email, code } = await req.json()
-    if (!email || !code) {
-      return NextResponse.json({ error: "Email and code are required" }, { status: 400 })
+    const { email, code, password } = await req.json()
+    if (!email || !code || !password) {
+      return NextResponse.json({ error: "Email, code and password are required" }, { status: 400 })
+    }
+    if (typeof email !== "string" || typeof code !== "string" || typeof password !== "string") {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
     // Find the user
     const { data: user } = await supabaseAdmin
       .from("users")
-      .select("id, username, email_verified")
+      .select("id, username, email_verified, password")
       .eq("email", email)
-      .single()
+      .maybeSingle()
 
+    // The code alone isn't enough: it must come with the password chosen
+    // at sign-up. Otherwise someone who registered another person's email
+    // (setting their own password) could get that person to type in the
+    // code and end up owning a verified account under their address.
+    // Every failure (unknown email, wrong password, wrong/expired/used
+    // code, already verified) gets the same reply, so this endpoint can't
+    // be used to test passwords or probe accounts.
+    const bad = () => NextResponse.json({ error: "Invalid or expired code, or wrong password" }, { status: 400 })
     if (!user) {
-      return NextResponse.json({ error: "Invalid verification code" }, { status: 400 })
+      await bcrypt.compare(password, DUMMY_HASH)
+      return bad()
     }
+    const passwordOk = await bcrypt.compare(password, user.password)
 
-    if (user.email_verified) {
-      return NextResponse.json({ ok: true, alreadyVerified: true })
-    }
-
-    // Find valid token
     const { data: token } = await supabaseAdmin
       .from("verification_tokens")
       .select("*")
       .eq("user_id", user.id)
       .eq("token", code)
       .eq("used", false)
-      .single()
+      .maybeSingle()
 
-    if (!token || new Date(token.expires_at) < new Date()) {
-      return NextResponse.json({ error: "Invalid or expired verification code" }, { status: 400 })
+    if (!passwordOk || user.email_verified || !token || new Date(token.expires_at) < new Date()) {
+      return bad()
     }
 
-    // Mark token as used
-    await supabaseAdmin
+    // Mark token as used (atomically — a code can be redeemed once)
+    const { data: claimed } = await supabaseAdmin
       .from("verification_tokens")
       .update({ used: true })
       .eq("id", token.id)
+      .eq("used", false)
+      .select("id")
+      .maybeSingle()
+    if (!claimed) return bad()
 
     // Mark user as verified
     await supabaseAdmin

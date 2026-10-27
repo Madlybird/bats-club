@@ -1,31 +1,71 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import Image from "next/image"
 import BatsOverlay from "@/components/BatsOverlay"
 
+// RegisterForm hands over the address in sessionStorage (kept out of the
+// URL so it never reaches analytics) and the password as _bats_pw (used
+// for auto sign-in and, now, required by /api/auth/verify). ?email= is
+// still read for old links.
+const EMAIL_KEY = "_bats_verify_email"
+const PW_KEY = "_bats_pw"
+const RESEND_COOLDOWN_S = 60
+
+function readSession(key: string): string {
+  try {
+    return sessionStorage.getItem(key) || ""
+  } catch {
+    return ""
+  }
+}
+
 function VerifyForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const emailParam = params.get("email") ?? ""
 
-  const [email] = useState(emailParam)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [hasStoredPw, setHasStoredPw] = useState(false)
+  const [hasEmail, setHasEmail] = useState(false)
   const [code, setCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
   const [done, setDone] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const handed = readSession(EMAIL_KEY) || params.get("email") || ""
+    setEmail(handed)
+    setHasEmail(!!handed)
+    const pw = readSession(PW_KEY)
+    if (pw) {
+      setPassword(pw)
+      setHasStoredPw(true)
+    }
+    setReady(true)
+  }, [params])
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [cooldown])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setNotice("")
     setLoading(true)
     try {
       const res = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: code.trim() }),
+        body: JSON.stringify({ email: email.trim(), code: code.trim(), password }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -33,22 +73,49 @@ function VerifyForm() {
         return
       }
       setDone(true)
+      try {
+        sessionStorage.removeItem(PW_KEY)
+        sessionStorage.removeItem(EMAIL_KEY)
+      } catch {
+        /* ignore */
+      }
       // Auto-sign in after verification
-      const pw = sessionStorage.getItem("_bats_pw")
-      if (pw) {
-        sessionStorage.removeItem("_bats_pw")
-        const result = await signIn("credentials", { email, password: pw, redirect: false })
-        if (!result?.error) {
-          router.push("/")
-          router.refresh()
-          return
-        }
+      const result = await signIn("credentials", { email: email.trim(), password, redirect: false })
+      if (!result?.error) {
+        router.push("/")
+        router.refresh()
+        return
       }
       setTimeout(() => router.push("/login"), 3000)
     } catch {
       setError("Something went wrong. Please try again.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    setError("")
+    setNotice("")
+    if (!email.trim() || !password) {
+      setError("Enter your email and password to get a new code.")
+      return
+    }
+    setCooldown(RESEND_COOLDOWN_S)
+    try {
+      const res = await fetch("/api/auth/resend-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "Could not send a new code. Please try again later.")
+        return
+      }
+      setNotice(data.message || "A new code is on its way.")
+    } catch {
+      setError("Something went wrong. Please try again.")
     }
   }
 
@@ -84,10 +151,37 @@ function VerifyForm() {
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {ready && !hasEmail && (
+                  <div>
+                    <label className="block text-sm text-white/40 mb-1.5 font-medium">Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="input"
+                    />
+                  </div>
+                )}
+                {ready && !hasStoredPw && (
+                  <div>
+                    <label className="block text-sm text-white/40 mb-1.5 font-medium">Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete="current-password"
+                      className="input"
+                    />
+                    <p className="text-[11px] text-white/25 mt-1">The password you chose when signing up.</p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm text-white/40 mb-1.5 font-medium">Verification Code</label>
                   <input
                     type="text"
+                    inputMode="numeric"
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     placeholder="000000"
@@ -103,10 +197,15 @@ function VerifyForm() {
                     <p className="text-red-400 text-sm">{error}</p>
                   </div>
                 )}
+                {notice && (
+                  <div className="rounded-lg px-4 py-3 border border-white/10 bg-white/[0.03]">
+                    <p className="text-white/60 text-sm">{notice}</p>
+                  </div>
+                )}
 
                 <button
                   type="submit"
-                  disabled={loading || code.length < 6}
+                  disabled={loading || code.length < 6 || !password}
                   className="w-full py-3 text-base font-bold mt-2 rounded-lg text-white transition-opacity disabled:opacity-50"
                   style={{ backgroundColor: "#ff2d78" }}
                 >
@@ -114,9 +213,24 @@ function VerifyForm() {
                 </button>
               </form>
 
-              <p className="text-xs text-white/20 text-center mt-4">
-                Code expires in 15 minutes.
-              </p>
+              <div className="text-center mt-4 space-y-2">
+                <p className="text-xs text-white/20">Code expires in 15 minutes.</p>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={cooldown > 0}
+                  className="text-xs font-semibold text-[#ff2d78] hover:underline disabled:text-white/25 disabled:no-underline"
+                >
+                  {cooldown > 0 ? `Send a new code in ${cooldown}s` : "Didn't get it? Send a new code"}
+                </button>
+                <p className="text-[11px] text-white/25">
+                  Forgot the password you signed up with?{" "}
+                  <a href="/forgot-password" className="text-white/50 hover:text-white underline">
+                    Reset it
+                  </a>{" "}
+                  — that also confirms your email.
+                </p>
+              </div>
             </>
           )}
         </div>

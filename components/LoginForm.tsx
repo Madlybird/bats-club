@@ -106,6 +106,25 @@ export default function LoginForm({ labels }: { labels: LoginFormLabels }) {
             {error && (
               <div className="bg-red-900/20 border border-red-900/50 rounded-lg px-4 py-3">
                 <p className="text-red-400 text-sm">{error}</p>
+                {/verify your email/i.test(error) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Hand over via sessionStorage, never the URL.
+                      try {
+                        sessionStorage.setItem("_bats_verify_email", email)
+                        sessionStorage.setItem("_bats_pw", password)
+                      } catch {
+                        /* ignore */
+                      }
+                      router.push("/verify")
+                    }}
+                    className="mt-2 text-xs font-semibold underline"
+                    style={{ color: "#ff2d78" }}
+                  >
+                    Enter your code or get a new one
+                  </button>
+                )}
               </div>
             )}
 
