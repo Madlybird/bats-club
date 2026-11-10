@@ -14,6 +14,11 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id
   if (!userId) return NextResponse.json({ error: "Not signed in" }, { status: 401 })
+  // Only during the one-time step after a first Google sign-in — the site
+  // has no general "rename" feature (it would break old profile links).
+  if (!session.user.needsUsername) {
+    return NextResponse.json({ error: "Username can't be changed here" }, { status: 403 })
+  }
 
   let username = ""
   try {
