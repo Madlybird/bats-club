@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
   }
 
-  let body: { figureId?: string; listingId?: string; artId?: string; paths?: string[] } = {}
+  let body: { figureId?: string; listingId?: string; artId?: string; bookId?: string; paths?: string[] } = {}
   try {
     body = await req.json()
   } catch {
@@ -62,6 +62,17 @@ export async function POST(req: Request) {
     revalidatePath("/ru/art/[id]", "page")
     revalidatePath("/jp/art/[id]", "page")
     revalidated.push("/art/[id]", "/ru/art/[id]", "/jp/art/[id]")
+  }
+
+  // Books section — same shape as art: index is force-dynamic, detail is ISR.
+  if (body.bookId) {
+    push("/books")
+    push("/ru/books")
+    push("/jp/books")
+    revalidatePath("/books/[id]", "page")
+    revalidatePath("/ru/books/[id]", "page")
+    revalidatePath("/jp/books/[id]", "page")
+    revalidated.push("/books/[id]", "/ru/books/[id]", "/jp/books/[id]")
   }
 
   if (body.figureId) {

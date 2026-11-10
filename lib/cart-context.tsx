@@ -14,10 +14,15 @@ export interface CartItem {
   /** "art" for /art listings, undefined/"figure" for figure listings. Used
    *  for GA4 item_category and to pick the shipping model (figures use the
    *  tiered per-order table, art is priced by ePacket weight). */
-  kind?: "figure" | "art"
+  kind?: "figure" | "art" | "book"
   /** Art type ("Poster" | "Zine" | …) — only set for art listings. Drives the
    *  per-type shipping weight and the per-order quantity cap. */
   artType?: string
+  /** Book type ("Artbook" | "Photobook" | …) — only set for /books listings. */
+  bookType?: string
+  /** Real packed-item weight in grams (books). Display-only on the client —
+   *  the checkout API re-reads it from the DB. */
+  weightG?: number
   /** Digital download (PDF) — no shipping, quantity locked to 1. */
   isDigital?: boolean
 }
@@ -52,7 +57,7 @@ function toTrackItem(i: Omit<CartItem, "quantity">, quantity = 1): TrackItem {
     name: i.figureName,
     price: i.price,
     category: i.kind ?? "figure",
-    variant: i.kind === "art" ? i.artType : i.figureSeries,
+    variant: i.kind === "art" ? i.artType : i.kind === "book" ? i.bookType : i.figureSeries,
     quantity,
   }
 }

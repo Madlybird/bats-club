@@ -123,8 +123,10 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   // ── Split cart: figures use the tiered per-order table (max 3, selectable
   //    when over), art ships as one weight-priced ePacket parcel with a
   //    per-type quantity cap. A mixed cart pays both.
-  const figureItems = items.filter((i) => i.kind !== "art")
+  //    Books travel in the same paper parcel(s) as art, priced by real weight.
+  const figureItems = items.filter((i) => i.kind !== "art" && i.kind !== "book")
   const artItems = items.filter((i) => i.kind === "art")
+  const paperItems = items.filter((i) => i.kind === "art" || i.kind === "book")
 
   const figureOverLimit = figureItems.length > MAX_ORDER_QUANTITY
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -144,7 +146,7 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const effectiveFigureItems = figureOverLimit
     ? figureItems.filter((i) => selectedIds.has(i.listingId))
     : figureItems
-  const effectiveItems = [...effectiveFigureItems, ...artItems]
+  const effectiveItems = [...effectiveFigureItems, ...paperItems]
   const effectiveUnits = effectiveItems.reduce((n, i) => n + i.quantity, 0)
 
   const toggleSelect = (id: string) => {
@@ -172,14 +174,14 @@ export default function CartPageContent({ dict, shopHref }: Props) {
   const figShip = effectiveFigureItems.length > 0
     ? getShippingInfo(countryCode, effectiveFigureItems.length)
     : null
-  const artShip = artItems.length > 0
+  const artShip = paperItems.length > 0
     ? getArtShippingInfo(
         countryCode,
-        artItems.map((i) => ({
-          type: i.artType ?? "",
-          quantity: i.quantity,
-          isDigital: i.isDigital,
-        }))
+        paperItems.map((i) =>
+          i.kind === "book"
+            ? { type: i.bookType ?? "", quantity: 1, weightG: i.weightG, isBook: true }
+            : { type: i.artType ?? "", quantity: i.quantity, isDigital: i.isDigital }
+        )
       )
     : null
   const shippingBlocked = Boolean(figShip?.blocked || artShip?.blocked)
@@ -208,10 +210,18 @@ export default function CartPageContent({ dict, shopHref }: Props) {
     ? (figShip?.priceCents ?? 0) + (artShip?.priceCents ?? 0)
     : 0
   const shippingDisplay = `$${(shippingCents / 100).toFixed(2)}`
-  const shippingBreakdown =
-    figShip && (artShip?.priceCents ?? 0) > 0 && !shippingBlocked
-      ? `Figures ${figShip.priceDisplay} + Art ${artShip!.priceDisplay} — ship separately`
-      : ""
+  const paperLabel = paperItems.some((i) => i.kind === "book")
+    ? artItems.length > 0 ? "Books & art" : "Books"
+    : "Art"
+  const parcelNote =
+    (artShip?.parcels ?? 0) > 1 ? ` (${artShip!.parcels} parcels)` : ""
+  const shippingBreakdown = shippingBlocked
+    ? ""
+    : figShip && (artShip?.priceCents ?? 0) > 0
+      ? `Figures ${figShip.priceDisplay} + ${paperLabel} ${artShip!.priceDisplay}${parcelNote} — ship separately`
+      : parcelNote && artShip
+        ? `${paperLabel} ship in ${artShip.parcels} parcels (2 kg postal limit each)`
+        : ""
 
   const memberDiscountCents = memberOffer ? memberShipDiscountCents(shippingCents) : 0
   const totalCents = itemsSubtotal + shippingCents - memberDiscountCents
@@ -374,10 +384,15 @@ export default function CartPageContent({ dict, shopHref }: Props) {
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => {
                 const isArt = item.kind === "art"
+                const isBook = item.kind === "book"
                 const isDigitalArt = isArt && !!item.isDigital
-                const detailHref = isArt ? `/art/${item.listingId}` : `/shop/${item.listingId}`
+                const detailHref = isArt
+                  ? `/art/${item.listingId}`
+                  : isBook
+                    ? `/books/${item.listingId}`
+                    : `/shop/${item.listingId}`
                 const cap = artCategoryMax(item.artType ?? "")
-                const showCheckbox = figureOverLimit && !isArt
+                const showCheckbox = figureOverLimit && !isArt && !isBook
                 const isSelected = selectedIds.has(item.listingId)
                 const canSelectMore = selectedIds.size < MAX_ORDER_QUANTITY
                 const checkboxDisabled = showCheckbox && !isSelected && !canSelectMore

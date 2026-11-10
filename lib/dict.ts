@@ -144,6 +144,7 @@ export interface Dict {
   nav_archive: string
   nav_shop: string
   nav_art: string
+  nav_books: string
   nav_articles: string
   nav_faq: string
   nav_signin: string
@@ -454,6 +455,7 @@ export const en: Dict = {
   nav_archive: "Archive",
   nav_shop: "Shop",
   nav_art: "Art",
+  nav_books: "Books",
   nav_articles: "Articles",
   nav_faq: "FAQ",
   nav_signin: "Sign In",
@@ -563,7 +565,7 @@ export const en: Dict = {
   cart_max_info: "Max 3 figures per order. For more, place a separate order.",
   cart_selected_count: "{X} of 3 selected",
   cart_shipping_prompt: "Select your country to see shipping cost",
-  cart_art_too_heavy: "This art order is too large to ship in one package (over 2 kg). Reduce the quantities, or place it as two separate orders. Questions? support@batsclub.com",
+  cart_art_too_heavy: "One of the items is too heavy for our standard postal service (over 2 kg). Email support@batsclub.com and we'll quote shipping for it.",
   cart_art_over_cap: "One of your art items is over its per-order limit. Reduce the quantity to check out.",
   cart_art_item_cap: "Max {X} per order — reduce to check out.",
   cart_digital_badge: "Digital",
@@ -756,6 +758,7 @@ export const ru: Dict = {
   nav_archive: "Архив",
   nav_shop: "Магазин",
   nav_art: "Арт",
+  nav_books: "Книги",
   nav_articles: "Статьи",
   nav_faq: "FAQ",
   nav_signin: "Войти",
@@ -865,7 +868,7 @@ export const ru: Dict = {
   cart_max_info: "Макс. 3 фигурки за заказ. Для большего количества оформите отдельный заказ.",
   cart_selected_count: "Выбрано {X} из 3",
   cart_shipping_prompt: "Выберите страну для расчёта доставки",
-  cart_art_too_heavy: "Этот арт-заказ слишком большой для одной посылки (более 2 кг). Уменьшите количество или оформите двумя отдельными заказами. Вопросы: support@batsclub.com",
+  cart_art_too_heavy: "Один из товаров слишком тяжёлый для обычной почтовой отправки (более 2 кг). Напишите на support@batsclub.com, и мы рассчитаем доставку для него.",
   cart_art_over_cap: "Одна из арт-позиций превышает лимит на заказ. Уменьшите количество, чтобы оформить.",
   cart_art_item_cap: "Макс. {X} за заказ — уменьшите, чтобы оформить.",
   cart_digital_badge: "Цифровой",
@@ -1058,6 +1061,7 @@ export const jp: Dict = {
   nav_archive: "アーカイブ",
   nav_shop: "ショップ",
   nav_art: "アート",
+  nav_books: "本",
   nav_articles: "記事",
   nav_faq: "FAQ",
   nav_signin: "ログイン",
@@ -1167,7 +1171,7 @@ export const jp: Dict = {
   cart_max_info: "1注文につき最大3点。それ以上は別途ご注文ください。",
   cart_selected_count: "3点中{X}点を選択",
   cart_shipping_prompt: "配送料は国を選択後に表示されます",
-  cart_art_too_heavy: "このアート注文は1つの荷物で発送するには大きすぎます（2 kg超）。数量を減らすか、2回に分けてご注文ください。ご質問は support@batsclub.com まで。",
+  cart_art_too_heavy: "一部の商品が通常の郵便で発送できる重さ（2 kg）を超えています。support@batsclub.com までご連絡いただければ、送料をお見積もりします。",
   cart_art_over_cap: "アート商品のいずれかが1注文あたりの上限を超えています。数量を減らしてください。",
   cart_art_item_cap: "1注文あたり最大{X}点 — 数量を減らしてください。",
   cart_digital_badge: "デジタル",

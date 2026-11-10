@@ -86,7 +86,7 @@ export async function sendCheckoutReminder(session: Stripe.Checkout.Session): Pr
 
   const { data: rows } = await supabaseAdmin
     .from("listings")
-    .select("id, price, stock, active, condition, photos, figure:figures(name, imageUrl:image_url, images), art:art(title)")
+    .select("id, price, stock, active, condition, photos, figure:figures(name, imageUrl:image_url, images), art:art(title), book:books(title)")
     .in("id", listingIds)
 
   const items: ReminderItem[] = []
@@ -97,14 +97,15 @@ export async function sendCheckoutReminder(session: Stripe.Checkout.Session): Pr
     if (!row || !row.active || (row.stock ?? 0) < quantity) continue
     const figure = one<any>(row.figure)
     const art = one<any>(row.art)
+    const book = one<any>(row.book)
     if ((row.stock ?? 0) > 1) allOneOfAKind = false
     items.push({
-      name: figure?.name || art?.title || "Your item",
+      name: figure?.name || art?.title || book?.title || "Your item",
       imageUrl: parseImages(row.photos)[0] || parseImages(figure?.images)[0] || figure?.imageUrl || null,
       priceCents: row.price,
       quantity,
-      condition: figure ? row.condition ?? null : null,
-      href: `${BASE_URL}${art ? "/art" : "/shop"}/${row.id}`,
+      condition: figure || book ? row.condition ?? null : null,
+      href: `${BASE_URL}${art ? "/art" : book ? "/books" : "/shop"}/${row.id}`,
     })
   }
   if (items.length === 0) return "skip: nothing left for sale"

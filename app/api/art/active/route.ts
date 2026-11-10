@@ -8,19 +8,19 @@ export const revalidate = 300
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("listings")
-      .select("id")
-      .eq("active", true)
-      .not("art_id", "is", null)
-      .limit(1)
+    // Same check for /books — one request serves both nav links.
+    const [art, books] = await Promise.all([
+      supabaseAdmin.from("listings").select("id").eq("active", true).not("art_id", "is", null).limit(1),
+      supabaseAdmin.from("listings").select("id").eq("active", true).not("book_id", "is", null).limit(1),
+    ])
 
-    const active = !error && !!data && data.length > 0
+    const active = !art.error && !!art.data && art.data.length > 0
+    const booksActive = !books.error && !!books.data && books.data.length > 0
     return NextResponse.json(
-      { active },
+      { active, books: booksActive },
       { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } },
     )
   } catch {
-    return NextResponse.json({ active: false })
+    return NextResponse.json({ active: false, books: false })
   }
 }

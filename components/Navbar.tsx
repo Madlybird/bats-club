@@ -37,11 +37,12 @@ export default function Navbar() {
   // The /art link only appears once there's at least one active art listing
   // (spec: don't link to an empty page). Cheap edge-cached check.
   const [showArt, setShowArt] = useState(false)
+  const [showBooks, setShowBooks] = useState(false)
   useEffect(() => {
     let cancelled = false
     fetch("/api/art/active")
       .then((r) => (r.ok ? r.json() : { active: false }))
-      .then((d) => { if (!cancelled) setShowArt(!!d?.active) })
+      .then((d) => { if (!cancelled) { setShowArt(!!d?.active); setShowBooks(!!d?.books) } })
       .catch(() => {})
     return () => { cancelled = true }
   }, [])
@@ -52,6 +53,7 @@ export default function Navbar() {
   const shopHref = withLocale(locale, "/shop")
   const artHref = withLocale(locale, "/art")
   const articlesHref = withLocale(locale, "/articles")
+  const booksHref = withLocale(locale, "/books")
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-md">
@@ -68,6 +70,7 @@ export default function Navbar() {
             <NavLink href={archiveHref}>{dict.nav_archive}</NavLink>
             <NavLink href={shopHref}>{dict.nav_shop}</NavLink>
             {showArt && <NavLink href={artHref}>{dict.nav_art}</NavLink>}
+            {showBooks && <NavLink href={booksHref}>{dict.nav_books}</NavLink>}
             <NavLink href={articlesHref}>{dict.nav_articles}</NavLink>
           </nav>
 
@@ -194,6 +197,7 @@ export default function Navbar() {
             <MobileNavLink href={archiveHref} onClick={() => setMobileOpen(false)}>{dict.nav_archive}</MobileNavLink>
             <MobileNavLink href={shopHref} onClick={() => setMobileOpen(false)}>{dict.nav_shop}</MobileNavLink>
             {showArt && <MobileNavLink href={artHref} onClick={() => setMobileOpen(false)}>{dict.nav_art}</MobileNavLink>}
+            {showBooks && <MobileNavLink href={booksHref} onClick={() => setMobileOpen(false)}>{dict.nav_books}</MobileNavLink>}
             <MobileNavLink href={articlesHref} onClick={() => setMobileOpen(false)}>{dict.nav_articles}</MobileNavLink>
             {/* Language switcher mobile */}
             <div className="flex gap-3 px-3 py-2">

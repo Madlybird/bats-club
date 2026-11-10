@@ -136,6 +136,41 @@ const buildEntries = unstable_cache(async (): Promise<MetadataRoute.Sitemap> => 
     console.error("[sitemap] art listings query failed:", e)
   }
 
+  // Book listing pages (/books/[id]) + the /books index once it has items.
+  try {
+    const { data: bookListings } = await supabaseAdmin
+      .from("listings")
+      .select("id, created_at, photos")
+      .eq("active", true)
+      .not("book_id", "is", null)
+      .order("created_at", { ascending: false })
+
+    const rows = (bookListings || []) as any[]
+    if (rows.length > 0) {
+      for (const locale of LOCALES) {
+        entries.push({ url: `${BASE}${locale}/books`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 })
+      }
+    }
+    for (const listing of rows) {
+      let photos: unknown = listing.photos
+      if (typeof photos === "string") {
+        try { photos = JSON.parse(photos) } catch { photos = [] }
+      }
+      const image = Array.isArray(photos) && photos.length > 0 ? photos[0] : null
+      for (const locale of LOCALES) {
+        entries.push({
+          url: `${BASE}${locale}/books/${listing.id}`,
+          lastModified: listing.created_at ? new Date(listing.created_at) : new Date(),
+          changeFrequency: "weekly",
+          priority: 0.7,
+          ...(image ? { images: [image] } : {}),
+        })
+      }
+    }
+  } catch (e) {
+    console.error("[sitemap] book listings query failed:", e)
+  }
+
   // Article pages
   try {
     const { data: articles } = await supabaseAdmin

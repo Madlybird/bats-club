@@ -34,7 +34,7 @@ export async function GET(req: Request) {
     .select(`
       id, listing_id, unit_price, shipping_price, quantity, created_at,
       shipping_address, buyer:users(email),
-      listing:listings(figure:figures(name), art:art(title))
+      listing:listings(figure:figures(name), art:art(title), book:books(title))
     `)
     .eq("stripe_session_id", sessionId)
     .eq("status", "PAID")
@@ -66,8 +66,8 @@ export async function GET(req: Request) {
 
   const items = orders.map((o: any) => ({
     item_id: o.listing_id,
-    item_name: o.listing?.figure?.name || o.listing?.art?.title || o.listing_id,
-    item_category: o.listing?.art ? "art" : "figure",
+    item_name: o.listing?.figure?.name || o.listing?.art?.title || o.listing?.book?.title || o.listing_id,
+    item_category: o.listing?.art ? "art" : o.listing?.book ? "book" : "figure",
     price: (o.unit_price ?? 0) / 100,
     quantity: o.quantity ?? 1,
   }))

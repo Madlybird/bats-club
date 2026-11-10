@@ -297,10 +297,10 @@ export async function POST(req: Request) {
           // Fetch figure names for the email
           const { data: figureData } = await supabaseAdmin
             .from("listings")
-            .select("figure:figures(name), art:art(title)")
+            .select("figure:figures(name), art:art(title), book:books(title)")
             .in("id", listingIds)
           const figureNames = (figureData || [])
-            .map((l: any) => l.figure?.name || l.art?.title)
+            .map((l: any) => l.figure?.name || l.art?.title || l.book?.title)
             .filter(Boolean)
             .join(", ")
           const totalPrice = listingPrices.reduce(

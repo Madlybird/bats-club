@@ -52,6 +52,17 @@ export function shopListingMetadata(
  * Self-canonical, hreflang across the three locale variants — mirrors
  * shopListingMetadata but for the art section.
  */
+/** `alternates` + `openGraph` for a /books/<id> listing page in `locale`. */
+export function bookListingMetadata(
+  id: string,
+  locale: Locale,
+  title: string,
+  image: string | null
+): ProductMeta {
+  const path = `/books/${id}`
+  return block(localeUrl(locale, path), path, title, image)
+}
+
 export function artListingMetadata(
   id: string,
   locale: Locale,

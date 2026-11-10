@@ -2,7 +2,7 @@ import Link from "next/link"
 import { supabaseAdmin } from "@/lib/supabase"
 import AdminOrderRow from "@/components/AdminOrderRow"
 
-type ItemKind = "figure" | "art"
+type ItemKind = "figure" | "art" | "book"
 
 export default async function AdminOrdersPage({
   searchParams,
@@ -10,7 +10,7 @@ export default async function AdminOrdersPage({
   searchParams: Promise<{ type?: string }>
 }) {
   const { type } = await searchParams
-  const filter: "all" | ItemKind = type === "art" || type === "figure" ? type : "all"
+  const filter: "all" | ItemKind = type === "art" || type === "figure" || type === "book" ? type : "all"
 
   const { data: orders } = await supabaseAdmin
     .from("orders")
@@ -23,7 +23,8 @@ export default async function AdminOrdersPage({
       listing:listings(
         id, price, condition,
         figure:figures(id, name, series, imageUrl:image_url),
-        art:art(id, title, type, series)
+        art:art(id, title, type, series),
+        book:books(id, title, type, series, author)
       )
     `)
     .order("created_at", { ascending: false })
@@ -35,7 +36,8 @@ export default async function AdminOrdersPage({
     const listing = (Array.isArray(o.listing) ? o.listing[0] : o.listing) as any
     const figure = Array.isArray(listing?.figure) ? listing.figure[0] : listing?.figure
     const art = Array.isArray(listing?.art) ? listing.art[0] : listing?.art
-    const kind: ItemKind = art ? "art" : "figure"
+    const book = Array.isArray(listing?.book) ? listing.book[0] : listing?.book
+    const kind: ItemKind = art ? "art" : book ? "book" : "figure"
     const addr = o.shippingAddress
     return {
       id: o.id,
@@ -51,8 +53,8 @@ export default async function AdminOrdersPage({
       buyer: { name: buyer?.name ?? "", username: buyer?.username ?? "", email: buyer?.email ?? "" },
       item: {
         kind,
-        name: (art ? art.title : figure?.name) ?? "—",
-        subtitle: (art ? art.series || art.type : figure?.series) ?? "",
+        name: (art ? art.title : book ? book.title : figure?.name) ?? "—",
+        subtitle: (art ? art.series || art.type : book ? [book.type, book.author].filter(Boolean).join(" · ") : figure?.series) ?? "",
       },
     }
   })
@@ -61,6 +63,7 @@ export default async function AdminOrdersPage({
     all: normalized.length,
     figure: normalized.filter((o) => o.item.kind === "figure").length,
     art: normalized.filter((o) => o.item.kind === "art").length,
+    book: normalized.filter((o) => o.item.kind === "book").length,
   }
   const shown = filter === "all" ? normalized : normalized.filter((o) => o.item.kind === filter)
 
@@ -68,6 +71,7 @@ export default async function AdminOrdersPage({
     { key: "all", label: `All (${counts.all})` },
     { key: "figure", label: `Figures (${counts.figure})` },
     { key: "art", label: `Art (${counts.art})` },
+    { key: "book", label: `Books (${counts.book})` },
   ]
 
   return (

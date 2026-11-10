@@ -101,7 +101,8 @@ export async function POST(req: Request) {
       .select(
         "id, price, condition, stock, photos, " +
           "figure:figures(name, series, scale, imageUrl:image_url), " +
-          "art:art(title, series, type, size, is_digital, file_path, file_name)"
+          "art:art(title, series, type, size, is_digital, file_path, file_name), " +
+          "book:books(title, series, type, author, weight_g)"
       )
       .in("id", listingIds)
       .eq("active", true)
@@ -130,11 +131,19 @@ export async function POST(req: Request) {
           image: figure.imageUrl ?? null,
         }
       }
-      const art = listing.art as any
+      const art = (listing.art ?? null) as any
+      const book = (listing.book ?? null) as any
       let photo: string | null = null
       const raw = listing.photos
       const arr = Array.isArray(raw) ? raw : typeof raw === "string" ? (() => { try { return JSON.parse(raw) } catch { return [] } })() : []
       if (Array.isArray(arr) && typeof arr[0] === "string") photo = arr[0]
+      if (book) {
+        return {
+          name: book.title ?? "Book",
+          description: [book.type, book.author, book.series, listing.condition].filter(Boolean).join(" · "),
+          image: photo,
+        }
+      }
       return {
         name: art?.title ?? "Item",
         description: [art?.series, art?.type, art?.size].filter(Boolean).join(" · "),
@@ -175,8 +184,11 @@ export async function POST(req: Request) {
     // not at all. A mixed cart pays for whatever physically ships.
     const figureListings = listings.filter((l) => l.figure)
     const artListings = listings.filter((l) => l.art)
+    // Books are 1-of-1 second-hand copies; they share the art paper parcel(s),
+    // priced by their real weight from the DB (never the client's value).
+    const bookListings = listings.filter((l) => l.book)
     const hasPhysical =
-      figureListings.length > 0 || artListings.some((l) => !isDigital(l))
+      figureListings.length > 0 || bookListings.length > 0 || artListings.some((l) => !isDigital(l))
 
     if (hasPhysical) {
       if (!country) {
@@ -209,15 +221,20 @@ export async function POST(req: Request) {
     const figureShip = figureListings.length > 0
       ? getShippingInfo(country ?? "", figureListings.length)
       : null
-    const artShip = artListings.length > 0
-      ? getArtShippingInfo(
-          country ?? "",
-          artListings.map((l) => ({
+    const artShip = artListings.length + bookListings.length > 0
+      ? getArtShippingInfo(country ?? "", [
+          ...artListings.map((l) => ({
             type: l.art?.type ?? "",
             quantity: requestedQty.get(l.id) ?? 1,
             isDigital: isDigital(l),
-          }))
-        )
+          })),
+          ...bookListings.map((l) => ({
+            type: l.book?.type ?? "",
+            quantity: 1,
+            weightG: Number(l.book?.weight_g) || undefined,
+            isBook: true,
+          })),
+        ])
       : null
     if (figureShip?.blocked) {
       return NextResponse.json({ error: figureShip.blockedMessage }, { status: 400 })

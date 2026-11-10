@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   }
 
   const { orderId, trackingNumber, customerEmail } = body
-  const itemNoun = body.kind === "art" ? "order" : "vintage figure"
+  const itemNoun = body.kind === "art" || body.kind === "book" ? "order" : "vintage figure"
   if (!orderId || !trackingNumber || !customerEmail) {
     return NextResponse.json(
       { error: "orderId, trackingNumber, and customerEmail are required" },

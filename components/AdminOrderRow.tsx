@@ -24,7 +24,7 @@ interface AdminOrderRowProps {
     shippingPrice: number
     createdAt: Date
     buyer: { username: string; name: string; email: string }
-    item: { kind: "figure" | "art"; name: string; subtitle: string }
+    item: { kind: "figure" | "art" | "book"; name: string; subtitle: string }
   }
 }
 
@@ -114,6 +114,8 @@ export default function AdminOrderRow({ order }: AdminOrderRowProps) {
             className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${
               order.item.kind === "art"
                 ? "bg-pink-900/30 text-pink-300 border border-pink-800/50"
+                : order.item.kind === "book"
+                ? "bg-amber-900/30 text-amber-300 border border-amber-800/50"
                 : "bg-violet-900/30 text-violet-300 border border-violet-800/50"
             }`}
           >

@@ -58,6 +58,49 @@ const ART_DATA_TEMPLATE =
   "Description: \n" +
   "```"
 
+// Books: second-hand printed matter from the owner's collection (artbooks,
+// photobooks, other artists' zines, magazines, art cards). Separate `books`
+// table; the sellable row is a `listings` row with book_id set. One copy per
+// listing (stock 1), graded condition, real weight for shipping.
+const BOOK_TYPES = ["Artbook", "Photobook", "Zine", "Magazine", "Cards"]
+const BOOK_CONDITIONS = ["New", "Like New", "Very Good", "Good", "Fair"]
+// template label (lowercase, spaces removed) → books column
+const BOOK_FIELD_MAP = {
+  title: "title",
+  originaltitle: "title_original",
+  original: "title_original",
+  author: "author",
+  artist: "author",
+  publisher: "publisher",
+  year: "year",
+  language: "language",
+  pages: "pages",
+  size: "size",
+  binding: "binding",
+  series: "series",
+  isbn: "isbn",
+  includes: "includes",
+  description: "description",
+}
+const BOOK_REQUIRED_FIELDS = ["title"]
+const BOOK_DATA_TEMPLATE =
+  "📝 *Fill in the book data and send it back* (required: Title — the rest is optional, delete lines you don't need):\n\n" +
+  "```\n" +
+  "Title: \n" +
+  "Original title: \n" +
+  "Author: \n" +
+  "Publisher: \n" +
+  "Year: \n" +
+  "Language: \n" +
+  "Pages: \n" +
+  "Size: \n" +
+  "Binding: \n" +
+  "Series: \n" +
+  "ISBN: \n" +
+  "Includes: Obi, Dust jacket\n" +
+  "Description: \n" +
+  "```"
+
 // Steps during which the photo handler should buffer incoming photos
 // (as opposed to rejecting them because another flow is in progress).
 const PHOTO_COLLECT_STEPS = [
@@ -66,6 +109,8 @@ const PHOTO_COLLECT_STEPS = [
   "choosing_category",
   "art_collecting_photos",
   "art_editing_photos",
+  "book_collecting_photos",
+  "book_editing_photos",
 ]
 
 const UUID_RE = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
@@ -92,6 +137,39 @@ function extractFigureSlug(text) {
 function extractArtListingId(text) {
   const match = text.match(/\/art\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/)
   return match ? match[1] : null
+}
+
+// Same idea for a pasted batsclub.com/books/<id> link.
+function extractBookListingId(text) {
+  const match = text.match(/\/books\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/)
+  return match ? match[1] : null
+}
+
+// "Label: value" parser for the book template. Labels are matched without
+// spaces/case ("Original title" → originaltitle). Description may span
+// several lines: everything after "Description:" belongs to it.
+function parseBookTemplate(text, base = {}) {
+  const data = { ...base }
+  const lines = text.split(/\r?\n/)
+  for (let i = 0; i < lines.length; i++) {
+    const match = lines[i].match(/^\s*([A-Za-z][A-Za-z ]*?)\s*:\s*(.*)$/)
+    if (!match) continue
+    const key = BOOK_FIELD_MAP[match[1].toLowerCase().replace(/\s+/g, "")]
+    if (!key) continue
+    let value = match[2].trim()
+    if (key === "description") {
+      value = [value, ...lines.slice(i + 1)].join("\n").trim()
+      i = lines.length
+    }
+    if (!value) continue
+    if (key === "year") data.year = parseYear(value)
+    else if (key === "pages") {
+      const n = parseInt(value, 10)
+      if (!isNaN(n) && n > 0) data.pages = n
+    } else data[key] = value
+  }
+  const missing = BOOK_REQUIRED_FIELDS.filter((f) => !data[f])
+  return { data, missing }
 }
 
 function slugify(input) {
@@ -439,6 +517,78 @@ async function deleteArtAndListing(listingId) {
   return revalidateSite({ artId: listing.art_id })
 }
 
+// ── Book writes ───────────────────────────────────────────────────────────────
+
+async function saveBook(bookData) {
+  const row = {
+    title: bookData.title,
+    title_original: bookData.title_original || null,
+    type: bookData.type,
+    author: bookData.author || null,
+    publisher: bookData.publisher || null,
+    year: bookData.year ?? null,
+    language: bookData.language || null,
+    isbn: bookData.isbn || null,
+    series: bookData.series || null,
+    pages: bookData.pages ?? null,
+    size: bookData.size || null,
+    binding: bookData.binding || null,
+    includes: bookData.includes || null,
+    weight_g: bookData.weightG,
+    description: bookData.description || null,
+    is_mature: !!bookData.isMature,
+  }
+  const { data, error } = await supabase.from("books").insert(row).select("id, title").single()
+  if (error) throw new Error(`Book insert failed: ${error.message}`)
+  return data
+}
+
+// 1 book = 1 listing, one copy (stock 1). Sold → decrement_stock de-lists it.
+async function createBookListing(bookId, priceCents, condition, photos) {
+  const { data, error } = await supabase
+    .from("listings")
+    .insert({
+      book_id: bookId,
+      seller_id: ADMIN_SELLER_ID,
+      price: priceCents,
+      condition,
+      stock: 1,
+      photos,
+      active: true,
+    })
+    .select("id")
+    .single()
+  if (error) throw new Error(`Book listing insert failed: ${error.message}`)
+  return data.id
+}
+
+// Hard-deletes a book and its listing; refuses if real orders exist.
+async function deleteBookAndListing(listingId) {
+  const { data: listing, error: findErr } = await supabase
+    .from("listings")
+    .select("id, book_id")
+    .eq("id", listingId)
+    .maybeSingle()
+  if (findErr) throw new Error(`Lookup failed: ${findErr.message}`)
+  if (!listing || !listing.book_id) throw new Error("Not a book listing.")
+
+  const { data: orders, error: ordersErr } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("listing_id", listingId)
+    .limit(1)
+  if (ordersErr) throw new Error(`Order lookup failed: ${ordersErr.message}`)
+  if (orders && orders.length > 0) {
+    throw new Error("Cannot delete — order(s) exist for this listing. Refusing to delete order history.")
+  }
+
+  const { error: delListingErr } = await supabase.from("listings").delete().eq("id", listingId)
+  if (delListingErr) throw new Error(`Failed to delete listing: ${delListingErr.message}`)
+  const { error: delBookErr } = await supabase.from("books").delete().eq("id", listing.book_id)
+  if (delBookErr) throw new Error(`Failed to delete book: ${delBookErr.message}`)
+  return revalidateSite({ bookId: listing.book_id })
+}
+
 // Bypasses the site's ISR cache on /figures/[slug] (and the archive/shop
 // listing pages) right after a direct-Supabase write, since the bot has no
 // admin session to trigger Next.js's normal revalidatePath() call.
@@ -560,8 +710,60 @@ const CATEGORY_KEYBOARD = {
     inline_keyboard: [[
       { text: "📦 Figure", callback_data: "cat:figure" },
       { text: "🖼️ Art", callback_data: "cat:art" },
+      { text: "📚 Books", callback_data: "cat:books" },
     ]],
   },
+}
+
+const BOOK_TYPE_KEYBOARD = {
+  reply_markup: {
+    inline_keyboard: [
+      [ { text: "Artbook", callback_data: "booktype:Artbook" }, { text: "Photobook", callback_data: "booktype:Photobook" } ],
+      [ { text: "Zine", callback_data: "booktype:Zine" }, { text: "Magazine", callback_data: "booktype:Magazine" } ],
+      [ { text: "Cards", callback_data: "booktype:Cards" } ],
+    ],
+  },
+}
+
+const BOOK_CONDITION_KEYBOARD = {
+  reply_markup: {
+    inline_keyboard: [
+      [ { text: "New", callback_data: "bookcond:New" }, { text: "Like New", callback_data: "bookcond:Like New" } ],
+      [ { text: "Very Good", callback_data: "bookcond:Very Good" }, { text: "Good", callback_data: "bookcond:Good" } ],
+      [ { text: "Fair", callback_data: "bookcond:Fair" } ],
+    ],
+  },
+}
+
+const BOOK_MATURE_KEYBOARD = {
+  reply_markup: {
+    inline_keyboard: [[
+      { text: "🔞 Yes, 18+", callback_data: "bookmature:yes" },
+      { text: "No", callback_data: "bookmature:no" },
+    ]],
+  },
+}
+
+function formatBookData(d) {
+  const line = (label, v) => `*${label}:* ${v ?? "—"}\n`
+  return (
+    `📚 *Book data:*\n\n` +
+    line("Title", d.title) +
+    (d.title_original ? line("Original title", d.title_original) : "") +
+    line("Type", d.type) +
+    line("Author", d.author) +
+    line("Publisher", d.publisher) +
+    line("Year", d.year) +
+    line("Language", d.language) +
+    line("Pages", d.pages) +
+    line("Size", d.size) +
+    line("Binding", d.binding) +
+    line("Series", d.series) +
+    line("ISBN", d.isbn) +
+    line("Includes", d.includes) +
+    line("Description", d.description) +
+    `\nIs this correct? Reply *YES* to confirm, or send corrected lines in \`Label: value\` format.`
+  )
 }
 
 const MATURE_KEYBOARD = {
@@ -630,6 +832,10 @@ bot.on("photo", async (msg) => {
         ? "Send more photos, or type *DONE* to save (replaces the art's current photos)."
         : freshState.step === "art_collecting_photos"
         ? "Send more photos of this piece, or type *DONE* when finished."
+        : freshState.step === "book_editing_photos"
+        ? "Send more photos, or type *DONE* to save (replaces the book's current photos)."
+        : freshState.step === "book_collecting_photos"
+        ? "Send more photos of this book (cover, spine, pages, flaws), or type *DONE* when finished."
         : "Send more photos of this figure, or type *DONE* when finished."
     return bot.sendMessage(
       chatId,
@@ -713,6 +919,47 @@ bot.on("callback_query", async (query) => {
       )
     }
 
+    if (data === "cat:books" && state.step === "choosing_category") {
+      setState(userId, { step: "book_collecting_photos", photoBuffers: state.photoBuffers || [] })
+      await bot.answerCallbackQuery(query.id, { text: "Books" })
+      const n = (state.photoBuffers || []).length
+      return bot.sendMessage(
+        chatId,
+        `📚 *Book.* ${n} photo${n === 1 ? "" : "s"} so far — add cover, spine, pages and any flaws, then type *DONE*.`,
+        { parse_mode: "Markdown" }
+      )
+    }
+
+    // Book type pick → data template.
+    if (data.startsWith("booktype:") && state.step === "book_choosing_type") {
+      const type = data.slice("booktype:".length)
+      if (!BOOK_TYPES.includes(type)) return bot.answerCallbackQuery(query.id)
+      setState(userId, { ...state, step: "book_awaiting_data", bookData: { type } })
+      await bot.answerCallbackQuery(query.id, { text: type })
+      return bot.sendMessage(chatId, BOOK_DATA_TEMPLATE, { parse_mode: "Markdown" })
+    }
+
+    // Condition pick → weight.
+    if (data.startsWith("bookcond:") && state.step === "book_awaiting_condition") {
+      const condition = data.slice("bookcond:".length)
+      if (!BOOK_CONDITIONS.includes(condition)) return bot.answerCallbackQuery(query.id)
+      setState(userId, { ...state, step: "book_awaiting_weight", condition })
+      await bot.answerCallbackQuery(query.id, { text: condition })
+      return bot.sendMessage(
+        chatId,
+        "⚖️ *Weight* of the book in grams, without packaging (e.g. `850`). Shipping is priced from this.",
+        { parse_mode: "Markdown" }
+      )
+    }
+
+    // Mature pick → price.
+    if (data.startsWith("bookmature:") && state.step === "book_awaiting_mature") {
+      const isMature = data === "bookmature:yes"
+      setState(userId, { ...state, step: "book_awaiting_price", bookData: { ...state.bookData, isMature } })
+      await bot.answerCallbackQuery(query.id, { text: isMature ? "18+" : "No" })
+      return bot.sendMessage(chatId, "💰 *Price* in USD? Reply with a number (e.g. `35`).", { parse_mode: "Markdown" })
+    }
+
     // Art type pick → ask digital vs physical.
     if (data.startsWith("arttype:") && state.step === "art_choosing_type") {
       const type = data.slice("arttype:".length)
@@ -772,12 +1019,14 @@ bot.on("message", async (msg) => {
   if (text === "/start" || text === "/help") {
     return bot.sendMessage(
       chatId,
-      "👋 *Bats Club Bot*\n\nSend up to 10 photos, then pick *📦 Figure* or *🖼️ Art*.\n\n" +
+      "👋 *Bats Club Bot*\n\nSend up to 10 photos, then pick *📦 Figure*, *🖼️ Art* or *📚 Books*.\n\n" +
         "*Figure:* photos → *DONE* → data template → optional shop listing.\n" +
-        "*Art:* photos → *DONE* → pick type → data template → 18+? → stock → price.\n\n" +
+        "*Art:* photos → *DONE* → pick type → data template → 18+? → stock → price.\n" +
+        "*Books:* photos → *DONE* → pick type → data template → condition → weight (g) → 18+? → price.\n\n" +
         "✏️ Paste a link to manage an existing item:\n" +
         "• `batsclub.com/shop/<id>` — figure listing: photos / `PRICE` / *DELETE*\n" +
-        "• `batsclub.com/art/<id>` — art listing: photos / `PRICE` / `STOCK` / *DELETE*\n\n" +
+        "• `batsclub.com/art/<id>` — art listing: photos / `PRICE` / `STOCK` / *DELETE*\n" +
+        "• `batsclub.com/books/<id>` — book listing: photos / `PRICE` / `WEIGHT` / *DELETE*\n\n" +
         "/cancel — cancel current operation",
       { parse_mode: "Markdown" }
     )
@@ -794,11 +1043,38 @@ bot.on("message", async (msg) => {
 
   // Waiting on the category buttons — nudge if they type instead.
   if (state.step === "choosing_category") {
-    return bot.sendMessage(chatId, "👆 Tap *📦 Figure* or *🖼️ Art* above, or /cancel.", { parse_mode: "Markdown" })
+    return bot.sendMessage(chatId, "👆 Tap *📦 Figure*, *🖼️ Art* or *📚 Books* above, or /cancel.", { parse_mode: "Markdown" })
   }
 
   // ── Idle: pasted a shop/archive link or ID → start management flow ───────
   if (state.step === "idle") {
+    // A batsclub.com/books/<id> link → manage that book listing.
+    const bookListingId = extractBookListingId(text)
+    if (bookListingId) {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("id, price, stock, photos, book_id, book:books(title, weight_g)")
+        .eq("id", bookListingId)
+        .maybeSingle()
+      if (error || !data || !data.book_id) {
+        return bot.sendMessage(chatId, "❌ Book listing not found. Check the link and try again.")
+      }
+      const book = Array.isArray(data.book) ? data.book[0] : data.book
+      const bookTitle = book?.title || "book"
+      setState(userId, { step: "book_editing_photos", listingId: data.id, bookId: data.book_id, bookTitle, photoBuffers: [] })
+      const photoCount = Array.isArray(data.photos) ? data.photos.length : 0
+      return bot.sendMessage(
+        chatId,
+        `📚 *Managing "${bookTitle}"*\n\n` +
+          `Current: ${photoCount} photo${photoCount === 1 ? "" : "s"} · $${(data.price / 100).toFixed(2)} · ${book?.weight_g ?? "?"} g · ${data.stock > 0 ? "for sale" : "sold"}\n\n` +
+          `• Send new photos (up to 10), then *DONE* — replace photos\n` +
+          `• \`PRICE <amount>\` — change price\n` +
+          `• \`WEIGHT <grams>\` — change weight\n` +
+          `• *DELETE* — remove permanently\n\n/cancel to exit`,
+        { parse_mode: "Markdown" }
+      )
+    }
+
     // A batsclub.com/art/<id> link → manage that art listing.
     const artListingId = extractArtListingId(text)
     if (artListingId) {
@@ -1216,6 +1492,183 @@ bot.on("message", async (msg) => {
       resetState(userId)
       return bot.sendMessage(chatId, `❌ Failed to save: ${err.message}`)
     }
+  }
+
+  // ══ BOOK FLOW ════════════════════════════════════════════════════════════════
+
+  if (state.step === "book_collecting_photos") {
+    if (text.toUpperCase() === "DONE") {
+      if (state.photoBuffers.length === 0) return bot.sendMessage(chatId, "📸 Send at least one photo first.")
+      setState(userId, { ...state, step: "book_choosing_type" })
+      return bot.sendMessage(chatId, "📚 Pick the *type*:", { parse_mode: "Markdown", ...BOOK_TYPE_KEYBOARD })
+    }
+    return bot.sendMessage(chatId, "📸 Send more photos or type *DONE* when finished.", { parse_mode: "Markdown" })
+  }
+
+  if (state.step === "book_choosing_type") {
+    return bot.sendMessage(chatId, "📚 Pick the *type* using the buttons above.", { parse_mode: "Markdown", ...BOOK_TYPE_KEYBOARD })
+  }
+
+  if (state.step === "book_awaiting_data") {
+    const { data, missing } = parseBookTemplate(text, { type: state.bookData.type })
+    if (missing.length > 0) {
+      return bot.sendMessage(chatId, `⚠️ Missing required field(s): ${missing.join(", ")}. Send the template again with a Title.`)
+    }
+    const bookData = { ...data, type: state.bookData.type }
+    setState(userId, { ...state, step: "book_awaiting_confirmation", bookData })
+    return bot.sendMessage(chatId, formatBookData(bookData), { parse_mode: "Markdown" })
+  }
+
+  if (state.step === "book_awaiting_confirmation") {
+    if (text.toUpperCase() === "YES") {
+      setState(userId, { ...state, step: "book_awaiting_condition" })
+      return bot.sendMessage(chatId, "🔎 *Condition* of this copy?", { parse_mode: "Markdown", ...BOOK_CONDITION_KEYBOARD })
+    }
+    const { data } = parseBookTemplate(text, state.bookData)
+    const bookData = { ...data, type: state.bookData.type }
+    setState(userId, { ...state, bookData })
+    return bot.sendMessage(chatId, formatBookData(bookData), { parse_mode: "Markdown" })
+  }
+
+  if (state.step === "book_awaiting_condition") {
+    return bot.sendMessage(chatId, "🔎 Pick the condition using the buttons above.", BOOK_CONDITION_KEYBOARD)
+  }
+
+  if (state.step === "book_awaiting_weight") {
+    const g = parseInt(text.replace(/[^\d]/g, ""), 10)
+    if (isNaN(g) || g < 10 || g > 20000) {
+      return bot.sendMessage(chatId, "⚠️ Send the weight in grams as a number (e.g. `850`).", { parse_mode: "Markdown" })
+    }
+    const warn = g > 1850 ? "\n\n⚠️ Over ~1.85 kg with packaging this can't go by ePacket — buyers will be asked to email you for a shipping quote." : ""
+    setState(userId, { ...state, step: "book_awaiting_mature", bookData: { ...state.bookData, weightG: g } })
+    return bot.sendMessage(chatId, `✅ ${g} g.${warn}\n\n🔞 Is this *18+ / mature* content?`, { parse_mode: "Markdown", ...BOOK_MATURE_KEYBOARD })
+  }
+
+  if (state.step === "book_awaiting_mature") {
+    return bot.sendMessage(chatId, "🔞 Use the buttons above — is this 18+?", BOOK_MATURE_KEYBOARD)
+  }
+
+  if (state.step === "book_awaiting_price") {
+    const price = parseFloat(text.trim())
+    if (isNaN(price) || price <= 0) {
+      return bot.sendMessage(chatId, "⚠️ Send a valid price (e.g. `35`).", { parse_mode: "Markdown" })
+    }
+    try {
+      await bot.sendMessage(chatId, "⏳ Uploading and saving book...")
+      const photos = await uploadAllPhotos(state.photoBuffers, state.bookData.title, "books")
+      const book = await saveBook(state.bookData)
+      const listingId = await createBookListing(book.id, Math.round(price * 100), state.condition, photos)
+      const revalidated = await revalidateSite({ bookId: book.id })
+      resetState(userId)
+      return bot.sendMessage(
+        chatId,
+        `✅ *Book added!*\n\n📚 ${book.title}\n💰 $${price.toFixed(2)} · ${state.condition} · ${state.bookData.weightG} g · ${state.bookData.type}\n\n` +
+          `📎 batsclub.com/books/${listingId}` +
+          (revalidated ? "" : REVALIDATE_WARNING),
+        { parse_mode: "Markdown" }
+      )
+    } catch (err) {
+      console.error("Book save error:", err)
+      resetState(userId)
+      return bot.sendMessage(chatId, `❌ Failed to save: ${err.message}`)
+    }
+  }
+
+  // ── Manage an existing book listing (pasted /books/<id> link) ─────────────
+  if (state.step === "book_editing_photos") {
+    const upper = text.toUpperCase()
+    const done = async (msgText, revalidated) => {
+      resetState(userId)
+      return bot.sendMessage(
+        chatId,
+        `${msgText}\n\n📎 batsclub.com/books/${state.listingId}` + (revalidated ? "" : REVALIDATE_WARNING),
+        { parse_mode: "Markdown" }
+      )
+    }
+
+    if (state.photoBuffers.length === 0 && upper === "DELETE") {
+      setState(userId, { step: "book_confirming_delete", listingId: state.listingId, bookId: state.bookId, bookTitle: state.bookTitle })
+      return bot.sendMessage(
+        chatId,
+        `⚠️ This will *permanently delete* "${state.bookTitle}" from /books. This cannot be undone.\n\nReply *DELETE CONFIRM* to proceed, or /cancel.`,
+        { parse_mode: "Markdown" }
+      )
+    }
+
+    if (state.photoBuffers.length === 0 && upper.startsWith("PRICE")) {
+      const price = parseFloat(text.split(/\s+/)[1])
+      if (isNaN(price) || price <= 0) {
+        return bot.sendMessage(chatId, "⚠️ Include a valid price. Example: `PRICE 35`", { parse_mode: "Markdown" })
+      }
+      try {
+        const { error } = await supabase.from("listings").update({ price: Math.round(price * 100) }).eq("id", state.listingId)
+        if (error) throw new Error(error.message)
+        return done(`✅ *Price updated!*\n\n📚 ${state.bookTitle}\n💰 $${price.toFixed(2)}`, await revalidateSite({ bookId: state.bookId }))
+      } catch (err) {
+        console.error("Book price update error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ Failed to update price: ${err.message}`)
+      }
+    }
+
+    if (state.photoBuffers.length === 0 && upper.startsWith("WEIGHT")) {
+      const g = parseInt((text.split(/\s+/)[1] || "").replace(/[^\d]/g, ""), 10)
+      if (isNaN(g) || g < 10 || g > 20000) {
+        return bot.sendMessage(chatId, "⚠️ Include the weight in grams. Example: `WEIGHT 850`", { parse_mode: "Markdown" })
+      }
+      try {
+        const { error } = await supabase.from("books").update({ weight_g: g }).eq("id", state.bookId)
+        if (error) throw new Error(error.message)
+        return done(`✅ *Weight updated!*\n\n📚 ${state.bookTitle}\n⚖️ ${g} g`, await revalidateSite({ bookId: state.bookId }))
+      } catch (err) {
+        console.error("Book weight update error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ Failed to update weight: ${err.message}`)
+      }
+    }
+
+    if (upper === "DONE") {
+      if (state.photoBuffers.length === 0) return bot.sendMessage(chatId, "📸 Send at least one photo first, or /cancel.")
+      try {
+        await bot.sendMessage(chatId, "⏳ Uploading photos...")
+        const imageUrls = await uploadAllPhotos(state.photoBuffers, state.bookTitle, "books")
+        const { error } = await supabase.from("listings").update({ photos: imageUrls }).eq("id", state.listingId)
+        if (error) throw new Error(error.message)
+        return done(
+          `✅ *Photos updated!*\n\n📚 ${state.bookTitle}\n📸 ${imageUrls.length} photo${imageUrls.length === 1 ? "" : "s"}`,
+          await revalidateSite({ bookId: state.bookId })
+        )
+      } catch (err) {
+        console.error("Book photo update error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ Failed to update photos: ${err.message}`)
+      }
+    }
+
+    return bot.sendMessage(
+      chatId,
+      "📸 Send photos + *DONE* to replace them. Or `PRICE <amount>` / `WEIGHT <grams>` / *DELETE* (before sending photos).",
+      { parse_mode: "Markdown" }
+    )
+  }
+
+  if (state.step === "book_confirming_delete") {
+    if (text.toUpperCase() === "DELETE CONFIRM") {
+      try {
+        const revalidated = await deleteBookAndListing(state.listingId)
+        resetState(userId)
+        return bot.sendMessage(
+          chatId,
+          `🗑️ *Deleted!*\n\n"${state.bookTitle}" has been permanently removed from /books.` + (revalidated ? "" : REVALIDATE_WARNING),
+          { parse_mode: "Markdown" }
+        )
+      } catch (err) {
+        console.error("Book delete error:", err)
+        resetState(userId)
+        return bot.sendMessage(chatId, `❌ ${err.message}`)
+      }
+    }
+    return bot.sendMessage(chatId, "⚠️ Reply *DELETE CONFIRM* to permanently delete, or /cancel.", { parse_mode: "Markdown" })
   }
 
   // ══ ART FLOW ═════════════════════════════════════════════════════════════════
