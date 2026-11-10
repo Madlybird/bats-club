@@ -1,5 +1,6 @@
 import LoginForm from "@/components/LoginForm"
 import { ru } from "@/lib/dict"
+import { googleAuthEnabled } from "@/lib/auth"
 
 export default function LoginRuPage() {
   return (
@@ -17,6 +18,7 @@ export default function LoginRuPage() {
         forgotLabel: ru.login_forgot_link,
         forgotHref: "/ru/forgot-password",
       }}
+      google={googleAuthEnabled ? { label: ru.auth_google, orLabel: ru.auth_or, lang: "ru" } : undefined}
     />
   )
 }

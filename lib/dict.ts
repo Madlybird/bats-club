@@ -159,6 +159,15 @@ export interface Dict {
   login_no_account: string
   login_join_link: string
   login_forgot_link: string
+  auth_google: string
+  auth_or: string
+  welcome_heading: string
+  welcome_body: string
+  welcome_username: string
+  welcome_suggested: string
+  welcome_suggested_hint: string
+  welcome_continue: string
+  welcome_saving: string
 
   // ── Forgot password page ──
   forgot_subtitle: string
@@ -459,6 +468,15 @@ export const en: Dict = {
   login_no_account: "Don't have an account?",
   login_join_link: "Join the Club",
   login_forgot_link: "Forgot password?",
+  auth_google: "Continue with Google",
+  auth_or: "or",
+  welcome_heading: "Choose your username",
+  welcome_body: "This is your public name on Bats Club. You can change it later in your profile.",
+  welcome_username: "Username",
+  welcome_suggested: "Suggested:",
+  welcome_suggested_hint: "Leave empty to use it, or tap to fill it in.",
+  welcome_continue: "Continue",
+  welcome_saving: "Saving...",
 
   forgot_subtitle: "Password Recovery",
   forgot_heading: "Forgot your password?",
@@ -752,6 +770,15 @@ export const ru: Dict = {
   login_no_account: "Нет аккаунта?",
   login_join_link: "Вступить в клуб",
   login_forgot_link: "Забыли пароль?",
+  auth_google: "Продолжить с Google",
+  auth_or: "или",
+  welcome_heading: "Выберите имя пользователя",
+  welcome_body: "Это ваше публичное имя на Bats Club. Его можно поменять позже в профиле.",
+  welcome_username: "Имя пользователя",
+  welcome_suggested: "Предлагаем:",
+  welcome_suggested_hint: "Оставьте поле пустым, чтобы взять его, или нажмите, чтобы подставить.",
+  welcome_continue: "Продолжить",
+  welcome_saving: "Сохраняем...",
 
   forgot_subtitle: "Восстановление пароля",
   forgot_heading: "Забыли пароль?",
@@ -1045,6 +1072,15 @@ export const jp: Dict = {
   login_no_account: "アカウントをお持ちでない方は",
   login_join_link: "クラブに参加",
   login_forgot_link: "パスワードをお忘れですか？",
+  auth_google: "Googleで続ける",
+  auth_or: "または",
+  welcome_heading: "ユーザー名を選択",
+  welcome_body: "Bats Clubでの公開名です。後からプロフィールで変更できます。",
+  welcome_username: "ユーザー名",
+  welcome_suggested: "おすすめ:",
+  welcome_suggested_hint: "空欄のままにするとこの名前を使用します。タップで入力されます。",
+  welcome_continue: "続ける",
+  welcome_saving: "保存中...",
 
   forgot_subtitle: "パスワード再設定",
   forgot_heading: "パスワードをお忘れですか？",

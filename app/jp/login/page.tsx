@@ -1,5 +1,6 @@
 import LoginForm from "@/components/LoginForm"
 import { jp } from "@/lib/dict"
+import { googleAuthEnabled } from "@/lib/auth"
 
 export default function LoginJpPage() {
   return (
@@ -17,6 +18,7 @@ export default function LoginJpPage() {
         forgotLabel: jp.login_forgot_link,
         forgotHref: "/jp/forgot-password",
       }}
+      google={googleAuthEnabled ? { label: jp.auth_google, orLabel: jp.auth_or, lang: "jp" } : undefined}
     />
   )
 }

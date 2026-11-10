@@ -32,7 +32,7 @@ export default function PrivacyPage() {
       <section>
         <h2 className="text-white font-bold text-base mb-2">1. What we collect</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          We collect your name, email address, shipping address, phone number, order history, and wishlist. Payment information is processed by Stripe and is never stored on our servers. We also collect basic analytics such as browser, device, and pages visited.
+          We collect your name, email address, shipping address, phone number, order history, and wishlist. Payment information is processed by Stripe and is never stored on our servers. We also collect basic analytics such as browser, device, and pages visited. If you sign in with Google, we receive only your name and email address from Google (no password, contacts or other account data) and use them to create or sign in to your Bats Club account.
         </p>
       </section>
 

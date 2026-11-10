@@ -9,6 +9,7 @@ declare module "next-auth" {
       name: string
       username: string
       isAdmin: boolean
+      needsUsername?: boolean
     }
   }
 
@@ -18,6 +19,7 @@ declare module "next-auth" {
     name: string
     username: string
     isAdmin: boolean
+    needsUsername?: boolean
   }
 }
 
@@ -26,5 +28,6 @@ declare module "next-auth/jwt" {
     id: string
     username: string
     isAdmin: boolean
+    needsUsername?: boolean
   }
 }

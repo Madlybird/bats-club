@@ -1,8 +1,12 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import GoogleProvider from "next-auth/providers/google"
 import { supabaseAdmin } from "@/lib/supabase"
 import bcrypt from "bcryptjs"
 import { rateLimit } from "@/lib/rate-limit"
+import { findOrCreateGoogleUser } from "@/lib/google-auth"
+
+export const googleAuthEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
 
 // Generic message used for every credential failure (no account, wrong
 // password) so an attacker can't enumerate which emails are registered.
@@ -56,7 +60,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error(INVALID_CREDS)
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+        const isPasswordValid = user.password
+          ? await bcrypt.compare(credentials.password, user.password)
+          : false
         if (!isPasswordValid) {
           throw new Error(INVALID_CREDS)
         }
@@ -74,9 +80,51 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
+    ...(googleAuthEnabled
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            // Always show Google's account chooser, so a shared computer
+            // doesn't silently sign in whoever used Google last.
+            authorization: { params: { prompt: "select_account" } },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ account, profile }) {
+      if (account?.provider === "google") {
+        // Only accept addresses Google itself has verified — that check
+        // replaces our email code for Google sign-ins.
+        const p = profile as { email?: string; email_verified?: boolean } | undefined
+        return !!(p?.email && p.email_verified === true)
+      }
+      return true
+    },
+    async jwt({ token, user, account, profile, trigger }) {
+      if (account?.provider === "google") {
+        const p = profile as { email: string; name?: string }
+        const g = await findOrCreateGoogleUser(p.email, p.name)
+        token.id = g.id
+        token.username = g.username
+        token.isAdmin = g.isAdmin
+        token.needsUsername = g.isNew
+        // Google's own user id must never be used as ours.
+        token.sub = g.id
+        return token
+      }
+      if (trigger === "update" && token.id) {
+        // Sent by the username step after it saved. Re-read from the DB —
+        // never trust values the client passes to update().
+        const { data } = await supabaseAdmin
+          .from("users")
+          .select("username")
+          .eq("id", token.id as string)
+          .maybeSingle()
+        if (data) token.username = data.username
+        token.needsUsername = false
+      }
       if (user) {
         token.id = user.id
         token.username = (user as any).username
@@ -118,12 +166,16 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.username = token.username as string
         session.user.isAdmin = token.isAdmin as boolean
+        session.user.needsUsername = !!token.needsUsername
       }
       return session
     },
   },
   pages: {
     signIn: "/login",
+    // Failed Google sign-ins land back on /login?error=..., not on
+    // NextAuth's bare built-in error page.
+    error: "/login",
   },
   session: {
     strategy: "jwt",

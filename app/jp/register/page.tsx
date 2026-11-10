@@ -1,5 +1,6 @@
 import RegisterForm from "@/components/RegisterForm"
 import { jp } from "@/lib/dict"
+import { googleAuthEnabled } from "@/lib/auth"
 
 export default function RegisterJpPage() {
   return (
@@ -19,6 +20,7 @@ export default function RegisterJpPage() {
         signinLink: jp.register_signin_link,
         loginHref: "/jp/login",
       }}
+      google={googleAuthEnabled ? { label: jp.auth_google, orLabel: jp.auth_or, lang: "jp" } : undefined}
     />
   )
 }

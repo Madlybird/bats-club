@@ -1,11 +1,12 @@
 "use client"
 
 import { signIn, getSession } from "next-auth/react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import BatsOverlay from "@/components/BatsOverlay"
+import GoogleSignInButton from "@/components/GoogleSignInButton"
 import { trackLogin } from "@/lib/analytics"
 
 interface LoginFormLabels {
@@ -22,12 +23,29 @@ interface LoginFormLabels {
   forgotHref: string
 }
 
-export default function LoginForm({ labels }: { labels: LoginFormLabels }) {
+export interface GoogleButtonProps {
+  label: string
+  orLabel: string
+  lang: "en" | "ru" | "jp"
+}
+
+export default function LoginForm({ labels, google }: { labels: LoginFormLabels; google?: GoogleButtonProps }) {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+
+  // Errors from the Google round-trip come back as /login?error=<code>.
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("error")
+    if (!code || code === "CredentialsSignin") return
+    setError(
+      code === "AccessDenied"
+        ? "Google didn't confirm this email address. Please use a verified Google account or sign in with email."
+        : "Google sign-in didn't complete. Please try again.",
+    )
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,6 +91,8 @@ export default function LoginForm({ labels }: { labels: LoginFormLabels }) {
 
         <div className="card p-8" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
           <h2 className="text-xl font-bold text-white mb-6">{labels.heading}</h2>
+
+          {google && <GoogleSignInButton {...google} />}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

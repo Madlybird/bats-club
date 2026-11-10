@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import BatsOverlay from "@/components/BatsOverlay"
+import GoogleSignInButton from "@/components/GoogleSignInButton"
+import type { GoogleButtonProps } from "@/components/LoginForm"
 import { trackSignUp } from "@/lib/analytics"
 
 interface RegisterFormLabels {
@@ -24,7 +26,7 @@ interface RegisterFormLabels {
   loginHref: string
 }
 
-export default function RegisterForm({ labels }: { labels: RegisterFormLabels }) {
+export default function RegisterForm({ labels, google }: { labels: RegisterFormLabels; google?: GoogleButtonProps }) {
   const router = useRouter()
   const [formData, setFormData] = useState({ name: "", username: "", email: "", password: "" })
   const [error, setError] = useState("")
@@ -137,6 +139,8 @@ export default function RegisterForm({ labels }: { labels: RegisterFormLabels })
 
         <div className="card p-8" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
           <h2 className="text-xl font-bold text-white mb-6">{labels.heading}</h2>
+
+          {google && <GoogleSignInButton {...google} />}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

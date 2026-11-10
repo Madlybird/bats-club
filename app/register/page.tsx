@@ -1,5 +1,6 @@
 import RegisterForm from "@/components/RegisterForm"
 import { en } from "@/lib/dict"
+import { googleAuthEnabled } from "@/lib/auth"
 
 export default function RegisterPage() {
   return (
@@ -19,6 +20,7 @@ export default function RegisterPage() {
         signinLink: en.register_signin_link,
         loginHref: "/login",
       }}
+      google={googleAuthEnabled ? { label: en.auth_google, orLabel: en.auth_or, lang: "en" } : undefined}
     />
   )
 }

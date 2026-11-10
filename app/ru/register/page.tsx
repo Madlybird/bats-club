@@ -1,5 +1,6 @@
 import RegisterForm from "@/components/RegisterForm"
 import { ru } from "@/lib/dict"
+import { googleAuthEnabled } from "@/lib/auth"
 
 export default function RegisterRuPage() {
   return (
@@ -19,6 +20,7 @@ export default function RegisterRuPage() {
         signinLink: ru.register_signin_link,
         loginHref: "/ru/login",
       }}
+      google={googleAuthEnabled ? { label: ru.auth_google, orLabel: ru.auth_or, lang: "ru" } : undefined}
     />
   )
 }

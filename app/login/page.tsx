@@ -1,5 +1,6 @@
 import LoginForm from "@/components/LoginForm"
 import { en } from "@/lib/dict"
+import { googleAuthEnabled } from "@/lib/auth"
 
 export default function LoginPage() {
   return (
@@ -17,6 +18,7 @@ export default function LoginPage() {
         forgotLabel: en.login_forgot_link,
         forgotHref: "/forgot-password",
       }}
+      google={googleAuthEnabled ? { label: en.auth_google, orLabel: en.auth_or, lang: "en" } : undefined}
     />
   )
 }
