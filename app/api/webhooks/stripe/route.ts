@@ -281,12 +281,19 @@ export async function POST(req: Request) {
         // lib/figures-cache.ts) so stock/sold-out state is live there too.
         try {
           revalidateTag("figures", { expire: 0 })
+          // A listing is a figure (/shop), art (/art) or book (/books) — the
+          // id is unique across all three, and revalidating a path that
+          // doesn't exist is a no-op, so refresh every section's detail page.
+          // Without this a sold 1-of-1 book kept its "Add to cart" button for
+          // up to the 1h ISR window.
           for (const listingId of listingIds) {
-            revalidatePath(`/shop/${listingId}`)
-            revalidatePath(`/ru/shop/${listingId}`)
-            revalidatePath(`/jp/shop/${listingId}`)
+            for (const section of ["shop", "art", "books"]) {
+              revalidatePath(`/${section}/${listingId}`)
+              revalidatePath(`/ru/${section}/${listingId}`)
+              revalidatePath(`/jp/${section}/${listingId}`)
+            }
           }
-          console.log("[stripe webhook] revalidated shop listing paths")
+          console.log("[stripe webhook] revalidated listing detail paths")
         } catch (e) {
           console.error("[stripe webhook] revalidate failed:", e)
         }
